@@ -1,6 +1,12 @@
 import path from "node:path";
-import { app, BrowserWindow, Menu, Notification, Tray } from "electron";
-import { ipcMain } from "electron/main";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  Notification,
+  Tray,
+} from "electron";
 import {
   installExtension,
   REACT_DEVELOPER_TOOLS,
@@ -181,11 +187,13 @@ function checkForUpdates() {
   });
 }
 
-async function setupORPC() {
-  const { rpcHandler } = await import("./ipc/handler");
-
-  ipcMain.on(IPC_CHANNELS.START_ORPC_SERVER, (event) => {
+function setupORPC() {
+  ipcMain.on(IPC_CHANNELS.START_ORPC_SERVER, async (event) => {
     const [serverPort] = event.ports;
+    // Imported lazily: the router reads ipcContext.mainWindowContext at import
+    // time, and the port only ever arrives from an existing window. The port
+    // queues the renderer's messages until start().
+    const { rpcHandler } = await import("./ipc/handler");
 
     serverPort.start();
     rpcHandler.upgrade(serverPort);
@@ -325,6 +333,10 @@ if (gotTheSingleInstanceLock) {
     try {
       const { wasOpenedAtLogin } = app.getLoginItemSettings();
 
+      // Must run before any window exists: the renderer sends its oRPC port
+      // only once, on load, and a port that arrives with no listener is
+      // dropped -- leaving every IPC call (window controls, theme, CRUD) hung.
+      setupORPC();
       registerOAuthProtocolClient();
       setupDatabase();
       syncLoginItemSettingsWithSavedPreference();
@@ -345,9 +357,10 @@ if (gotTheSingleInstanceLock) {
         handleProtocolCallback(initialUrl);
       }
 
-      await installExtensions();
+      if (inDevelopment) {
+        installExtensions();
+      }
       checkForUpdates();
-      await setupORPC();
     } catch (error) {
       console.error("Error during app initialization:", error);
     }
