@@ -6,6 +6,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Versão portátil para Windows.** O release passa a ter um `Personare-win32-x64-<versão>.zip`: é só
+  extrair e rodar o `Personare.exe`, sem instalar. A versão portátil não se atualiza sozinha.
+
+### Fixed
+
+- **O `Setup.exe` não criava atalhos**, e o usuário precisava rodar o instalador de novo para abrir o
+  app. O `electron-squirrel-startup` estava nas dependências, mas nunca era chamado, então os eventos
+  `--squirrel-install/-updated/-uninstall` eram ignorados. Agora o Setup instala uma vez e cria os
+  atalhos no Menu Iniciar e na Área de Trabalho, e a desinstalação os remove.
+
 ## [0.1.0-alpha.3] - 2026-09-26
 
 ### Added
