@@ -6,6 +6,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.4] - 2026-09-26
+
 ### Added
 
 - **Versão portátil para Windows.** O release passa a ter um `Personare-win32-x64-<versão>.zip`: é só
@@ -13,6 +15,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Fixed
 
+- **No app instalado não dava para fechar ou minimizar a janela, trocar o tema nem fazer CRUD**
+  ([#118](https://github.com/jopsfernandes/Personare/pull/118)). O renderer envia a porta do oRPC
+  uma única vez, ao carregar, mas o main só registrava o listener no fim do boot, depois de esperar
+  o download do React DevTools, que também rodava em produção. A porta chegava sem listener, era
+  descartada e todo o IPC ficava pendente. O listener agora é registrado antes de a janela existir,
+  e o DevTools só é instalado em desenvolvimento.
 - **O `Setup.exe` não criava atalhos**, e o usuário precisava rodar o instalador de novo para abrir o
   app. O `electron-squirrel-startup` estava nas dependências, mas nunca era chamado, então os eventos
   `--squirrel-install/-updated/-uninstall` eram ignorados. Agora o Setup instala uma vez e cria os
