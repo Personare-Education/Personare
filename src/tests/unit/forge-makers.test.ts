@@ -46,3 +46,11 @@ test.each(["deb", "rpm"])(
     });
   }
 );
+
+test("zip maker also builds a portable Windows package", () => {
+  const maker = config.makers?.find(
+    (candidate) => "name" in candidate && candidate.name === "zip"
+  );
+
+  expect(maker).toMatchObject({ platformsToMakeOn: ["darwin", "win32"] });
+});

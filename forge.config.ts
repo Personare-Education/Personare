@@ -24,7 +24,8 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({}),
-    new MakerZIP({}, ["darwin"]),
+    // win32: portable build, extract and run Personare.exe without installing.
+    new MakerZIP({}, ["darwin", "win32"]),
     // Packager names the Linux binary after productName; these default to package.json's name.
     new MakerRpm({ options: { bin: "Personare" } }),
     new MakerDeb({ options: { bin: "Personare" } }),

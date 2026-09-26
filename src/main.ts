@@ -1,10 +1,17 @@
 import path from "node:path";
-import { app, BrowserWindow, Menu, Notification, Tray } from "electron";
-import { ipcMain } from "electron/main";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  Notification,
+  Tray,
+} from "electron";
 import {
   installExtension,
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
+import isSquirrelEvent from "electron-squirrel-startup";
 import { UpdateSourceType, updateElectronApp } from "update-electron-app";
 import { createDatabaseClient } from "@/database/client";
 import { resolveMigrationsFolder, runMigrations } from "@/database/migrate";
@@ -44,9 +51,14 @@ let isQuitting = false;
 // instance: on Windows/Linux, the OS launches a *second* process to deliver
 // the URL to an already-running app, which must hand it off to the first
 // instance via "second-instance" and then exit immediately.
-const gotTheSingleInstanceLock = app.requestSingleInstanceLock();
+//
+// Squirrel.Windows (Setup.exe) launches the app with --squirrel-* flags on
+// install/update/uninstall; electron-squirrel-startup creates or removes the
+// shortcuts and quits, so nothing else may start in that case.
+const gotTheSingleInstanceLock =
+  !isSquirrelEvent && app.requestSingleInstanceLock();
 
-if (!gotTheSingleInstanceLock) {
+if (!(gotTheSingleInstanceLock || isSquirrelEvent)) {
   app.quit();
 }
 
