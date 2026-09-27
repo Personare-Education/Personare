@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -262,6 +262,87 @@ describe("ActivityFormDialog PDF file selection (Issue #13)", () => {
       "pdf",
       null,
       PDF_ACTIVITY.filePath
+    );
+  });
+});
+
+describe("ActivityFormDialog type cards", () => {
+  const TYPE_LABELS = [
+    i18n.t("activityTypeLink"),
+    i18n.t("activityTypeQuiz"),
+    i18n.t("activityTypePdf"),
+    i18n.t("activityTypeFlashcardDeck"),
+  ];
+
+  it("picks the type from a radio group of cards labeled by the type field, not a combo box", () => {
+    renderDialog();
+
+    const group = screen.getByRole("radiogroup", {
+      name: i18n.t("activityTypeLabel"),
+    });
+    const cards = within(group).getAllByRole("radio");
+    expect(cards.map((card) => card.textContent)).toEqual(TYPE_LABELS);
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
+  it("shows an icon above the name on every card", () => {
+    renderDialog();
+
+    for (const card of screen.getAllByRole("radio")) {
+      expect(card.querySelector("svg")).toBeInTheDocument();
+    }
+  });
+
+  it("starts with Link selected when creating", () => {
+    renderDialog();
+    expect(
+      screen.getByRole("radio", { name: i18n.t("activityTypeLink") })
+    ).toBeChecked();
+  });
+
+  it("starts with the activity's own type selected when editing", () => {
+    renderDialog(QUIZ_ACTIVITY);
+    expect(
+      screen.getByRole("radio", { name: i18n.t("activityTypeQuiz") })
+    ).toBeChecked();
+  });
+
+  it("switches the type, and its conditional fields, when a card is clicked", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypePdf") })
+    );
+
+    expect(
+      screen.getByRole("radio", { name: i18n.t("activityTypePdf") })
+    ).toBeChecked();
+    expect(
+      screen.queryByLabelText(i18n.t("activityUrlLabel"))
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: i18n.t("selectPdfFileAction") })
+    ).toBeInTheDocument();
+  });
+
+  it("submits the type chosen through the cards", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog();
+
+    await user.type(
+      screen.getByLabelText(i18n.t("activityTitleLabel")),
+      "Novo quiz"
+    );
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypeQuiz") })
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    );
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith("Novo quiz", "quiz", null, null)
     );
   });
 });

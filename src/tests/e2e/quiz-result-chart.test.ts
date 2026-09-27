@@ -53,8 +53,7 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
 
   await page.getByRole("button", { name: "New activity" }).click();
   await page.getByLabel("Title").fill(quizName);
-  await page.getByLabel("Type").click();
-  await page.getByRole("option", { name: "Quiz" }).click();
+  await page.getByRole("radio", { name: "Quiz" }).click();
   await page.getByRole("button", { name: "Save" }).click();
 
   const quizRow = page.getByRole("row", { name: new RegExp(quizName) });
