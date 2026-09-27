@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -323,8 +329,9 @@ describe("ActivityFormDialog type cards", () => {
     expect(
       screen.queryByLabelText(i18n.t("activityUrlLabel"))
     ).not.toBeInTheDocument();
+    // Creating a PDF picks its file in the next step (pdf-activity-dropzone.md).
     expect(
-      screen.getByRole("button", { name: i18n.t("selectPdfFileAction") })
+      screen.getByRole("button", { name: i18n.t("nextStepAction") })
     ).toBeInTheDocument();
   });
 
@@ -498,5 +505,136 @@ Quanto é 2 + 2?
       },
     ]);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * Spec: docs/specs/pdf-activity-dropzone.md -- creating a PDF activity is
+ * two steps: Details -> File, the file picked from a drop-zone.
+ */
+describe("ActivityFormDialog PDF creation steps", () => {
+  const PDF_PATH = "C:/Users/aluno/Documents/apostila.pdf";
+
+  beforeEach(() => {
+    vi.mocked(selectPdfFile).mockReset();
+    window.personare = {
+      getPathForFile: vi.fn((file: File) => `C:/Downloads/${file.name}`),
+    };
+  });
+
+  async function goToFileStep(user: ReturnType<typeof userEvent.setup>) {
+    await user.type(
+      screen.getByLabelText(i18n.t("activityTitleLabel")),
+      "Apostila"
+    );
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypePdf") })
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextStepAction") })
+    );
+  }
+
+  it("goes from the details step to a file step, two steps in all", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypePdf") })
+    );
+    expect(
+      screen.getByText(
+        i18n.t("quizCreationStepIndicator", { current: 1, total: 2 })
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("selectPdfFileAction") })
+    ).not.toBeInTheDocument();
+
+    await goToFileStep(user);
+
+    expect(
+      screen.getByText(
+        i18n.t("quizCreationStepIndicator", { current: 2, total: 2 })
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(i18n.t("pdfDropzoneLabel"))).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    ).toBeDisabled();
+  });
+
+  it("picks the file through the native dialog when the drop-zone is clicked, then saves it", async () => {
+    const user = userEvent.setup();
+    vi.mocked(selectPdfFile).mockResolvedValueOnce(PDF_PATH);
+    const { onSubmit } = renderDialog();
+    await goToFileStep(user);
+
+    await user.click(screen.getByText(i18n.t("pdfDropzoneLabel")));
+
+    expect(await screen.findByText("apostila.pdf")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    );
+    expect(onSubmit).toHaveBeenCalledWith("Apostila", "pdf", null, PDF_PATH);
+  });
+
+  it("picks a PDF dropped on the drop-zone", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog();
+    await goToFileStep(user);
+    const file = new File(["%PDF-1.7"], "resumo.pdf", {
+      type: "application/pdf",
+    });
+
+    fireEvent.drop(screen.getByText(i18n.t("pdfDropzoneLabel")), {
+      dataTransfer: { files: [file], types: ["Files"] },
+    });
+
+    expect(await screen.findByText("resumo.pdf")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    );
+    expect(onSubmit).toHaveBeenCalledWith(
+      "Apostila",
+      "pdf",
+      null,
+      "C:/Downloads/resumo.pdf"
+    );
+  });
+
+  it("refuses a dropped file that is not a PDF", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    await goToFileStep(user);
+    const file = new File(["oi"], "notas.txt", { type: "text/plain" });
+
+    fireEvent.drop(screen.getByText(i18n.t("pdfDropzoneLabel")), {
+      dataTransfer: { files: [file], types: ["Files"] },
+    });
+
+    expect(
+      await screen.findByText(i18n.t("pdfDropzoneInvalidFileMessage"))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    ).toBeDisabled();
+  });
+
+  it("goes back to the details step keeping what was filled in", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    await goToFileStep(user);
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("previousStepAction") })
+    );
+
+    expect(screen.getByLabelText(i18n.t("activityTitleLabel"))).toHaveValue(
+      "Apostila"
+    );
+    expect(
+      screen.getByRole("radio", { name: i18n.t("activityTypePdf") })
+    ).toBeChecked();
   });
 });
