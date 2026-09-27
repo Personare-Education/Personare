@@ -168,3 +168,38 @@
     display: none;
   }
 }
+
+/*
+ * A dialog that refuses an outside click (the quiz runner) shakes softly
+ * instead of closing. `transform` stays free for it: the dialog is centered
+ * with Tailwind's `translate` property.
+ */
+@keyframes dialog-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.dialog-shake[data-shaking] {
+  animation: dialog-shake 400ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-shake[data-shaking] {
+    animation: none;
+  }
+}
+

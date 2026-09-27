@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import {
+  type AnimationEvent,
   type RefObject,
   useCallback,
   useEffect,
@@ -402,9 +403,9 @@ export default function QuizRunnerDialog({
 
   /**
    * Closing the dialog after the quiz was actually finished (result !==
-   * null) -- via the X button, Escape or an outside click, not just the
-   * "Finish quiz" click itself, which only computes the score and shows the
-   * result screen -- is the signal to move straight into
+   * null) -- via the X button, Escape or the result screen's "Complete quiz"
+   * button, not just the "Finish quiz" click itself, which only computes the
+   * score and shows the result screen -- is the signal to move straight into
    * ActivityDifficultyDialog (Issue #103). Abandoning mid-quiz (no result
    * yet) does not trigger it.
    */
@@ -418,27 +419,59 @@ export default function QuizRunnerDialog({
     [activity, onFinished, onOpenChange, result]
   );
 
+  const handleCompleteClick = useCallback(() => {
+    handleDialogOpenChange(false);
+  }, [handleDialogOpenChange]);
+
+  // A click outside the quiz is most likely a slip: rather than throwing
+  // the quiz away, the dialog stays open and shakes softly.
+  const [isShaking, setIsShaking] = useState(false);
+
+  const handleInteractOutside = useCallback((event: Event) => {
+    event.preventDefault();
+    setIsShaking(true);
+  }, []);
+
+  const handleAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (event.animationName === "dialog-shake") {
+        setIsShaking(false);
+      }
+    },
+    []
+  );
+
   return (
     <Dialog onOpenChange={handleDialogOpenChange} open={open}>
       <DialogContent
         className={cn(
-          "max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)]",
+          "dialog-shake max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)]",
           result
-            ? "grid-rows-[auto_minmax(0,1fr)] sm:max-w-3xl"
+            ? "grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-3xl"
             : "grid-rows-[auto_auto_minmax(0,1fr)_auto]"
         )}
+        data-shaking={isShaking || undefined}
+        onAnimationEnd={handleAnimationEnd}
+        onInteractOutside={handleInteractOutside}
       >
         <DialogHeader>
           <DialogTitle>{activity?.title}</DialogTitle>
         </DialogHeader>
         {result ? (
-          <QuizRunnerResult
-            answers={answers}
-            averageTimeMs={averageTimeMs}
-            questions={questions}
-            result={result}
-            totalTimeMs={totalTimeMs}
-          />
+          <>
+            <QuizRunnerResult
+              answers={answers}
+              averageTimeMs={averageTimeMs}
+              questions={questions}
+              result={result}
+              totalTimeMs={totalTimeMs}
+            />
+            <DialogFooter>
+              <Button onClick={handleCompleteClick} type="button">
+                {t("completeQuizAction")}
+              </Button>
+            </DialogFooter>
+          </>
         ) : (
           <>
             <div className="flex flex-col gap-2">

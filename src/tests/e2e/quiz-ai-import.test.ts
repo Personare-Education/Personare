@@ -19,6 +19,11 @@ let electronApp: ElectronApplication;
 let page: Page;
 let quizFile: string;
 
+/** Whether the quiz dialog was shaking, each time that changed. */
+interface ShakeRecorder {
+  shakes: boolean[];
+}
+
 /** Where the stubbed shell.openExternal records the URLs it was asked to open. */
 interface UrlRecorder {
   openedUrls: string[];
@@ -284,4 +289,29 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   await lastAnswer.scrollIntoViewIfNeeded();
   await expect(lastAnswer).toBeInViewport();
   await expect(chart).toBeInViewport();
+
+  // A click outside by mistake keeps the quiz open and shakes it (the
+  // shake is short, so it is recorded rather than caught in the act)...
+  await runner.evaluate((runnerDialog) => {
+    const recorder = window as unknown as ShakeRecorder;
+    recorder.shakes = [];
+    new MutationObserver(() =>
+      recorder.shakes.push(runnerDialog.hasAttribute("data-shaking"))
+    ).observe(runnerDialog, { attributeFilter: ["data-shaking"] });
+  });
+  await page.mouse.click(8, viewport.height - 8);
+  const completeButton = runner.getByRole("button", { name: "Complete quiz" });
+  await expect(completeButton).toBeInViewport();
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as unknown as ShakeRecorder).shakes)
+    )
+    .toEqual([true, false]);
+
+  // ...and "Complete quiz" moves on to rating it, like closing it does.
+  await completeButton.click();
+  await expect(completeButton).toBeHidden();
+  // Rate it, or the pending rating reopens on the next launch.
+  await page.getByRole("button", { name: "Again" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });

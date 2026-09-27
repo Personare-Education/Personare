@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -344,6 +344,51 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     await user.click(screen.getByRole("button", { name: "Close" }));
 
     expect(onFinished).toHaveBeenCalledWith(QUIZ_ACTIVITY);
+  });
+
+  /**
+   * A click outside the quiz by mistake must not throw the quiz away: the
+   * dialog stays open and shakes softly instead.
+   */
+  it("stays open and shakes when clicked outside", async () => {
+    const { onOpenChange } = renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    // Radix starts listening for outside clicks a tick after opening.
+    await act(() => vi.advanceTimersByTimeAsync(10));
+
+    // user-event refuses to click the body a modal dialog made inert
+    // (`pointer-events: none`), so the click's events are fired directly:
+    // Radix waits for the click that follows the pointerdown.
+    fireEvent.pointerDown(document.body, { button: 0 });
+    fireEvent.click(document.body);
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toHaveAttribute("data-shaking");
+  });
+
+  it("completes the quiz from the result screen's button, like closing it", async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+    const { onFinished, onOpenChange } = renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
+    await user.click(q1Radios[1]);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await screen.findByText(RUNNER_QUESTIONS[1].text);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: i18n.t("completeQuizAction") })
+    );
+
+    expect(onFinished).toHaveBeenCalledWith(QUIZ_ACTIVITY);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("does not call onFinished when the dialog is closed before finishing the quiz", async () => {
