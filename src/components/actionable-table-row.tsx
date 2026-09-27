@@ -4,6 +4,7 @@ import {
   type ReactNode,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
 import ActionIconButton from "@/components/action-icon-button";
 import {
   ContextMenu,
@@ -12,6 +13,8 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
+import type { ReviewHighlight } from "@/utils/review-highlight";
+import { cn } from "@/utils/tailwind";
 
 export interface RowAction {
   destructive?: boolean;
@@ -26,9 +29,22 @@ interface ActionableTableRowProps {
   actions: RowAction[];
   /** Cells before the actions cell. */
   children: ReactNode;
+  /**
+   * Pulses the row for a pending review (docs/specs/calendar-module-review-highlight.md);
+   * an overdue one also needs `rowId`, for its clock beside the table
+   * (ReviewHighlightTableFrame).
+   */
+  highlight?: ReviewHighlight;
   /** What clicking the row (or pressing Enter on it) does. */
   onOpen: () => void;
+  rowId?: string;
 }
+
+const HIGHLIGHT_LABEL_KEYS: Record<ReviewHighlight, string> = {
+  focus: "reviewFocusLabel",
+  overdue: "reviewOverdueLabel",
+  today: "reviewDueTodayLabel",
+};
 
 function stopPropagation(event: MouseEvent) {
   event.stopPropagation();
@@ -41,8 +57,11 @@ function stopPropagation(event: MouseEvent) {
 export default function ActionableTableRow({
   actions,
   children,
+  highlight,
   onOpen,
+  rowId,
 }: ActionableTableRowProps) {
+  const { t } = useTranslation();
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTableRowElement>) => {
       // Only the row itself: Enter on one of its buttons runs that button.
@@ -57,7 +76,13 @@ export default function ActionableTableRow({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <TableRow
-          className="cursor-pointer"
+          className={cn(
+            "cursor-pointer",
+            highlight && "review-pulse",
+            highlight === "overdue" && "review-pulse-overdue"
+          )}
+          data-review-highlight={highlight}
+          data-row-id={rowId}
           onClick={onOpen}
           onKeyDown={handleKeyDown}
           tabIndex={0}
@@ -65,6 +90,11 @@ export default function ActionableTableRow({
           {children}
           {/* The buttons run their own action, not the row's. */}
           <TableCell onClick={stopPropagation}>
+            {highlight ? (
+              <span className="sr-only">
+                {t(HIGHLIGHT_LABEL_KEYS[highlight])}
+              </span>
+            ) : null}
             <div className="flex items-center gap-1">
               {actions.map((action) => (
                 <ActionIconButton

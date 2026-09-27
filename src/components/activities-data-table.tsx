@@ -16,6 +16,7 @@ import { openExternalLink } from "@/actions/shell";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
+import ReviewHighlightTableFrame from "@/components/review-highlight-table-frame";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import {
   Table,
@@ -26,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { ReviewHighlight } from "@/utils/review-highlight";
 
 export interface Activity {
   createdAt: Date;
@@ -68,6 +70,8 @@ const RATING_BADGE_VARIANTS: Record<string, BadgeVariant> = {
 
 interface ActivitiesDataTableProps {
   activities: Activity[];
+  /** Pending-review highlight per activity (docs/specs/calendar-module-review-highlight.md). */
+  highlightByActivityId?: Record<string, ReviewHighlight | undefined>;
   onEdit: (activity: Activity) => void;
   onManageFlashcards: (activity: Activity) => void;
   onManageQuiz: (activity: Activity) => void;
@@ -81,6 +85,7 @@ interface ActivitiesDataTableProps {
 
 interface ActivityRowProps {
   activity: Activity;
+  highlight: ReviewHighlight | undefined;
   onEdit: (activity: Activity) => void;
   onManageFlashcards: (activity: Activity) => void;
   onManageQuiz: (activity: Activity) => void;
@@ -94,6 +99,7 @@ interface ActivityRowProps {
 
 function ActivityRow({
   activity,
+  highlight,
   onEdit,
   onManageFlashcards,
   onManageQuiz,
@@ -193,7 +199,12 @@ function ActivityRow({
     ACTIVITY_TYPE_TRANSLATION_KEYS[activity.type] ?? activity.type;
 
   return (
-    <ActionableTableRow actions={actions} onOpen={actions[0].onSelect}>
+    <ActionableTableRow
+      actions={actions}
+      highlight={highlight}
+      onOpen={actions[0].onSelect}
+      rowId={activity.id}
+    >
       <TableCell className="font-medium">{activity.title}</TableCell>
       <TableCell>
         <Badge variant="outline">{t(typeTranslationKey)}</Badge>
@@ -219,8 +230,11 @@ function ActivityRow({
   );
 }
 
+const NO_HIGHLIGHTS: Record<string, ReviewHighlight | undefined> = {};
+
 export default function ActivitiesDataTable({
   activities,
+  highlightByActivityId = NO_HIGHLIGHTS,
   onEdit,
   onManageFlashcards,
   onManageQuiz,
@@ -239,7 +253,7 @@ export default function ActivitiesDataTable({
 
   return (
     <TooltipProvider>
-      <div className="overflow-hidden rounded-lg border">
+      <ReviewHighlightTableFrame highlightById={highlightByActivityId}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -254,6 +268,7 @@ export default function ActivitiesDataTable({
             {activities.map((activity) => (
               <ActivityRow
                 activity={activity}
+                highlight={highlightByActivityId[activity.id]}
                 key={activity.id}
                 onEdit={onEdit}
                 onManageFlashcards={onManageFlashcards}
@@ -268,7 +283,7 @@ export default function ActivitiesDataTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </ReviewHighlightTableFrame>
     </TooltipProvider>
   );
 }

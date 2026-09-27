@@ -44,11 +44,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRateOnReturn } from "@/hooks/use-rate-on-return";
+import { useReviewSchedule } from "@/hooks/use-review-schedule";
 import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
+import {
+  getFocusedActivityIds,
+  type ReviewHighlight,
+  summarizeReviewUrgency,
+  toReviewHighlight,
+} from "@/utils/review-highlight";
 
 function ModuleActivitiesPage() {
   const { t } = useTranslation();
   const { moduleId, programId } = Route.useParams();
+  const { focusDate } = Route.useSearch();
+  const { refresh: refreshSchedule, rows: scheduleRows } = useReviewSchedule();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [programName, setProgramName] = useState("");
@@ -203,11 +212,38 @@ function ModuleActivitiesPage() {
     }
   }, []);
 
-  const handleReviewSessionOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setActivityInReview(null);
-    }
-  }, []);
+  const handleReviewSessionOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setActivityInReview(null);
+        // Reviewed flashcards are no longer due: stop pulsing the deck.
+        refreshSchedule();
+      }
+    },
+    [refreshSchedule]
+  );
+
+  const handleActivityRated = useCallback(() => {
+    refreshReviewState();
+    refreshSchedule();
+  }, [refreshReviewState, refreshSchedule]);
+
+  // Pending reviews pulse, and so do the activities of the calendar day
+  // that led here (docs/specs/calendar-module-review-highlight.md AC-6/7).
+  const highlightByActivityId = useMemo(() => {
+    const { byActivityId } = summarizeReviewUrgency(scheduleRows, new Date());
+    const focusedIds = getFocusedActivityIds(scheduleRows, moduleId, focusDate);
+
+    return Object.fromEntries(
+      activities.map((activity) => [
+        activity.id,
+        toReviewHighlight(
+          byActivityId[activity.id],
+          focusedIds.has(activity.id)
+        ),
+      ])
+    ) as Record<string, ReviewHighlight | undefined>;
+  }, [activities, focusDate, moduleId, scheduleRows]);
 
   const handleDifficultyDialogOpenChange = useCallback((open: boolean) => {
     if (!open) {
@@ -295,6 +331,7 @@ function ModuleActivitiesPage() {
       </div>
       <ActivitiesDataTable
         activities={visibleActivities}
+        highlightByActivityId={highlightByActivityId}
         onEdit={handleEdit}
         onManageFlashcards={handleManageFlashcards}
         onManageQuiz={handleManageQuiz}
@@ -344,7 +381,7 @@ function ModuleActivitiesPage() {
         activityTitle={activityMarkingDifficulty?.title ?? ""}
         moduleName={moduleName}
         onOpenChange={handleDifficultyDialogOpenChange}
-        onRated={refreshReviewState}
+        onRated={handleActivityRated}
         open={activityMarkingDifficulty !== null}
         programName={programName}
       />

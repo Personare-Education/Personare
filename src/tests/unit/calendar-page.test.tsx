@@ -5,8 +5,9 @@ import {
   createRouter,
   Outlet,
   RouterProvider,
+  useRouterState,
 } from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import type { ReactNode } from "react";
@@ -77,6 +78,7 @@ const SCHEDULE_ROWS = [
     front: "Brasilia",
     id: "r1",
     moduleId: "m1",
+    moduleName: "Geografia",
     programId: "p1",
   },
 ];
@@ -84,14 +86,24 @@ const SCHEDULE_ROWS = [
 const MAPPED_EVENTS = [
   {
     allDay: true,
-    data: { moduleId: "m1", programId: "p1" },
+    data: { date: "2026-02-01", moduleId: "m1", programId: "p1" },
     end: new Date("2026-02-02T00:00:00Z"),
     id: "r1",
     readOnly: true,
     start: new Date("2026-02-01T00:00:00Z"),
-    title: "Brasilia",
+    title: "Geografia",
   },
 ];
+
+function ProgramLocation() {
+  const location = useRouterState({ select: (state) => state.location });
+
+  return (
+    <p data-testid="program-location">
+      {location.pathname}?{location.searchStr.slice(1)}
+    </p>
+  );
+}
 
 function renderCalendarPage() {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -100,7 +112,12 @@ function renderCalendarPage() {
     getParentRoute: () => rootRoute,
     path: "/calendar",
   });
-  const routeTree = rootRoute.addChildren([calendarRoute]);
+  const programRoute = createRoute({
+    component: ProgramLocation,
+    getParentRoute: () => rootRoute,
+    path: "/programs/$programId",
+  });
+  const routeTree = rootRoute.addChildren([calendarRoute, programRoute]);
   const router = createRouter({
     history: createMemoryHistory({ initialEntries: ["/calendar"] }),
     routeTree,
@@ -357,5 +374,32 @@ describe("CalendarPage Google Calendar sync (Issue #26)", () => {
     expect(
       await screen.findByText(i18n.t("calendarSyncErrorMessage"))
     ).toBeInTheDocument();
+  });
+});
+
+/**
+ * docs/specs/calendar-module-review-highlight.md AC-2: clicking an event
+ * opens the module's program with that module (and day) in focus.
+ */
+describe("CalendarPage event click", () => {
+  it("opens the program with the event's module and day in focus", async () => {
+    renderCalendarPage();
+
+    await waitFor(() => {
+      expect(vi.mocked(EventCalendar).mock.calls.at(-1)?.[0].events).toEqual(
+        MAPPED_EVENTS
+      );
+    });
+    const [lastProps] = vi.mocked(EventCalendar).mock.calls.at(-1) ?? [];
+    const { onEventClick } = lastProps as unknown as {
+      onEventClick: (occurrence: {
+        event: (typeof MAPPED_EVENTS)[number];
+      }) => void;
+    };
+    act(() => onEventClick({ event: MAPPED_EVENTS[0] }));
+
+    expect(await screen.findByTestId("program-location")).toHaveTextContent(
+      "/programs/p1?focusDate=2026-02-01&focusModuleId=m1"
+    );
   });
 });

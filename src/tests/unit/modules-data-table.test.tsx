@@ -6,6 +6,8 @@ import ModulesDataTable, { type Module } from "@/components/modules-data-table";
 import "@/localization/i18n";
 
 const MODULE_1_ROW_NAME = /Modulo 1/;
+const MODULE_2_ROW_NAME = /Modulo 2/;
+const MODULE_3_ROW_NAME = /Modulo 3/;
 
 /**
  * RED phase (Issue #9, Spec Driven TDD): src/components/modules-data-table
@@ -220,4 +222,61 @@ describe("Modules screen i18n keys (Issue #9)", () => {
       }
     }
   );
+});
+
+/**
+ * docs/specs/calendar-module-review-highlight.md AC-4 to AC-6: a row pulses
+ * while it has a review due today (or is in focus from the calendar), and
+ * pulses red with a clock beside the table while a review is overdue.
+ */
+describe("ModulesDataTable review highlight", () => {
+  function renderHighlighted() {
+    render(
+      <ModulesDataTable
+        highlightByModuleId={{
+          [MODULES[0].id]: "overdue",
+          [MODULES[1].id]: "today",
+        }}
+        modules={[
+          ...MODULES,
+          {
+            ...MODULES[1],
+            id: "33333333-3333-3333-3333-333333333333",
+            name: "Modulo 3",
+          },
+        ]}
+        onEdit={vi.fn()}
+        onNavigateToActivities={vi.fn()}
+        onRequestDelete={vi.fn()}
+      />
+    );
+  }
+
+  it("marks a row due today and says so to assistive tech", () => {
+    renderHighlighted();
+    const row = screen.getByRole("row", { name: MODULE_2_ROW_NAME });
+
+    expect(row).toHaveAttribute("data-review-highlight", "today");
+    expect(row).toHaveTextContent(i18n.t("reviewDueTodayLabel"));
+  });
+
+  it("marks an overdue row and puts one clock beside the table, not inside it", () => {
+    renderHighlighted();
+    const row = screen.getByRole("row", { name: MODULE_1_ROW_NAME });
+
+    expect(row).toHaveAttribute("data-review-highlight", "overdue");
+    expect(row).toHaveTextContent(i18n.t("reviewOverdueLabel"));
+    const markers = document.querySelectorAll(
+      '[data-slot="overdue-review-marker"]'
+    );
+    expect(markers).toHaveLength(1);
+    expect(markers[0].closest("table")).toBeNull();
+  });
+
+  it("leaves a row without pending reviews alone", () => {
+    renderHighlighted();
+    const row = screen.getByRole("row", { name: MODULE_3_ROW_NAME });
+
+    expect(row).not.toHaveAttribute("data-review-highlight");
+  });
 });

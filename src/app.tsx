@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { updateAppLanguage } from "./actions/language";
 import { syncWithLocalTheme } from "./actions/theme";
 import { router } from "./utils/routes";
+import { installStackContentReveal } from "./utils/stack-content-reveal";
 import "./localization/i18n";
 
 export default function App() {
@@ -22,6 +23,8 @@ const container = document.getElementById("app");
 if (!container) {
   throw new Error('Root element with id "app" not found');
 }
+installStackContentReveal(document);
+
 const root = createRoot(container);
 root.render(
   <React.StrictMode>
