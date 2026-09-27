@@ -289,6 +289,7 @@ describe("CalendarPage Google Calendar sync (Issue #26)", () => {
           front: "Rio de Janeiro",
           id: "r2",
           moduleId: "m1",
+          moduleName: "Geografia",
           programId: "p1",
         },
       ]);
