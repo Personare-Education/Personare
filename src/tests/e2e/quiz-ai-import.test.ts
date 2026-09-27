@@ -76,12 +76,15 @@ test.afterAll(async () => {
   fs.rmSync(path.dirname(quizFile), { force: true, recursive: true });
 });
 
-test("imports an AI-generated Markdown quiz through the multi-step dialog", async () => {
+async function openImportStep(quizName: string) {
   const uniqueSuffix = Date.now();
   const programName = `E2E Import Program ${uniqueSuffix}`;
   const moduleName = `E2E Import Module ${uniqueSuffix}`;
-  const quizName = `E2E Imported Quiz ${uniqueSuffix}`;
 
+  // Start from the Programs page, whatever a previous test left open.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("link", { name: "Programs" }).click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();
@@ -105,6 +108,13 @@ test("imports an AI-generated Markdown quiz through the multi-step dialog", asyn
   await dialog.getByRole("button", { name: "Next" }).click();
 
   await expect(dialog.getByText("Step 3 of 3")).toBeVisible();
+  return dialog;
+}
+
+test("imports an AI-generated Markdown quiz through the multi-step dialog", async () => {
+  const quizName = `E2E Imported Quiz ${Date.now()}`;
+  const dialog = await openImportStep(quizName);
+
   await dialog.getByLabel("Theme").fill("Basic math");
   await dialog
     .getByRole("button", { name: "Copy prompt and open ChatGPT" })
@@ -144,4 +154,54 @@ test("imports an AI-generated Markdown quiz through the multi-step dialog", asyn
 
   const runner = page.getByRole("dialog", { name: quizName });
   await expect(runner.getByText("What is 2 + 2?")).toBeVisible();
+});
+
+test("keeps a long imported quiz inside the dialog, with its buttons reachable", async () => {
+  // Ten long questions with LaTeX, like a real AI answer: the preview used to
+  // widen the dialog past the window (nowrap text) and push its footer out
+  // of view (no height limit).
+  const longQuestions = Array.from(
+    { length: 10 },
+    (_, index) => `## Question ${index + 1}
+By the Pigeonhole Principle, what is the minimum number of people in a group so that at least two of them share a birthday month, given $n = ${index + 12}$ and $\\gcd(48, 18)$ along the way?
+
+- [ ] ${index + 11}
+- [x] ${index + 13}
+- [ ] ${index + 24}
+`
+  ).join("\n");
+  const longFile = path.join(path.dirname(quizFile), "long-quiz.md");
+  fs.writeFileSync(longFile, longQuestions);
+
+  const dialog = await openImportStep(`E2E Long Quiz ${Date.now()}`);
+  await dialog
+    .getByLabel("Drag the .md file here or click to choose")
+    .setInputFiles(longFile);
+  await expect(dialog.getByText("10 questions read")).toBeVisible();
+
+  const window =
+    page.viewportSize() ??
+    (await page.evaluate(() => ({
+      height: window.innerHeight,
+      width: window.innerWidth,
+    })));
+  const box = await dialog.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+  expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(window.width);
+  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(window.height);
+
+  // Nothing inside sticks out sideways.
+  expect(
+    await dialog.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+
+  await expect(
+    dialog.getByRole("button", { name: "Create quiz (10)" })
+  ).toBeInViewport();
+  await expect(dialog.getByRole("button", { name: "Back" })).toBeInViewport();
+  await expect(dialog.getByRole("listitem").first()).toBeInViewport();
 });

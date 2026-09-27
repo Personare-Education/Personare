@@ -149,7 +149,7 @@ export default function QuizImportPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
         <div className="flex flex-col gap-1">
           <Label htmlFor={themeInputId}>{t("quizImportThemeLabel")}</Label>
           <Input
@@ -241,11 +241,15 @@ function QuizImportPreview({ parsed }: { parsed: ParsedQuiz }) {
       <p className="font-medium">
         {t("quizImportPreviewCount", { count: parsed.questions.length })}
       </p>
-      <ol className="max-h-40 list-inside list-decimal space-y-1 overflow-y-auto text-muted-foreground">
+      {/* No nowrap: a long question would widen the whole dialog. */}
+      <ol className="flex flex-col gap-1 text-muted-foreground">
         {parsed.questions.map((question, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: the list is rebuilt from scratch for every file and never reordered.
-          <li className="truncate" key={index}>
-            {question.text}
+          <li className="flex gap-1" key={index}>
+            <span className="shrink-0">{index + 1}.</span>
+            <span className="line-clamp-2 min-w-0 break-words">
+              {question.text}
+            </span>
           </li>
         ))}
       </ol>
