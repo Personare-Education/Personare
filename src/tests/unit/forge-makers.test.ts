@@ -54,3 +54,28 @@ test("zip maker also builds a portable Windows package", () => {
 
   expect(maker).toMatchObject({ platformsToMakeOn: ["darwin", "win32"] });
 });
+
+/*
+ * Spec: docs/specs/macos-build.md
+ * O release precisa trazer um instalador .dmg para usuarios de macOS.
+ */
+
+test("dmg maker builds the macOS installer", () => {
+  const maker = config.makers?.find(
+    (candidate) => "name" in candidate && candidate.name === "dmg"
+  );
+
+  expect(maker).toBeDefined();
+});
+
+test("fuses plugin re-signs the macOS app ad hoc after flipping the fuses", () => {
+  // Flipping fuses edits the Electron binary and breaks its ad hoc signature;
+  // Apple Silicon then refuses to open the app ("is damaged").
+  const fuses = config.plugins?.find(
+    (plugin) => "name" in plugin && plugin.name === "fuses"
+  );
+
+  expect(fuses).toMatchObject({
+    fusesConfig: { resetAdHocDarwinSignature: true },
+  });
+});
