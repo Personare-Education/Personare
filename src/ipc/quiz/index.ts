@@ -1,6 +1,7 @@
 import {
   createOption,
   createQuestion,
+  createWithQuestions,
   listOptions,
   listQuestions,
   softDeleteOption,
@@ -12,6 +13,7 @@ import {
 export const quiz = {
   createOption,
   createQuestion,
+  createWithQuestions,
   listOptions,
   listQuestions,
   softDeleteOption,

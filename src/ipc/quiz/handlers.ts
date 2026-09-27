@@ -1,11 +1,12 @@
 import { os } from "@orpc/server";
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { quizOptions, quizQuestions } from "@/database/schema";
+import { activities, quizOptions, quizQuestions } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
 import { cascadeSoftDeleteQuizQuestion } from "@/ipc/shared/cascade-soft-delete";
 import {
   createOptionInputSchema,
   createQuestionInputSchema,
+  createWithQuestionsInputSchema,
   listOptionsInputSchema,
   listQuestionsInputSchema,
   softDeleteOptionInputSchema,
@@ -157,4 +158,67 @@ export const softDeleteOption = os
       .set({ deletedAt: new Date() })
       .where(eq(quizOptions.id, input.id))
       .run();
+  });
+
+/**
+ * Creates a quiz activity together with its questions and options (imported
+ * from an AI-generated Markdown file, see docs/specs/quiz-ai-import.md) in one
+ * transaction, so a failure never leaves a half-imported quiz behind.
+ * Questions and options are listed by createdAt, so each row gets a
+ * strictly increasing timestamp to keep the file's order.
+ */
+export const createWithQuestions = os
+  .input(createWithQuestionsInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const start = Date.now();
+    let tick = 0;
+    const nextTimestamp = () => {
+      tick += 1;
+      return new Date(start + tick);
+    };
+
+    return db.transaction((tx) => {
+      const createdAt = nextTimestamp();
+      const activity = tx
+        .insert(activities)
+        .values({
+          createdAt,
+          moduleId: input.moduleId,
+          title: input.title,
+          type: "quiz",
+          updatedAt: createdAt,
+        })
+        .returning()
+        .get();
+
+      for (const question of input.questions) {
+        const questionCreatedAt = nextTimestamp();
+        const { id: questionId } = tx
+          .insert(quizQuestions)
+          .values({
+            activityId: activity.id,
+            createdAt: questionCreatedAt,
+            text: question.text,
+            updatedAt: questionCreatedAt,
+          })
+          .returning({ id: quizQuestions.id })
+          .get();
+
+        for (const option of question.options) {
+          const optionCreatedAt = nextTimestamp();
+          tx.insert(quizOptions)
+            .values({
+              createdAt: optionCreatedAt,
+              isCorrect: option.isCorrect,
+              questionId,
+              text: option.text,
+              updatedAt: optionCreatedAt,
+            })
+            .run();
+        }
+      }
+
+      return activity;
+    });
   });

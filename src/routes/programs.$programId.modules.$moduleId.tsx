@@ -17,6 +17,7 @@ import {
 } from "@/actions/activities";
 import { listModules } from "@/actions/modules";
 import { listPrograms } from "@/actions/programs";
+import { createQuizWithQuestions } from "@/actions/quiz";
 import {
   armPendingActivityRating,
   listActivityReviewState,
@@ -43,6 +44,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRateOnReturn } from "@/hooks/use-rate-on-return";
+import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
 
 function ModuleActivitiesPage() {
   const { t } = useTranslation();
@@ -173,6 +175,16 @@ function ModuleActivitiesPage() {
     [formActivity, moduleId, refreshActivities]
   );
 
+  const handleImportQuiz = useCallback(
+    (title: string, questions: ParsedQuizQuestion[]) => {
+      createQuizWithQuestions(moduleId, title, questions).then(() => {
+        setIsFormOpen(false);
+        refreshActivities();
+      });
+    },
+    [moduleId, refreshActivities]
+  );
+
   const handleQuizManagerOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setActivityBeingManaged(null);
@@ -295,6 +307,7 @@ function ModuleActivitiesPage() {
       />
       <ActivityFormDialog
         activity={formActivity}
+        onImportQuiz={handleImportQuiz}
         onOpenChange={handleFormOpenChange}
         onSubmit={handleFormSubmit}
         open={isFormOpen}

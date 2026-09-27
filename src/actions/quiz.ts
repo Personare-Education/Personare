@@ -1,4 +1,5 @@
 import { ipc } from "@/ipc/manager";
+import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
 
 export function listQuizQuestions(activityId: string) {
   return ipc.client.quiz.listQuestions({ activityId });
@@ -77,4 +78,12 @@ export async function listQuizQuestionsWithOptions(activityId: string) {
       };
     })
   );
+}
+
+export function createQuizWithQuestions(
+  moduleId: string,
+  title: string,
+  questions: ParsedQuizQuestion[]
+) {
+  return ipc.client.quiz.createWithQuestions({ moduleId, questions, title });
 }
