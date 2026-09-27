@@ -173,13 +173,14 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   const longFile = path.join(path.dirname(quizFile), "long-quiz.md");
   fs.writeFileSync(longFile, longQuestions);
 
-  const dialog = await openImportStep(`E2E Long Quiz ${Date.now()}`);
+  const quizName = `E2E Long Quiz ${Date.now()}`;
+  const dialog = await openImportStep(quizName);
   await dialog
     .getByLabel("Drag the .md file here or click to choose")
     .setInputFiles(longFile);
   await expect(dialog.getByText("10 questions read")).toBeVisible();
 
-  const window =
+  const viewport =
     page.viewportSize() ??
     (await page.evaluate(() => ({
       height: window.innerHeight,
@@ -189,8 +190,10 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   expect(box).not.toBeNull();
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
   expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
-  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(window.width);
-  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(window.height);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewport.width);
+  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(
+    viewport.height
+  );
 
   // Nothing inside sticks out sideways.
   expect(
@@ -204,4 +207,55 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   ).toBeInViewport();
   await expect(dialog.getByRole("button", { name: "Back" })).toBeInViewport();
   await expect(dialog.getByRole("listitem").first()).toBeInViewport();
+
+  // Take the whole quiz; the result screen must fit too: answers in a
+  // scrolling left column, score and times on the right.
+  await dialog.getByRole("button", { name: "Create quiz (10)" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page
+    .getByRole("row", { name: new RegExp(quizName) })
+    .getByLabel("Take quiz")
+    .click();
+  const runner = page.getByRole("dialog", { name: quizName });
+
+  async function answerRemaining(remaining: number): Promise<void> {
+    if (remaining === 0) {
+      return;
+    }
+    await runner.getByRole("radio").first().click();
+    await runner
+      .getByRole("button", {
+        name: remaining === 1 ? "Finish quiz" : "Next question",
+      })
+      .click();
+    await answerRemaining(remaining - 1);
+  }
+  await answerRemaining(10);
+
+  const review = runner.getByRole("region", { name: "Review" });
+  const chart = runner.locator('[data-slot="chart"]');
+  await expect(chart).toBeInViewport();
+  await expect(
+    runner.getByText("Total time", { exact: false })
+  ).toBeInViewport();
+
+  const resultBox = await runner.boundingBox();
+  expect((resultBox?.y ?? 0) + (resultBox?.height ?? 0)).toBeLessThanOrEqual(
+    viewport.height
+  );
+  expect(
+    await runner.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+
+  const reviewBox = await review.boundingBox();
+  const chartBox = await chart.boundingBox();
+  expect(reviewBox?.x ?? 0).toBeLessThan(chartBox?.x ?? 0);
+
+  // The last answer is reachable by scrolling the answers column.
+  const lastAnswer = review.getByRole("listitem").last();
+  await lastAnswer.scrollIntoViewIfNeeded();
+  await expect(lastAnswer).toBeInViewport();
+  await expect(chart).toBeInViewport();
 });

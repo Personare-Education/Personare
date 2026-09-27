@@ -28,6 +28,7 @@ import {
   type QuizAnswers,
   type QuizScore,
 } from "@/utils/quiz-scoring";
+import { cn } from "@/utils/tailwind";
 
 interface QuizRunnerOption {
   id: string;
@@ -90,7 +91,7 @@ function QuizRunnerReviewRow({ answers, question }: QuizRunnerReviewRowProps) {
   const isCorrect = selectedOption?.isCorrect ?? false;
 
   return (
-    <div className="flex items-start gap-2 border-b pb-3 text-sm last:border-b-0 last:pb-0">
+    <li className="flex items-start gap-2 border-b pb-3 text-sm last:border-b-0 last:pb-0">
       {isCorrect ? (
         <CheckCircle2
           aria-label={t("quizReviewCorrectStatusLabel")}
@@ -126,7 +127,7 @@ function QuizRunnerReviewRow({ answers, question }: QuizRunnerReviewRowProps) {
           </div>
         )}
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -155,8 +156,8 @@ function QuizRunnerResult({
       : Math.round((result.correct / result.total) * QUIZ_MAX_SCORE);
 
   return (
-    <div className="flex flex-col gap-4 py-4">
-      <div className="flex flex-col items-center gap-4">
+    <div className="grid min-h-0 gap-6 py-4 sm:grid-cols-[minmax(0,1fr)_15rem]">
+      <div className="flex flex-col items-center gap-4 sm:order-last">
         <RadialChartStacked
           centerLabel={String(score)}
           centerSublabel={t("quizScoreMaxLabel", { max: QUIZ_MAX_SCORE })}
@@ -196,18 +197,20 @@ function QuizRunnerResult({
       </div>
       <section
         aria-labelledby={reviewHeadingId}
-        className="flex flex-col gap-3"
+        className="flex min-h-0 flex-col gap-3"
       >
         <h3 className="font-medium text-sm" id={reviewHeadingId}>
           {t("quizReviewHeading")}
         </h3>
-        {questions.map((question) => (
-          <QuizRunnerReviewRow
-            answers={answers}
-            key={question.id}
-            question={question}
-          />
-        ))}
+        <ol className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-2 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
+          {questions.map((question) => (
+            <QuizRunnerReviewRow
+              answers={answers}
+              key={question.id}
+              question={question}
+            />
+          ))}
+        </ol>
       </section>
     </div>
   );
@@ -305,7 +308,14 @@ export default function QuizRunnerDialog({
 
   return (
     <Dialog onOpenChange={handleDialogOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent
+        className={cn(
+          "max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)]",
+          result
+            ? "grid-rows-[auto_minmax(0,1fr)] sm:max-w-3xl"
+            : "grid-rows-[auto_auto_minmax(0,1fr)_auto]"
+        )}
+      >
         <DialogHeader>
           <DialogTitle>{activity?.title}</DialogTitle>
         </DialogHeader>
@@ -335,6 +345,7 @@ export default function QuizRunnerDialog({
               </p>
             </div>
             <Questionnaire
+              className="min-h-0 overflow-y-auto [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
               item={currentQuestion?.id}
               items={questions.map((question) => ({
                 choices: question.options.map((option) => ({
