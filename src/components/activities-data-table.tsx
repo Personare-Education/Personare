@@ -253,7 +253,7 @@ export default function ActivitiesDataTable({
 
   return (
     <TooltipProvider>
-      <div className="rounded-lg border">
+      <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
