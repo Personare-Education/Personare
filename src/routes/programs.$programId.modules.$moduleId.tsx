@@ -5,7 +5,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
   useTransition,
 } from "react";
@@ -22,7 +21,6 @@ import {
   armPendingActivityRating,
   listActivityReviewState,
 } from "@/actions/review";
-import { openActivityFile } from "@/actions/shell";
 import ActivitiesDataTable, {
   type Activity,
   type ActivityReviewState,
@@ -44,6 +42,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRateOnReturn } from "@/hooks/use-rate-on-return";
 
 function ModuleActivitiesPage() {
   const { t } = useTranslation();
@@ -72,13 +71,9 @@ function ModuleActivitiesPage() {
   );
   const [activityMarkingDifficulty, setActivityMarkingDifficulty] =
     useState<Activity | null>(null);
-  /**
-   * Set right after opening a PDF/Link externally, cleared on the next
-   * window focus (Issue #103) -- the app never navigates away when the OS
-   * opens an external viewer/browser, so this route is still mounted when
-   * the user comes back to it.
-   */
-  const armedActivityRef = useRef<Activity | null>(null);
+  const { arm: armRatingOnReturn, openPdf } = useRateOnReturn(
+    setActivityMarkingDifficulty
+  );
 
   const refreshActivities = useCallback(() => {
     startTransition(() => {
@@ -120,19 +115,6 @@ function ModuleActivitiesPage() {
     });
   }, [programId, moduleId]);
 
-  useEffect(() => {
-    function handleWindowFocus() {
-      const armed = armedActivityRef.current;
-      if (armed) {
-        armedActivityRef.current = null;
-        setActivityMarkingDifficulty(armed);
-      }
-    }
-
-    window.addEventListener("focus", handleWindowFocus);
-    return () => window.removeEventListener("focus", handleWindowFocus);
-  }, []);
-
   const handleCreateClick = useCallback(() => {
     setFormActivity(null);
     setIsFormOpen(true);
@@ -145,24 +127,6 @@ function ModuleActivitiesPage() {
 
   const handleRequestDelete = useCallback((activity: Activity) => {
     setActivityPendingDelete(activity);
-  }, []);
-
-  const handleViewPdf = useCallback((activity: Activity) => {
-    if (!activity.filePath) {
-      return;
-    }
-
-    openActivityFile(activity.filePath).then((result) => {
-      if (!result.errorMessage) {
-        armPendingActivityRating(activity.id);
-        armedActivityRef.current = activity;
-      }
-    });
-  }, []);
-
-  const handleOpenLink = useCallback((activity: Activity) => {
-    armPendingActivityRating(activity.id);
-    armedActivityRef.current = activity;
   }, []);
 
   const handleManageQuiz = useCallback((activity: Activity) => {
@@ -322,11 +286,11 @@ function ModuleActivitiesPage() {
         onEdit={handleEdit}
         onManageFlashcards={handleManageFlashcards}
         onManageQuiz={handleManageQuiz}
-        onOpenLink={handleOpenLink}
+        onOpenLink={armRatingOnReturn}
         onRequestDelete={handleRequestDelete}
         onStartReview={handleStartReview}
         onTakeQuiz={handleTakeQuiz}
-        onViewPdf={handleViewPdf}
+        onViewPdf={openPdf}
         reviewStateByActivityId={reviewStateByActivityId}
       />
       <ActivityFormDialog
