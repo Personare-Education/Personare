@@ -1,7 +1,13 @@
 // biome-ignore-all lint/style/useFilenamingConvention: TanStack Router file-based routing requires the "$paramName" filename convention for dynamic route segments.
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   createModule,
@@ -20,11 +26,24 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { useFocusedModuleRedirect } from "@/hooks/use-focused-module-redirect";
+import { useReviewSchedule } from "@/hooks/use-review-schedule";
+import {
+  type ReviewHighlight,
+  summarizeReviewUrgency,
+  toReviewHighlight,
+} from "@/utils/review-highlight";
 
 function ProgramModulesPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { programId } = Route.useParams();
+  const { focusDate, focusModuleId } = Route.useSearch();
+  const { rows: scheduleRows } = useReviewSchedule();
+  const { openModule } = useFocusedModuleRedirect({
+    focusDate,
+    focusModuleId,
+    programId,
+  });
   const [modules, setModules] = useState<Module[]>([]);
   const [programName, setProgramName] = useState("");
   const [, startTransition] = useTransition();
@@ -51,6 +70,19 @@ function ProgramModulesPage() {
     });
   }, [programId]);
 
+  // Modules with pending reviews pulse, and so does the one in focus from
+  // the calendar until it opens (docs/specs/calendar-module-review-highlight.md).
+  const highlightByModuleId = useMemo(() => {
+    const { byModuleId } = summarizeReviewUrgency(scheduleRows, new Date());
+
+    return Object.fromEntries(
+      modules.map((module) => [
+        module.id,
+        toReviewHighlight(byModuleId[module.id], module.id === focusModuleId),
+      ])
+    ) as Record<string, ReviewHighlight | undefined>;
+  }, [focusModuleId, modules, scheduleRows]);
+
   const handleCreateClick = useCallback(() => {
     setFormModule(null);
     setIsFormOpen(true);
@@ -66,13 +98,8 @@ function ProgramModulesPage() {
   }, []);
 
   const handleNavigateToActivities = useCallback(
-    (module: Module) => {
-      navigate({
-        params: { moduleId: module.id, programId },
-        to: "/programs/$programId/modules/$moduleId",
-      });
-    },
-    [navigate, programId]
+    (module: Module) => openModule(module.id),
+    [openModule]
   );
 
   const handleFormOpenChange = useCallback((open: boolean) => {
@@ -136,6 +163,7 @@ function ProgramModulesPage() {
         </Breadcrumb>
       </div>
       <ModulesDataTable
+        highlightByModuleId={highlightByModuleId}
         modules={modules}
         onEdit={handleEdit}
         onNavigateToActivities={handleNavigateToActivities}

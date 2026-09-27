@@ -13,7 +13,9 @@ export default function BaseLayout({
       <DragWindowRegion />
       <SidebarProvider className="min-h-0 flex-1">
         <AppSidebar />
-        <SidebarInset>
+        {/* The whole panel (its background and corners) is what slides in
+            a stack navigation, see src/utils/stack-transition.ts. */}
+        <SidebarInset className="stack-content">
           <main className="h-full overflow-y-auto p-2">{children}</main>
         </SidebarInset>
       </SidebarProvider>

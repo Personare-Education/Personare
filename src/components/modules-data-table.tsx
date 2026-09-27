@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
+import ReviewHighlightTableFrame from "@/components/review-highlight-table-frame";
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { ReviewHighlight } from "@/utils/review-highlight";
 
 export interface Module {
   createdAt: Date;
@@ -23,6 +25,8 @@ export interface Module {
 }
 
 interface ModulesDataTableProps {
+  /** Pending-review highlight per module (docs/specs/calendar-module-review-highlight.md). */
+  highlightByModuleId?: Record<string, ReviewHighlight | undefined>;
   modules: Module[];
   onEdit: (module: Module) => void;
   onNavigateToActivities: (module: Module) => void;
@@ -30,6 +34,7 @@ interface ModulesDataTableProps {
 }
 
 interface ModuleRowProps {
+  highlight: ReviewHighlight | undefined;
   module: Module;
   onEdit: (module: Module) => void;
   onNavigateToActivities: (module: Module) => void;
@@ -37,6 +42,7 @@ interface ModuleRowProps {
 }
 
 function ModuleRow({
+  highlight,
   module,
   onEdit,
   onNavigateToActivities,
@@ -71,13 +77,21 @@ function ModuleRow({
   );
 
   return (
-    <ActionableTableRow actions={actions} onOpen={actions[0].onSelect}>
+    <ActionableTableRow
+      actions={actions}
+      highlight={highlight}
+      onOpen={actions[0].onSelect}
+      rowId={module.id}
+    >
       <TableCell className="font-medium">{module.name}</TableCell>
     </ActionableTableRow>
   );
 }
 
+const NO_HIGHLIGHTS: Record<string, ReviewHighlight | undefined> = {};
+
 export default function ModulesDataTable({
+  highlightByModuleId = NO_HIGHLIGHTS,
   modules,
   onEdit,
   onNavigateToActivities,
@@ -91,7 +105,7 @@ export default function ModulesDataTable({
 
   return (
     <TooltipProvider>
-      <div className="overflow-hidden rounded-lg border">
+      <ReviewHighlightTableFrame highlightById={highlightByModuleId}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -102,6 +116,7 @@ export default function ModulesDataTable({
           <TableBody>
             {modules.map((module) => (
               <ModuleRow
+                highlight={highlightByModuleId[module.id]}
                 key={module.id}
                 module={module}
                 onEdit={onEdit}
@@ -111,7 +126,7 @@ export default function ModulesDataTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </ReviewHighlightTableFrame>
     </TooltipProvider>
   );
 }
