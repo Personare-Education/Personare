@@ -93,8 +93,8 @@ beforeEach(() => {
   vi.mocked(getAttachmentImageDataUrl).mockResolvedValue(
     "data:image/png;base64,AAAA"
   );
-  // The result screen renders RadialChartText (Recharts); see
-  // radial-chart-text.test.tsx for why this mock is required under jsdom.
+  // The result screen renders RadialChartStacked (Recharts); see
+  // radial-chart-stacked.test.tsx for why this mock is required under jsdom.
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
     bottom: 300,
     height: 300,
@@ -233,7 +233,11 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
 
-    expect(await screen.findByText("100%")).toBeInTheDocument();
+    // Score scale: 0 to 1000.
+    expect(await screen.findByText("1000")).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("quizScoreMaxLabel", { max: 1000 }))
+    ).toBeInTheDocument();
     expect(
       screen.getByText(i18n.t("quizResultMessage", { correct: 2, total: 2 }))
     ).toBeInTheDocument();
@@ -270,7 +274,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     await user.click(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
-    await screen.findByText("100%");
+    await screen.findByText("1000");
 
     expect(onFinished).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Close" }));
@@ -308,7 +312,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
 
-    expect(await screen.findByText("50%")).toBeInTheDocument();
+    expect(await screen.findByText("500")).toBeInTheDocument();
     expect(
       screen.getByText(i18n.t("quizResultMessage", { correct: 1, total: 2 }))
     ).toBeInTheDocument();
