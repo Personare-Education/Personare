@@ -1,7 +1,9 @@
 import { ListChecks, Pencil, Trash2 } from "lucide-react";
-import { useCallback } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import ActionIconButton from "@/components/action-icon-button";
+import ActionableTableRow, {
+  type RowAction,
+} from "@/components/actionable-table-row";
 import {
   Table,
   TableBody,
@@ -42,44 +44,36 @@ function ModuleRow({
 }: ModuleRowProps) {
   const { t } = useTranslation();
 
-  const handleEditClick = useCallback(() => {
-    onEdit(module);
-  }, [onEdit, module]);
-
-  const handleDeleteClick = useCallback(() => {
-    onRequestDelete(module);
-  }, [onRequestDelete, module]);
-
-  const handleNavigateToActivitiesClick = useCallback(() => {
-    onNavigateToActivities(module);
-  }, [onNavigateToActivities, module]);
+  // The first action is what clicking the row does.
+  const actions = useMemo<RowAction[]>(
+    () => [
+      {
+        icon: <ListChecks />,
+        key: "view-activities",
+        label: t("viewActivitiesAction"),
+        onSelect: () => onNavigateToActivities(module),
+      },
+      {
+        icon: <Pencil />,
+        key: "edit",
+        label: t("editModuleAction"),
+        onSelect: () => onEdit(module),
+      },
+      {
+        destructive: true,
+        icon: <Trash2 />,
+        key: "delete",
+        label: t("deleteModuleAction"),
+        onSelect: () => onRequestDelete(module),
+      },
+    ],
+    [module, onEdit, onNavigateToActivities, onRequestDelete, t]
+  );
 
   return (
-    <TableRow>
+    <ActionableTableRow actions={actions} onOpen={actions[0].onSelect}>
       <TableCell className="font-medium">{module.name}</TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1">
-          <ActionIconButton
-            label={t("viewActivitiesAction")}
-            onClick={handleNavigateToActivitiesClick}
-          >
-            <ListChecks />
-          </ActionIconButton>
-          <ActionIconButton
-            label={t("editModuleAction")}
-            onClick={handleEditClick}
-          >
-            <Pencil />
-          </ActionIconButton>
-          <ActionIconButton
-            label={t("deleteModuleAction")}
-            onClick={handleDeleteClick}
-          >
-            <Trash2 />
-          </ActionIconButton>
-        </div>
-      </TableCell>
-    </TableRow>
+    </ActionableTableRow>
   );
 }
 

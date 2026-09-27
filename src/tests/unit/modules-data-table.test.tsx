@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { describe, expect, it, vi } from "vitest";
 import ModulesDataTable, { type Module } from "@/components/modules-data-table";
 import "@/localization/i18n";
+
+const MODULE_1_ROW_NAME = /Modulo 1/;
 
 /**
  * RED phase (Issue #9, Spec Driven TDD): src/components/modules-data-table
@@ -130,6 +132,67 @@ describe("ModulesDataTable", () => {
 
     expect(onNavigateToActivities).toHaveBeenCalledTimes(1);
     expect(onNavigateToActivities).toHaveBeenCalledWith(MODULES[0]);
+  });
+});
+
+describe("ModulesDataTable row click and context menu", () => {
+  it("opens the module's activities when its row is clicked", async () => {
+    const user = userEvent.setup();
+    const { onNavigateToActivities } = renderTable();
+
+    await user.click(screen.getByText("Modulo 2"));
+
+    expect(onNavigateToActivities).toHaveBeenCalledTimes(1);
+    expect(onNavigateToActivities).toHaveBeenCalledWith(MODULES[1]);
+  });
+
+  it("opens the module's activities when its row is focused and Enter is pressed", async () => {
+    const user = userEvent.setup();
+    const { onNavigateToActivities } = renderTable();
+
+    screen.getByRole("row", { name: MODULE_1_ROW_NAME }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(onNavigateToActivities).toHaveBeenCalledWith(MODULES[0]);
+  });
+
+  it("does not also open the module when one of its action buttons is clicked", async () => {
+    const user = userEvent.setup();
+    const { onEdit, onNavigateToActivities } = renderTable();
+
+    await user.click(
+      screen.getAllByRole("button", { name: i18n.t("editModuleAction") })[0]
+    );
+
+    expect(onEdit).toHaveBeenCalledWith(MODULES[0]);
+    expect(onNavigateToActivities).not.toHaveBeenCalled();
+  });
+
+  it("lists every module action in a context menu on right-click", async () => {
+    renderTable();
+
+    fireEvent.contextMenu(screen.getByText("Modulo 1"));
+
+    const items = await screen.findAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      i18n.t("viewActivitiesAction"),
+      i18n.t("editModuleAction"),
+      i18n.t("deleteModuleAction"),
+    ]);
+  });
+
+  it("runs the selected context menu action for that module", async () => {
+    const user = userEvent.setup();
+    const { onRequestDelete } = renderTable();
+
+    fireEvent.contextMenu(screen.getByText("Modulo 2"));
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("deleteModuleAction"),
+      })
+    );
+
+    expect(onRequestDelete).toHaveBeenCalledWith(MODULES[1]);
   });
 });
 

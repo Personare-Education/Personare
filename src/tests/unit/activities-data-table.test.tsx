@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { describe, expect, it, vi } from "vitest";
@@ -7,6 +7,8 @@ import ActivitiesDataTable, {
   type Activity,
 } from "@/components/activities-data-table";
 import "@/localization/i18n";
+
+const PDF_ROW_NAME = /Apostila em PDF/;
 
 vi.mock("@/actions/shell", () => ({
   openExternalLink: vi.fn(),
@@ -436,6 +438,85 @@ describe("ActivitiesDataTable", () => {
 
     expect(screen.getByText(i18n.t("ratingGoodAction"))).toBeInTheDocument();
     expect(screen.getByText("2026-03-15")).toBeInTheDocument();
+  });
+});
+
+describe("ActivitiesDataTable row click and context menu", () => {
+  it.each([
+    ["Aula introdutoria", "onOpenLink", 0],
+    ["Quiz de fixacao", "onTakeQuiz", 1],
+    ["Apostila em PDF", "onViewPdf", 2],
+    ["Baralho de revisao", "onStartReview", 3],
+  ] as const)(
+    "clicking the %s row runs its type's main action (%s)",
+    async (title, handler, index) => {
+      const user = userEvent.setup();
+      const handlers = renderTable();
+
+      await user.click(screen.getByText(title));
+
+      expect(handlers[handler]).toHaveBeenCalledTimes(1);
+      expect(handlers[handler]).toHaveBeenCalledWith(ACTIVITIES[index]);
+    }
+  );
+
+  it("clicking a Link row also opens its URL", async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getByText("Aula introdutoria"));
+
+    expect(openExternalLink).toHaveBeenCalledWith(ACTIVITIES[0].url);
+  });
+
+  it("opens the activity when its row is focused and Enter is pressed", async () => {
+    const user = userEvent.setup();
+    const { onViewPdf } = renderTable();
+
+    screen.getByRole("row", { name: PDF_ROW_NAME }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(onViewPdf).toHaveBeenCalledWith(ACTIVITIES[2]);
+  });
+
+  it("does not also open the activity when one of its action buttons is clicked", async () => {
+    const user = userEvent.setup();
+    const { onManageQuiz, onTakeQuiz } = renderTable();
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("manageQuizQuestionsAction") })
+    );
+
+    expect(onManageQuiz).toHaveBeenCalledWith(ACTIVITIES[1]);
+    expect(onTakeQuiz).not.toHaveBeenCalled();
+  });
+
+  it("lists the row's actions, in button order, in a context menu on right-click", async () => {
+    renderTable();
+
+    fireEvent.contextMenu(screen.getByText("Quiz de fixacao"));
+
+    const items = await screen.findAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      i18n.t("takeQuizAction"),
+      i18n.t("manageQuizQuestionsAction"),
+      i18n.t("editActivityAction"),
+      i18n.t("deleteActivityAction"),
+    ]);
+  });
+
+  it("runs the selected context menu action for that activity", async () => {
+    const user = userEvent.setup();
+    const { onManageFlashcards } = renderTable();
+
+    fireEvent.contextMenu(screen.getByText("Baralho de revisao"));
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("manageFlashcardsAction"),
+      })
+    );
+
+    expect(onManageFlashcards).toHaveBeenCalledWith(ACTIVITIES[3]);
   });
 });
 

@@ -10,10 +10,12 @@ import {
   Repeat,
   Trash2,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { openExternalLink } from "@/actions/shell";
-import ActionIconButton from "@/components/action-icon-button";
+import ActionableTableRow, {
+  type RowAction,
+} from "@/components/actionable-table-row";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import {
   Table,
@@ -104,46 +106,94 @@ function ActivityRow({
 }: ActivityRowProps) {
   const { t } = useTranslation();
 
-  const handleEditClick = useCallback(() => {
-    onEdit(activity);
-  }, [onEdit, activity]);
+  // The first action is what clicking the row does.
+  const actions = useMemo<RowAction[]>(() => {
+    const typeActions: Record<string, RowAction[]> = {
+      flashcard_deck: [
+        {
+          icon: <Repeat />,
+          key: "start-review",
+          label: t("startReviewAction"),
+          onSelect: () => onStartReview(activity),
+        },
+        {
+          icon: <Layers />,
+          key: "manage-flashcards",
+          label: t("manageFlashcardsAction"),
+          onSelect: () => onManageFlashcards(activity),
+        },
+      ],
+      link: [
+        {
+          icon: <ExternalLink />,
+          key: "open-url",
+          label: t("openActivityUrlAction"),
+          onSelect: () => {
+            if (activity.url) {
+              openExternalLink(activity.url);
+            }
+            onOpenLink(activity);
+          },
+        },
+      ],
+      pdf: [
+        {
+          icon: <FileText />,
+          key: "view-pdf",
+          label: t("viewPdfAction"),
+          onSelect: () => onViewPdf(activity),
+        },
+      ],
+      quiz: [
+        {
+          icon: <Play />,
+          key: "take-quiz",
+          label: t("takeQuizAction"),
+          onSelect: () => onTakeQuiz(activity),
+        },
+        {
+          icon: <ListChecks />,
+          key: "manage-quiz",
+          label: t("manageQuizQuestionsAction"),
+          onSelect: () => onManageQuiz(activity),
+        },
+      ],
+    };
 
-  const handleDeleteClick = useCallback(() => {
-    onRequestDelete(activity);
-  }, [onRequestDelete, activity]);
-
-  const handleOpenUrlClick = useCallback(() => {
-    if (activity.url) {
-      openExternalLink(activity.url);
-    }
-    onOpenLink(activity);
-  }, [activity, onOpenLink]);
-
-  const handleViewPdfClick = useCallback(() => {
-    onViewPdf(activity);
-  }, [onViewPdf, activity]);
-
-  const handleManageQuizClick = useCallback(() => {
-    onManageQuiz(activity);
-  }, [onManageQuiz, activity]);
-
-  const handleTakeQuizClick = useCallback(() => {
-    onTakeQuiz(activity);
-  }, [onTakeQuiz, activity]);
-
-  const handleManageFlashcardsClick = useCallback(() => {
-    onManageFlashcards(activity);
-  }, [onManageFlashcards, activity]);
-
-  const handleStartReviewClick = useCallback(() => {
-    onStartReview(activity);
-  }, [onStartReview, activity]);
+    return [
+      ...(typeActions[activity.type] ?? []),
+      {
+        icon: <Pencil />,
+        key: "edit",
+        label: t("editActivityAction"),
+        onSelect: () => onEdit(activity),
+      },
+      {
+        destructive: true,
+        icon: <Trash2 />,
+        key: "delete",
+        label: t("deleteActivityAction"),
+        onSelect: () => onRequestDelete(activity),
+      },
+    ];
+  }, [
+    activity,
+    onEdit,
+    onManageFlashcards,
+    onManageQuiz,
+    onOpenLink,
+    onRequestDelete,
+    onStartReview,
+    onTakeQuiz,
+    onViewPdf,
+    t,
+  ]);
 
   const typeTranslationKey =
     ACTIVITY_TYPE_TRANSLATION_KEYS[activity.type] ?? activity.type;
 
   return (
-    <TableRow>
+    <ActionableTableRow actions={actions} onOpen={actions[0].onSelect}>
       <TableCell className="font-medium">{activity.title}</TableCell>
       <TableCell>
         <Badge variant="outline">{t(typeTranslationKey)}</Badge>
@@ -165,71 +215,7 @@ function ActivityRow({
       <TableCell className="text-muted-foreground">
         {reviewState ? format(reviewState.dueDate, "yyyy-MM-dd") : null}
       </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1">
-          {activity.type === "link" && (
-            <ActionIconButton
-              label={t("openActivityUrlAction")}
-              onClick={handleOpenUrlClick}
-            >
-              <ExternalLink />
-            </ActionIconButton>
-          )}
-          {activity.type === "pdf" && (
-            <ActionIconButton
-              label={t("viewPdfAction")}
-              onClick={handleViewPdfClick}
-            >
-              <FileText />
-            </ActionIconButton>
-          )}
-          {activity.type === "quiz" && (
-            <ActionIconButton
-              label={t("manageQuizQuestionsAction")}
-              onClick={handleManageQuizClick}
-            >
-              <ListChecks />
-            </ActionIconButton>
-          )}
-          {activity.type === "quiz" && (
-            <ActionIconButton
-              label={t("takeQuizAction")}
-              onClick={handleTakeQuizClick}
-            >
-              <Play />
-            </ActionIconButton>
-          )}
-          {activity.type === "flashcard_deck" && (
-            <ActionIconButton
-              label={t("manageFlashcardsAction")}
-              onClick={handleManageFlashcardsClick}
-            >
-              <Layers />
-            </ActionIconButton>
-          )}
-          {activity.type === "flashcard_deck" && (
-            <ActionIconButton
-              label={t("startReviewAction")}
-              onClick={handleStartReviewClick}
-            >
-              <Repeat />
-            </ActionIconButton>
-          )}
-          <ActionIconButton
-            label={t("editActivityAction")}
-            onClick={handleEditClick}
-          >
-            <Pencil />
-          </ActionIconButton>
-          <ActionIconButton
-            label={t("deleteActivityAction")}
-            onClick={handleDeleteClick}
-          >
-            <Trash2 />
-          </ActionIconButton>
-        </div>
-      </TableCell>
-    </TableRow>
+    </ActionableTableRow>
   );
 }
 
