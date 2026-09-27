@@ -27,7 +27,7 @@ export default function NavigationMenu() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <ExternalLink href="https://github.com/jopsfernandes/Personare">
+            <ExternalLink href="https://github.com/Personare-Education/Personare">
               {t("documentation")}
             </ExternalLink>
           </NavigationMenuLink>
