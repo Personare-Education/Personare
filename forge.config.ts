@@ -81,7 +81,7 @@ const config: ForgeConfig = {
         prerelease: true,
         repository: {
           name: "Personare",
-          owner: "jopsfernandes",
+          owner: "Personare-Education",
         },
       },
       /*

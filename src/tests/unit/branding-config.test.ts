@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 /*
  * Criterio de aceite 2 (Issue #1 - Rebranding):
  * package.json (author) e forge.config.ts (publisher) devem refletir a
- * identidade Personare (repositorio jopsfernandes/Personare), sem
+ * identidade Personare (repositorio Personare-Education/Personare), sem
  * referencias a ROG/LuanRoger.
  */
 
@@ -13,9 +13,9 @@ const ROOT = path.resolve(import.meta.dirname, "../../..");
 
 const ELECTRON_SHADCN_RE = /electron-shadcn/i;
 const LUAN_ROGER_RE = /LuanRoger/i;
-const FORGE_OWNER_RE = /owner:\s*["']jopsfernandes["']/;
+const FORGE_OWNER_RE = /owner:\s*["']Personare-Education["']/;
 const FORGE_NAME_RE = /name:\s*["']Personare["']/;
-const MAIN_REPO_RE = /repo:\s*["']jopsfernandes\/Personare["']/;
+const MAIN_REPO_RE = /repo:\s*["']Personare-Education\/Personare["']/;
 
 test("package.json author reflects Personare identity, not LuanRoger", () => {
   const pkg = JSON.parse(
