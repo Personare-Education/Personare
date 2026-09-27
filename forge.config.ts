@@ -1,5 +1,6 @@
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { MakerDeb } from "@electron-forge/maker-deb";
+import { MakerDMG } from "@electron-forge/maker-dmg";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
@@ -24,6 +25,8 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({}),
+    // macOS installer: drag Personare into Applications.
+    new MakerDMG({}),
     // win32: portable build, extract and run Personare.exe without installing.
     new MakerZIP({}, ["darwin", "win32"]),
     // Packager names the Linux binary after productName; these default to package.json's name.
@@ -65,6 +68,10 @@ const config: ForgeConfig = {
     }),
 
     new FusesPlugin({
+      // Flipping fuses edits the Electron binary and breaks its ad hoc
+      // signature, which Apple Silicon requires to open the app at all.
+      // Only acts on a macOS .app bundle.
+      resetAdHocDarwinSignature: true,
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,
       [FuseV1Options.EnableCookieEncryption]: true,
