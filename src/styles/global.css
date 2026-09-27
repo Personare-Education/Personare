@@ -213,8 +213,8 @@
 @layer components {
   .review-pulse {
     --review-pulse-color: var(--review-highlight);
-    animation: review-pulse 1.6s ease-in-out infinite;
     box-shadow: inset 3px 0 0 var(--review-pulse-color);
+    animation: review-pulse 1.6s ease-in-out infinite;
   }
 
   .review-pulse-overdue {
@@ -222,18 +222,18 @@
   }
 
   .review-alarm {
-    animation: review-alarm-ring 2s ease-in-out infinite;
     transform-origin: 50% 20%;
+    animation: review-alarm-ring 2s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .review-pulse {
-      animation: none;
       background-color: color-mix(
         in oklch,
         var(--review-pulse-color) 14%,
         transparent
       );
+      animation: none;
     }
 
     .review-alarm {
@@ -299,16 +299,16 @@
   }
 
   &::view-transition-new(stack-content) {
-    animation: stack-from-right 350ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
     box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
+    animation: stack-from-right 350ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 }
 
 :root:active-view-transition-type(stack-pop) {
   &::view-transition-old(stack-content) {
-    animation: stack-to-right 300ms cubic-bezier(0.4, 0, 0.6, 1) both;
-    box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
     z-index: 1;
+    box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
+    animation: stack-to-right 300ms cubic-bezier(0.4, 0, 0.6, 1) both;
   }
 
   &::view-transition-new(stack-content) {
@@ -322,4 +322,3 @@
     animation: none !important;
   }
 }
-
