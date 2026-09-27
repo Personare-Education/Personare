@@ -199,8 +199,9 @@ export default function ActivityFormDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
+      {/* Capped to the window: the step body scrolls, header and footer stay put. */}
+      <DialogContent className="max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)]">
+        <form className="flex min-h-0 flex-col" onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
               {activity ? t("editActivityTitle") : t("createActivityTitle")}
@@ -214,7 +215,7 @@ export default function ActivityFormDialog({
           </DialogHeader>
           <div
             className={cn(
-              "fade-in-0 flex animate-in flex-col gap-4 py-4 duration-200",
+              "fade-in-0 -mx-1 flex min-h-0 animate-in flex-col gap-4 overflow-y-auto px-1 py-4 duration-200 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]",
               movingBack ? "slide-in-from-left-4" : "slide-in-from-right-4"
             )}
             key={step}
