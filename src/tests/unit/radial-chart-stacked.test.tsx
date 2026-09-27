@@ -23,7 +23,7 @@ beforeEach(() => {
   });
 });
 
-const { RadialChartStacked } = await import(
+const { getSegmentAnimations, RadialChartStacked } = await import(
   "@/components/radial-chart-stacked"
 );
 
@@ -59,5 +59,43 @@ describe("RadialChartStacked (Issue #122)", () => {
     expect(
       container.querySelectorAll(".recharts-radial-bar-sectors")
     ).toHaveLength(2);
+  });
+
+  describe("segment animations", () => {
+    it("animates each segment after the previous one, sharing the duration by size", () => {
+      // Eased in at the start and out at the end only, so the sweep does
+      // not slow down where one segment hands over to the next.
+      expect(getSegmentAnimations(segments, 1500)).toEqual([
+        { begin: 0, duration: 1125, easing: "ease-in" },
+        { begin: 1125, duration: 375, easing: "ease-out" },
+      ]);
+    });
+
+    it("gives an empty segment no time, so the next one starts right away", () => {
+      expect(
+        getSegmentAnimations(
+          [
+            { ...segments[0], value: 0 },
+            { ...segments[1], value: 4 },
+          ],
+          1500
+        )
+      ).toEqual([
+        { begin: 0, duration: 0, easing: "linear" },
+        { begin: 0, duration: 1500, easing: "ease" },
+      ]);
+    });
+
+    it("does not animate anything when every segment is empty", () => {
+      expect(
+        getSegmentAnimations(
+          segments.map((segment) => ({ ...segment, value: 0 })),
+          1500
+        )
+      ).toEqual([
+        { begin: 0, duration: 0, easing: "linear" },
+        { begin: 0, duration: 0, easing: "linear" },
+      ]);
+    });
   });
 });

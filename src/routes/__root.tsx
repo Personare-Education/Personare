@@ -2,6 +2,7 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { getPendingActivityRating } from "@/actions/review";
 import ActivityDifficultyDialog from "@/components/activity-difficulty-dialog";
+import StackContent from "@/components/stack-content";
 import BaseLayout from "@/layouts/base-layout";
 
 type PendingActivityRating = Awaited<
@@ -27,7 +28,9 @@ function Root() {
 
   return (
     <BaseLayout>
-      <Outlet />
+      <StackContent>
+        <Outlet />
+      </StackContent>
       <ActivityDifficultyDialog
         activityId={pending?.activityId ?? null}
         activityTitle={pending?.activityTitle ?? ""}

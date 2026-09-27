@@ -19,6 +19,11 @@ let electronApp: ElectronApplication;
 let page: Page;
 let quizFile: string;
 
+/** Whether the quiz dialog was shaking, each time that changed. */
+interface ShakeRecorder {
+  shakes: boolean[];
+}
+
 /** Where the stubbed shell.openExternal records the URLs it was asked to open. */
 interface UrlRecorder {
   openedUrls: string[];
@@ -173,13 +178,14 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   const longFile = path.join(path.dirname(quizFile), "long-quiz.md");
   fs.writeFileSync(longFile, longQuestions);
 
-  const dialog = await openImportStep(`E2E Long Quiz ${Date.now()}`);
+  const quizName = `E2E Long Quiz ${Date.now()}`;
+  const dialog = await openImportStep(quizName);
   await dialog
     .getByLabel("Drag the .md file here or click to choose")
     .setInputFiles(longFile);
   await expect(dialog.getByText("10 questions read")).toBeVisible();
 
-  const window =
+  const viewport =
     page.viewportSize() ??
     (await page.evaluate(() => ({
       height: window.innerHeight,
@@ -189,8 +195,10 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   expect(box).not.toBeNull();
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
   expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
-  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(window.width);
-  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(window.height);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewport.width);
+  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(
+    viewport.height
+  );
 
   // Nothing inside sticks out sideways.
   expect(
@@ -204,4 +212,106 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   ).toBeInViewport();
   await expect(dialog.getByRole("button", { name: "Back" })).toBeInViewport();
   await expect(dialog.getByRole("listitem").first()).toBeInViewport();
+
+  // Take the whole quiz; the result screen must fit too: answers in a
+  // scrolling left column, score and times on the right.
+  await dialog.getByRole("button", { name: "Create quiz (10)" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page
+    .getByRole("row", { name: new RegExp(quizName) })
+    .getByLabel("Take quiz")
+    .click();
+  const runner = page.getByRole("dialog", { name: quizName });
+
+  async function answerRemaining(remaining: number): Promise<void> {
+    if (remaining === 0) {
+      return;
+    }
+    await runner.getByRole("radio").first().click();
+    await runner
+      .getByRole("button", {
+        name: remaining === 1 ? "Finish quiz" : "Next question",
+      })
+      .click();
+    await answerRemaining(remaining - 1);
+  }
+  await answerRemaining(10);
+
+  const review = runner.getByRole("region", { name: "Review" });
+  const chart = runner.locator('[data-slot="chart"]');
+  await expect(chart).toBeInViewport();
+  await expect(
+    runner.getByText("Total time", { exact: false })
+  ).toBeInViewport();
+
+  const resultBox = await runner.boundingBox();
+  expect((resultBox?.y ?? 0) + (resultBox?.height ?? 0)).toBeLessThanOrEqual(
+    viewport.height
+  );
+  expect(
+    await runner.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+
+  const reviewBox = await review.boundingBox();
+  const chartBox = await chart.boundingBox();
+  expect(reviewBox?.x ?? 0).toBeLessThan(chartBox?.x ?? 0);
+
+  // At most four answers are visible at once; the rest need a scroll. A
+  // short window can show fewer, since the dialog must still fit in it.
+  async function countVisibleAnswers(): Promise<number> {
+    return await review.getByRole("list").evaluate((list) => {
+      const listBox = list.getBoundingClientRect();
+      return Array.from(list.children).filter((item) => {
+        const itemBox = item.getBoundingClientRect();
+        return (
+          itemBox.top >= listBox.top - 1 && itemBox.bottom <= listBox.bottom + 1
+        );
+      }).length;
+    });
+  }
+  expect(await countVisibleAnswers()).toBeLessThanOrEqual(4);
+
+  const originalSize = await electronApp.evaluate(({ BrowserWindow }) => {
+    const [window] = BrowserWindow.getAllWindows();
+    const [width, height] = window.getContentSize();
+    window.setContentSize(width, 1200);
+    return { height, width };
+  });
+  await expect.poll(countVisibleAnswers).toBe(4);
+  await electronApp.evaluate(({ BrowserWindow }, size) => {
+    BrowserWindow.getAllWindows()[0].setContentSize(size.width, size.height);
+  }, originalSize);
+
+  // The last answer is reachable by scrolling the answers column.
+  const lastAnswer = review.getByRole("listitem").last();
+  await lastAnswer.scrollIntoViewIfNeeded();
+  await expect(lastAnswer).toBeInViewport();
+  await expect(chart).toBeInViewport();
+
+  // A click outside by mistake keeps the quiz open and shakes it (the
+  // shake is short, so it is recorded rather than caught in the act)...
+  await runner.evaluate((runnerDialog) => {
+    const recorder = window as unknown as ShakeRecorder;
+    recorder.shakes = [];
+    new MutationObserver(() =>
+      recorder.shakes.push(runnerDialog.hasAttribute("data-shaking"))
+    ).observe(runnerDialog, { attributeFilter: ["data-shaking"] });
+  });
+  await page.mouse.click(8, viewport.height - 8);
+  const completeButton = runner.getByRole("button", { name: "Complete quiz" });
+  await expect(completeButton).toBeInViewport();
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as unknown as ShakeRecorder).shakes)
+    )
+    .toEqual([true, false]);
+
+  // ...and "Complete quiz" moves on to rating it, like closing it does.
+  await completeButton.click();
+  await expect(completeButton).toBeHidden();
+  // Rate it, or the pending rating reopens on the next launch.
+  await page.getByRole("button", { name: "Again" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });

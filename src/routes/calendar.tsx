@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  type CalendarEventData,
   ensureReviewItems,
   listSchedule,
   type ScheduleRow,
@@ -17,7 +18,6 @@ import {
   EventCalendar,
   EventCalendarContent,
   EventCalendarNav,
-  type EventCalendarRenderEventProps,
 } from "@/components/reui/event-calendar";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,34 +29,6 @@ const SYNC_ERROR_MESSAGE_KEYS: Record<string, string> = {
   calendar_not_connected: "calendarNotConnectedErrorMessage",
   calendar_reconnect_required: "calendarReconnectRequiredErrorMessage",
 };
-
-interface CalendarEventData {
-  moduleId: string;
-  programId: string;
-}
-
-interface CalendarEventChipProps {
-  event: CalendarEvent<CalendarEventData>;
-  onSelect: (data: CalendarEventData) => void;
-}
-
-function CalendarEventChip({ event, onSelect }: CalendarEventChipProps) {
-  const handleClick = useCallback(() => {
-    if (event.data) {
-      onSelect(event.data);
-    }
-  }, [event.data, onSelect]);
-
-  return (
-    <button
-      className="w-full truncate text-left"
-      onClick={handleClick}
-      type="button"
-    >
-      {event.title}
-    </button>
-  );
-}
 
 export function CalendarPage() {
   const { i18n, t } = useTranslation();
@@ -83,24 +55,24 @@ export function CalendarPage() {
     getCalendarConnectionStatus().then(setIsCalendarConnected);
   }, []);
 
-  const handleSelectEvent = useCallback(
-    (data: CalendarEventData) => {
+  // Every view (month, agenda) reports clicks here: open the event's
+  // program with its module and day in focus
+  // (docs/specs/calendar-module-review-highlight.md AC-2).
+  const handleEventClick = useCallback(
+    ({ event }: { event: CalendarEvent<CalendarEventData> }) => {
+      if (!event.data) {
+        return;
+      }
       navigate({
-        params: { moduleId: data.moduleId, programId: data.programId },
-        to: "/programs/$programId/modules/$moduleId",
+        params: { programId: event.data.programId },
+        search: {
+          focusDate: event.data.date,
+          focusModuleId: event.data.moduleId,
+        },
+        to: "/programs/$programId",
       });
     },
     [navigate]
-  );
-
-  const renderEvent = useCallback(
-    ({ occurrence }: EventCalendarRenderEventProps<CalendarEventData>) => (
-      <CalendarEventChip
-        event={occurrence.event}
-        onSelect={handleSelectEvent}
-      />
-    ),
-    [handleSelectEvent]
   );
 
   const handleSyncClick = useCallback(() => {
@@ -167,8 +139,8 @@ export function CalendarPage() {
         i18n={eventCalendarI18n}
         interactions={{ drag: false, resize: false, selectSlot: false }}
         locale={eventCalendarLocale}
+        onEventClick={handleEventClick}
         onEventsChange={setEvents}
-        renderEvent={renderEvent}
         views={["month", "agenda"]}
       >
         <EventCalendarNav />

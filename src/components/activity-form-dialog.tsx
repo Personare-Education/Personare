@@ -12,6 +12,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { selectPdfFile } from "@/actions/dialog";
 import type { Activity } from "@/components/activities-data-table";
+import PdfDropzone from "@/components/pdf-dropzone";
 import QuizImportPanel from "@/components/quiz-import-panel";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,12 +52,20 @@ const ACTIVITY_TYPE_ICONS: Record<
 const CARD_CLASS_NAME =
   "flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-sm outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/10";
 
-/** Creating a Quiz: Details -> Source -> Import (docs/specs/quiz-ai-import.md). */
-type Step = "details" | "import" | "source";
+/**
+ * Creating a Quiz: Details -> Source -> Import (docs/specs/quiz-ai-import.md).
+ * Creating a PDF: Details -> File (docs/specs/pdf-activity-dropzone.md).
+ */
+type Step = "details" | "file" | "import" | "source";
 type QuizSource = "ai" | "manual";
 type PrimaryAction = "import" | "next" | "save";
 
-const STEP_NUMBERS: Record<Step, number> = { details: 1, import: 3, source: 2 };
+const STEP_NUMBERS: Record<Step, number> = {
+  details: 1,
+  file: 2,
+  import: 3,
+  source: 2,
+};
 
 const QUIZ_SOURCES: {
   descriptionKey: string;
@@ -80,16 +89,50 @@ const QUIZ_SOURCES: {
 
 function primaryActionFor(
   step: Step,
-  isQuizCreation: boolean,
+  hasMoreSteps: boolean,
   quizSource: QuizSource | null
 ): PrimaryAction {
   if (step === "import") {
     return "import";
   }
   if (step === "details") {
-    return isQuizCreation ? "next" : "save";
+    return hasMoreSteps ? "next" : "save";
+  }
+  if (step === "file") {
+    return "save";
   }
   return quizSource === "manual" ? "save" : "next";
+}
+
+/** Where "Next" leads: Details -> File (PDF) or Source (Quiz); Source -> Import. */
+function nextStepFrom(step: Step, isPdfCreation: boolean): Step {
+  if (step !== "details") {
+    return "import";
+  }
+  return isPdfCreation ? "file" : "source";
+}
+
+function isStepIncomplete(
+  step: Step,
+  quizSource: QuizSource | null,
+  importCount: number,
+  filePath: string | null
+): boolean {
+  return (
+    (step === "source" && !quizSource) ||
+    (step === "import" && importCount === 0) ||
+    (step === "file" && !filePath)
+  );
+}
+
+function stepCountFor(
+  isPdfCreation: boolean,
+  quizSource: QuizSource | null
+): number {
+  if (isPdfCreation || quizSource === "manual") {
+    return 2;
+  }
+  return 3;
 }
 
 interface ActivityFormDialogProps {
@@ -139,8 +182,13 @@ export default function ActivityFormDialog({
   }, [open, activity]);
 
   const isQuizCreation = !activity && type === "quiz";
+  const isPdfCreation = !activity && type === "pdf";
   const importCount = importedQuestions?.length ?? 0;
-  const primaryAction = primaryActionFor(step, isQuizCreation, quizSource);
+  const primaryAction = primaryActionFor(
+    step,
+    isQuizCreation || isPdfCreation,
+    quizSource
+  );
 
   const goTo = useCallback((next: Step, back = false) => {
     setMovingBack(back);
@@ -152,7 +200,7 @@ export default function ActivityFormDialog({
       event.preventDefault();
 
       if (primaryAction === "next") {
-        goTo(step === "details" ? "source" : "import");
+        goTo(nextStepFrom(step, isPdfCreation));
       } else if (primaryAction === "import") {
         if (importedQuestions && importedQuestions.length > 0) {
           onImportQuiz(title, importedQuestions);
@@ -170,6 +218,7 @@ export default function ActivityFormDialog({
       filePath,
       goTo,
       importedQuestions,
+      isPdfCreation,
       onImportQuiz,
       onSubmit,
       primaryAction,
@@ -184,6 +233,10 @@ export default function ActivityFormDialog({
     goTo(step === "import" ? "source" : "details", true);
   }, [goTo, step]);
 
+  const handleFilePathChange = useCallback((nextFilePath: string) => {
+    setFilePath(nextFilePath);
+  }, []);
+
   const handleCancelClick = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
@@ -193,9 +246,12 @@ export default function ActivityFormDialog({
     next: t("nextStepAction"),
     save: t("saveAction"),
   };
-  const isPrimaryDisabled =
-    (step === "source" && !quizSource) ||
-    (step === "import" && importCount === 0);
+  const isPrimaryDisabled = isStepIncomplete(
+    step,
+    quizSource,
+    importCount,
+    filePath
+  );
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -206,10 +262,10 @@ export default function ActivityFormDialog({
             <DialogTitle>
               {activity ? t("editActivityTitle") : t("createActivityTitle")}
             </DialogTitle>
-            {isQuizCreation ? (
+            {isQuizCreation || isPdfCreation ? (
               <StepIndicator
                 current={STEP_NUMBERS[step]}
-                total={quizSource === "manual" ? 2 : 3}
+                total={stepCountFor(isPdfCreation, quizSource)}
               />
             ) : null}
           </DialogHeader>
@@ -223,6 +279,7 @@ export default function ActivityFormDialog({
             {step === "details" ? (
               <ActivityDetailsFields
                 filePath={filePath}
+                isCreating={!activity}
                 onFilePathChange={setFilePath}
                 onTitleChange={setTitle}
                 onTypeChange={setType}
@@ -240,6 +297,12 @@ export default function ActivityFormDialog({
             ) : null}
             {step === "import" ? (
               <QuizImportPanel onParsedChange={setImportedQuestions} />
+            ) : null}
+            {step === "file" ? (
+              <PdfDropzone
+                filePath={filePath}
+                onFilePathChange={handleFilePathChange}
+              />
             ) : null}
           </div>
           <DialogFooter>
@@ -262,6 +325,8 @@ export default function ActivityFormDialog({
 
 interface ActivityDetailsFieldsProps {
   filePath: string | null;
+  /** Creating a PDF picks its file in the next step, not here. */
+  isCreating: boolean;
   onFilePathChange: (filePath: string) => void;
   onTitleChange: (title: string) => void;
   onTypeChange: (type: string) => void;
@@ -273,6 +338,7 @@ interface ActivityDetailsFieldsProps {
 
 function ActivityDetailsFields({
   filePath,
+  isCreating,
   onFilePathChange,
   onTitleChange,
   onTypeChange,
@@ -353,7 +419,7 @@ function ActivityDetailsFields({
           />
         </div>
       )}
-      {type === "pdf" && (
+      {type === "pdf" && !isCreating && (
         <div className="flex flex-col gap-1">
           <Button
             onClick={handleSelectPdfFileClick}

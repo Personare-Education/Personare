@@ -568,3 +568,44 @@ describe("Activities screen i18n keys (Issue #10)", () => {
     }
   );
 });
+
+/**
+ * docs/specs/calendar-module-review-highlight.md AC-6 and AC-7: same
+ * highlight as the modules table, per activity; "focus" is an activity
+ * picked from the calendar for a later day.
+ */
+describe("ActivitiesDataTable review highlight", () => {
+  it("marks each activity row with its highlight, and a clock only for overdue ones", () => {
+    render(
+      <ActivitiesDataTable
+        activities={ACTIVITIES}
+        highlightByActivityId={{
+          [ACTIVITIES[0].id]: "overdue",
+          [ACTIVITIES[1].id]: "focus",
+        }}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onViewPdf={vi.fn()}
+        reviewStateByActivityId={{}}
+      />
+    );
+
+    const overdueRow = screen.getByRole("row", {
+      name: new RegExp(ACTIVITIES[0].title),
+    });
+    expect(overdueRow).toHaveAttribute("data-review-highlight", "overdue");
+    const focusRow = screen.getByRole("row", {
+      name: new RegExp(ACTIVITIES[1].title),
+    });
+    expect(focusRow).toHaveAttribute("data-review-highlight", "focus");
+    expect(focusRow).toHaveTextContent(i18n.t("reviewFocusLabel"));
+    expect(
+      document.querySelectorAll('[data-slot="overdue-review-marker"]')
+    ).toHaveLength(1);
+  });
+});

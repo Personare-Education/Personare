@@ -199,6 +199,7 @@ export const listSchedule = os.handler(() => {
       front: sql<string | null>`${flashcardsTable.front}`,
       id: reviewItemsTable.id,
       moduleId: modulesTable.id,
+      moduleName: modulesTable.name,
       programId: programsTable.id,
     })
     .from(reviewItemsTable)
@@ -222,6 +223,7 @@ export const listSchedule = os.handler(() => {
       front: sql<string | null>`NULL`,
       id: reviewItemsTable.id,
       moduleId: modulesTable.id,
+      moduleName: modulesTable.name,
       programId: programsTable.id,
     })
     .from(reviewItemsTable)

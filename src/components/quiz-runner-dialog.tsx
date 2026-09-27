@@ -1,8 +1,18 @@
 import { CheckCircle2, XCircle } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  type AnimationEvent,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { listQuizQuestionsWithOptions } from "@/actions/quiz";
 import type { Activity } from "@/components/activities-data-table";
+import CountUp from "@/components/count-up";
 import ImageAttachmentViewer from "@/components/image-attachment-viewer";
 import MarkdownContent from "@/components/markdown-content";
 import { RadialChartStacked } from "@/components/radial-chart-stacked";
@@ -28,6 +38,7 @@ import {
   type QuizAnswers,
   type QuizScore,
 } from "@/utils/quiz-scoring";
+import { cn } from "@/utils/tailwind";
 
 interface QuizRunnerOption {
   id: string;
@@ -90,7 +101,7 @@ function QuizRunnerReviewRow({ answers, question }: QuizRunnerReviewRowProps) {
   const isCorrect = selectedOption?.isCorrect ?? false;
 
   return (
-    <div className="flex items-start gap-2 border-b pb-3 text-sm last:border-b-0 last:pb-0">
+    <li className="flex items-start gap-2 border-b pb-3 text-sm last:border-b-0 last:pb-0">
       {isCorrect ? (
         <CheckCircle2
           aria-label={t("quizReviewCorrectStatusLabel")}
@@ -126,7 +137,7 @@ function QuizRunnerReviewRow({ answers, question }: QuizRunnerReviewRowProps) {
           </div>
         )}
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -139,6 +150,91 @@ interface QuizRunnerResultProps {
 }
 
 const QUIZ_MAX_SCORE = 1000;
+const QUIZ_REVIEW_VISIBLE_ROWS = 4;
+
+/**
+ * Caps a list's height at the bottom of its Nth row, so at most `rows`
+ * rows show and the rest scroll. Rows vary in height (long questions,
+ * wrapped answers), so the cap is measured, and re-measured whenever one of
+ * those rows resizes. The list must be `relative` so the rows' offsetTop is
+ * measured from it.
+ */
+function useVisibleRowsMaxHeight(
+  listRef: RefObject<HTMLElement | null>,
+  rows: number
+): number | undefined {
+  const [maxHeight, setMaxHeight] = useState<number>();
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list || list.children.length <= rows) {
+      setMaxHeight(undefined);
+      return;
+    }
+
+    const lastVisibleRow = list.children[rows - 1] as HTMLElement;
+    const measure = () =>
+      setMaxHeight(lastVisibleRow.offsetTop + lastVisibleRow.offsetHeight);
+    measure();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const observer = new ResizeObserver(measure);
+    for (const row of Array.from(list.children).slice(0, rows)) {
+      observer.observe(row);
+    }
+    return () => observer.disconnect();
+  }, [listRef, rows]);
+
+  return maxHeight;
+}
+
+/**
+ * The result screen animates in two steps: the score counts up while the
+ * chart fills, then both time cards fade in and count up together.
+ */
+const QUIZ_COUNT_UP_SECONDS = 1.5;
+
+function formatCountedDuration(seconds: number): string {
+  return formatQuizDuration(seconds * 1000);
+}
+
+interface QuizRunnerTimeCardProps {
+  durationMs: number;
+  label: string;
+  shown: boolean;
+}
+
+function QuizRunnerTimeCard({
+  durationMs,
+  label,
+  shown,
+}: QuizRunnerTimeCardProps) {
+  const labelId = useId();
+
+  return (
+    <figure
+      aria-hidden={!shown}
+      aria-labelledby={labelId}
+      className={cn(
+        "flex flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center",
+        shown ? "fade-in-0 animate-in duration-500" : "invisible"
+      )}
+    >
+      <CountUp
+        className="font-bold text-2xl tabular-nums"
+        duration={QUIZ_COUNT_UP_SECONDS}
+        format={formatCountedDuration}
+        startWhen={shown}
+        to={Math.round(durationMs / 1000)}
+      />
+      <figcaption className="text-muted-foreground text-xs" id={labelId}>
+        {label}
+      </figcaption>
+    </figure>
+  );
+}
 
 function QuizRunnerResult({
   answers,
@@ -149,16 +245,30 @@ function QuizRunnerResult({
 }: QuizRunnerResultProps) {
   const { t } = useTranslation();
   const reviewHeadingId = useId();
+  const reviewListRef = useRef<HTMLOListElement>(null);
+  const reviewListMaxHeight = useVisibleRowsMaxHeight(
+    reviewListRef,
+    QUIZ_REVIEW_VISIBLE_ROWS
+  );
   const score =
     result.total === 0
       ? 0
       : Math.round((result.correct / result.total) * QUIZ_MAX_SCORE);
+  const [timesShown, setTimesShown] = useState(false);
+  const handleScoreCounted = useCallback(() => setTimesShown(true), []);
 
   return (
-    <div className="flex flex-col gap-4 py-4">
-      <div className="flex flex-col items-center gap-4">
+    <div className="grid min-h-0 gap-6 py-4 sm:grid-cols-[minmax(0,1fr)_15rem]">
+      <div className="flex flex-col items-center gap-4 sm:order-last">
         <RadialChartStacked
-          centerLabel={String(score)}
+          animationDuration={QUIZ_COUNT_UP_SECONDS * 1000}
+          centerLabel={
+            <CountUp
+              duration={QUIZ_COUNT_UP_SECONDS}
+              onEnd={handleScoreCounted}
+              to={score}
+            />
+          }
           centerSublabel={t("quizScoreMaxLabel", { max: QUIZ_MAX_SCORE })}
           segments={[
             {
@@ -175,39 +285,45 @@ function QuizRunnerResult({
             },
           ]}
         />
-        <div className="flex flex-col items-center gap-1 text-muted-foreground text-sm">
-          <p>
-            {t("quizResultMessage", {
-              correct: result.correct,
-              total: result.total,
-            })}
-          </p>
-          <p>
-            {t("quizTotalTimeLabel", {
-              duration: formatQuizDuration(totalTimeMs),
-            })}
-          </p>
-          <p>
-            {t("quizAverageTimeLabel", {
-              duration: formatQuizDuration(averageTimeMs),
-            })}
-          </p>
+        <p className="text-muted-foreground text-sm">
+          {t("quizResultMessage", {
+            correct: result.correct,
+            total: result.total,
+          })}
+        </p>
+        <div className="grid w-full grid-cols-2 gap-2">
+          <QuizRunnerTimeCard
+            durationMs={averageTimeMs}
+            label={t("quizAverageTimeLabel")}
+            shown={timesShown}
+          />
+          <QuizRunnerTimeCard
+            durationMs={totalTimeMs}
+            label={t("quizTotalTimeLabel")}
+            shown={timesShown}
+          />
         </div>
       </div>
       <section
         aria-labelledby={reviewHeadingId}
-        className="flex flex-col gap-3"
+        className="flex min-h-0 flex-col gap-3"
       >
         <h3 className="font-medium text-sm" id={reviewHeadingId}>
           {t("quizReviewHeading")}
         </h3>
-        {questions.map((question) => (
-          <QuizRunnerReviewRow
-            answers={answers}
-            key={question.id}
-            question={question}
-          />
-        ))}
+        <ol
+          className="relative flex min-h-0 flex-col gap-3 overflow-y-auto pr-2 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
+          ref={reviewListRef}
+          style={{ maxHeight: reviewListMaxHeight }}
+        >
+          {questions.map((question) => (
+            <QuizRunnerReviewRow
+              answers={answers}
+              key={question.id}
+              question={question}
+            />
+          ))}
+        </ol>
       </section>
     </div>
   );
@@ -287,9 +403,9 @@ export default function QuizRunnerDialog({
 
   /**
    * Closing the dialog after the quiz was actually finished (result !==
-   * null) -- via the X button, Escape or an outside click, not just the
-   * "Finish quiz" click itself, which only computes the score and shows the
-   * result screen -- is the signal to move straight into
+   * null) -- via the X button, Escape or the result screen's "Complete quiz"
+   * button, not just the "Finish quiz" click itself, which only computes the
+   * score and shows the result screen -- is the signal to move straight into
    * ActivityDifficultyDialog (Issue #103). Abandoning mid-quiz (no result
    * yet) does not trigger it.
    */
@@ -303,20 +419,59 @@ export default function QuizRunnerDialog({
     [activity, onFinished, onOpenChange, result]
   );
 
+  const handleCompleteClick = useCallback(() => {
+    handleDialogOpenChange(false);
+  }, [handleDialogOpenChange]);
+
+  // A click outside the quiz is most likely a slip: rather than throwing
+  // the quiz away, the dialog stays open and shakes softly.
+  const [isShaking, setIsShaking] = useState(false);
+
+  const handleInteractOutside = useCallback((event: Event) => {
+    event.preventDefault();
+    setIsShaking(true);
+  }, []);
+
+  const handleAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (event.animationName === "dialog-shake") {
+        setIsShaking(false);
+      }
+    },
+    []
+  );
+
   return (
     <Dialog onOpenChange={handleDialogOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent
+        className={cn(
+          "dialog-shake max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)]",
+          result
+            ? "grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-3xl"
+            : "grid-rows-[auto_auto_minmax(0,1fr)_auto]"
+        )}
+        data-shaking={isShaking || undefined}
+        onAnimationEnd={handleAnimationEnd}
+        onInteractOutside={handleInteractOutside}
+      >
         <DialogHeader>
           <DialogTitle>{activity?.title}</DialogTitle>
         </DialogHeader>
         {result ? (
-          <QuizRunnerResult
-            answers={answers}
-            averageTimeMs={averageTimeMs}
-            questions={questions}
-            result={result}
-            totalTimeMs={totalTimeMs}
-          />
+          <>
+            <QuizRunnerResult
+              answers={answers}
+              averageTimeMs={averageTimeMs}
+              questions={questions}
+              result={result}
+              totalTimeMs={totalTimeMs}
+            />
+            <DialogFooter>
+              <Button onClick={handleCompleteClick} type="button">
+                {t("completeQuizAction")}
+              </Button>
+            </DialogFooter>
+          </>
         ) : (
           <>
             <div className="flex flex-col gap-2">
@@ -335,6 +490,7 @@ export default function QuizRunnerDialog({
               </p>
             </div>
             <Questionnaire
+              className="min-h-0 overflow-y-auto [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
               item={currentQuestion?.id}
               items={questions.map((question) => ({
                 choices: question.options.map((option) => ({
