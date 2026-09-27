@@ -5,7 +5,7 @@ import { listQuizQuestionsWithOptions } from "@/actions/quiz";
 import type { Activity } from "@/components/activities-data-table";
 import ImageAttachmentViewer from "@/components/image-attachment-viewer";
 import MarkdownContent from "@/components/markdown-content";
-import { RadialChartText } from "@/components/radial-chart-text";
+import { RadialChartStacked } from "@/components/radial-chart-stacked";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -138,6 +138,8 @@ interface QuizRunnerResultProps {
   totalTimeMs: number;
 }
 
+const QUIZ_MAX_SCORE = 1000;
+
 function QuizRunnerResult({
   answers,
   averageTimeMs,
@@ -147,21 +149,39 @@ function QuizRunnerResult({
 }: QuizRunnerResultProps) {
   const { t } = useTranslation();
   const reviewHeadingId = useId();
-  const percent =
-    result.total === 0 ? 0 : Math.round((result.correct / result.total) * 100);
+  const score =
+    result.total === 0
+      ? 0
+      : Math.round((result.correct / result.total) * QUIZ_MAX_SCORE);
 
   return (
     <div className="flex flex-col gap-4 py-4">
       <div className="flex flex-col items-center gap-4">
-        <RadialChartText
-          centerLabel={`${percent}%`}
-          centerSublabel={t("quizResultMessage", {
-            correct: result.correct,
-            total: result.total,
-          })}
-          value={percent}
+        <RadialChartStacked
+          centerLabel={String(score)}
+          centerSublabel={t("quizScoreMaxLabel", { max: QUIZ_MAX_SCORE })}
+          segments={[
+            {
+              color: "var(--success)",
+              key: "correct",
+              label: t("quizReviewCorrectStatusLabel"),
+              value: result.correct,
+            },
+            {
+              color: "var(--destructive)",
+              key: "incorrect",
+              label: t("quizReviewIncorrectStatusLabel"),
+              value: result.total - result.correct,
+            },
+          ]}
         />
         <div className="flex flex-col items-center gap-1 text-muted-foreground text-sm">
+          <p>
+            {t("quizResultMessage", {
+              correct: result.correct,
+              total: result.total,
+            })}
+          </p>
           <p>
             {t("quizTotalTimeLabel", {
               duration: formatQuizDuration(totalTimeMs),
