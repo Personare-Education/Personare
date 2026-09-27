@@ -75,7 +75,10 @@ export function RadialChartText({
 
   return (
     <ChartContainer
-      className={cn("mx-auto aspect-square max-h-[200px]", className)}
+      // An explicit width: in a flex `items-center` parent the container would
+      // otherwise shrink to Recharts' ResponsiveContainer, which sizes itself
+      // from this same box -- ending up 0x0 and drawing nothing (Issue #122).
+      className={cn("mx-auto aspect-square w-full max-w-[200px]", className)}
       config={chartConfig}
     >
       <RadialBarChart
