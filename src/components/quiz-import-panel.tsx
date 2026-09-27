@@ -12,7 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type FileWithPreview, useFileUpload } from "@/hooks/use-file-upload";
+import {
+  type FileWithPreview,
+  useFileUpload,
+} from "@/hooks/reui/use-file-upload";
 import {
   buildQuizPrompt,
   type ParsedQuiz,
