@@ -69,19 +69,21 @@ const PDF_ACTIVITY: Activity = {
 };
 
 function renderDialog(activity: Activity | null = null) {
+  const onImportQuiz = vi.fn();
   const onOpenChange = vi.fn();
   const onSubmit = vi.fn();
 
   render(
     <ActivityFormDialog
       activity={activity}
+      onImportQuiz={onImportQuiz}
       onOpenChange={onOpenChange}
       onSubmit={onSubmit}
       open={true}
     />
   );
 
-  return { onOpenChange, onSubmit };
+  return { onImportQuiz, onOpenChange, onSubmit };
 }
 
 describe("ActivityFormDialog", () => {
@@ -332,17 +334,169 @@ describe("ActivityFormDialog type cards", () => {
 
     await user.type(
       screen.getByLabelText(i18n.t("activityTitleLabel")),
-      "Novo quiz"
+      "Novo baralho"
     );
+    // Not Quiz: creating a Quiz goes to its own next step instead of saving.
     await user.click(
-      screen.getByRole("radio", { name: i18n.t("activityTypeQuiz") })
+      screen.getByRole("radio", { name: i18n.t("activityTypeFlashcardDeck") })
     );
     await user.click(
       screen.getByRole("button", { name: i18n.t("saveAction") })
     );
 
     await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith("Novo quiz", "quiz", null, null)
+      expect(onSubmit).toHaveBeenCalledWith(
+        "Novo baralho",
+        "flashcard_deck",
+        null,
+        null
+      )
     );
+  });
+});
+
+/*
+ * Spec: docs/specs/quiz-ai-import.md -- creating a Quiz becomes a multi-step
+ * form: Details -> Source (import from an AI or create manually) -> Import.
+ */
+describe("ActivityFormDialog quiz creation steps", () => {
+  const MARKDOWN = `## Pergunta 1
+Quanto é 2 + 2?
+
+- [ ] 3
+- [x] 4
+`;
+
+  async function goToSourceStep(user: ReturnType<typeof userEvent.setup>) {
+    await user.type(
+      screen.getByLabelText(i18n.t("activityTitleLabel")),
+      "Quiz importado"
+    );
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypeQuiz") })
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextStepAction") })
+    );
+  }
+
+  function sourceCard(titleKey: string) {
+    return screen.getByRole("radio", { name: new RegExp(i18n.t(titleKey)) });
+  }
+
+  it("shows Next instead of Save when creating a Quiz", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypeQuiz") })
+    );
+
+    expect(
+      screen.getByRole("button", { name: i18n.t("nextStepAction") })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("saveAction") })
+    ).not.toBeInTheDocument();
+  });
+
+  it("still saves directly when editing a Quiz", () => {
+    renderDialog(QUIZ_ACTIVITY);
+
+    expect(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("nextStepAction") })
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers importing from an AI or creating manually on the next step", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await goToSourceStep(user);
+
+    expect(
+      screen.getByText(
+        i18n.t("quizCreationStepIndicator", { current: 2, total: 3 })
+      )
+    ).toBeInTheDocument();
+    expect(sourceCard("quizSourceAiTitle")).toBeInTheDocument();
+    expect(sourceCard("quizSourceManualTitle")).toBeInTheDocument();
+  });
+
+  it("creates the quiz as before when the user picks manual", async () => {
+    const user = userEvent.setup();
+    const { onImportQuiz, onSubmit } = renderDialog();
+
+    await goToSourceStep(user);
+    await user.click(sourceCard("quizSourceManualTitle"));
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    );
+
+    expect(onSubmit).toHaveBeenCalledWith("Quiz importado", "quiz", null, null);
+    expect(onImportQuiz).not.toHaveBeenCalled();
+  });
+
+  it("goes back to the details step, keeping what was typed", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await goToSourceStep(user);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("previousStepAction") })
+    );
+
+    expect(screen.getByLabelText(i18n.t("activityTitleLabel"))).toHaveValue(
+      "Quiz importado"
+    );
+    expect(
+      screen.getByRole("radio", { name: i18n.t("activityTypeQuiz") })
+    ).toBeChecked();
+  });
+
+  it("imports the questions of a dropped file after the preview is confirmed", async () => {
+    const user = userEvent.setup();
+    const { onImportQuiz, onSubmit } = renderDialog();
+
+    await goToSourceStep(user);
+    await user.click(sourceCard("quizSourceAiTitle"));
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextStepAction") })
+    );
+
+    expect(
+      screen.getByText(
+        i18n.t("quizCreationStepIndicator", { current: 3, total: 3 })
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: i18n.t("quizImportCreateAction", { count: 0 }),
+      })
+    ).toBeDisabled();
+
+    await user.upload(
+      screen.getByLabelText(i18n.t("quizImportDropzoneLabel")),
+      new File([MARKDOWN], "quiz.md", { type: "text/markdown" })
+    );
+    await user.click(
+      await screen.findByRole("button", {
+        name: i18n.t("quizImportCreateAction", { count: 1 }),
+      })
+    );
+
+    expect(onImportQuiz).toHaveBeenCalledWith("Quiz importado", [
+      {
+        options: [
+          { isCorrect: false, text: "3" },
+          { isCorrect: true, text: "4" },
+        ],
+        text: "Quanto é 2 + 2?",
+      },
+    ]);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

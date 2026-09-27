@@ -18,6 +18,8 @@ import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 let electronApp: ElectronApplication;
 let page: Page;
 
+const CREATE_MANUALLY = /Create manually/;
+
 test.beforeAll(async () => {
   const latestBuild = findLatestBuild();
   const appInfo = parseElectronApp(latestBuild);
@@ -54,6 +56,8 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
   await page.getByRole("button", { name: "New activity" }).click();
   await page.getByLabel("Title").fill(quizName);
   await page.getByRole("radio", { name: "Quiz" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("radio", { name: CREATE_MANUALLY }).click();
   await page.getByRole("button", { name: "Save" }).click();
 
   const quizRow = page.getByRole("row", { name: new RegExp(quizName) });

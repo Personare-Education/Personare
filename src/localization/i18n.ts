@@ -164,7 +164,9 @@ i18n.use(initReactI18next).init({
         navPlatformSectionLabel: "Menu",
         navPrograms: "Programs",
         nextQuestionAction: "Next question",
+        nextStepAction: "Next",
         openActivityUrlAction: "Open URL",
+        previousStepAction: "Back",
         programActivityHeatmapSummary: "{{count}} reviews in the last year",
         programCardMenuAction: "More actions",
         programColorLabel: "Color",
@@ -173,6 +175,31 @@ i18n.use(initReactI18next).init({
         programsPageTitle: "Programs",
         programsTableEmptyMessage: "No programs found.",
         quizAverageTimeLabel: "Average time per question: {{duration}}",
+        quizCreationStepIndicator: "Step {{current}} of {{total}}",
+        quizImportAiLabel: "AI",
+        quizImportCreateAction: "Create quiz ({{count}})",
+        quizImportDropzoneHint: "Only Markdown (.md) files",
+        quizImportDropzoneLabel: "Drag the .md file here or click to choose",
+        quizImportEmptyFileMessage:
+          "No questions found in this file. Check that it follows the prompt's format.",
+        quizImportErrorMissingText: "Question {{question}}: no statement.",
+        quizImportErrorMultipleCorrectOptions:
+          "Question {{question}}: more than one answer marked as right.",
+        quizImportErrorNoCorrectOption:
+          "Question {{question}}: no answer marked as right.",
+        quizImportErrorTooFewOptions:
+          "Question {{question}}: needs at least 2 answers.",
+        quizImportInvalidFileMessage: "Choose a Markdown (.md) file.",
+        quizImportPreviewCount_one: "{{count}} question read",
+        quizImportPreviewCount_other: "{{count}} questions read",
+        quizImportPromptCopied:
+          "Prompt copied. Send it in {{ai}}, save the answer as a .md file and drop it below.",
+        quizImportPromptCopiedPaste:
+          "Prompt copied. Paste it in {{ai}}, save the answer as a .md file and drop it below.",
+        quizImportSendPromptAction: "Copy prompt and open {{ai}}",
+        quizImportSkippedNote: "Questions with errors will be left out.",
+        quizImportThemeLabel: "Theme",
+        quizImportThemePlaceholder: "e.g. French Revolution",
         quizOptionTextLabel: "Option text",
         quizQuestionProgressLabel: "Question {{current}} of {{total}}",
         quizQuestionsEmptyMessage: "No questions yet.",
@@ -185,6 +212,13 @@ i18n.use(initReactI18next).init({
         quizReviewNoAnswerLabel: "No answer given",
         quizReviewYourAnswerLabel: "Your answer:",
         quizScoreMaxLabel: "of {{max}} points",
+        quizSourceAiDescription:
+          "Generate them with ChatGPT, Claude or Gemini and import the file",
+        quizSourceAiTitle: "Import from an AI",
+        quizSourceLabel: "How do you want to create the questions?",
+        quizSourceManualDescription:
+          "Write the questions yourself after saving",
+        quizSourceManualTitle: "Create manually",
         quizTotalTimeLabel: "Total time: {{duration}}",
         ratingAgainAction: "Again",
         ratingEasyAction: "Easy",
@@ -389,7 +423,9 @@ i18n.use(initReactI18next).init({
         navPlatformSectionLabel: "Menu",
         navPrograms: "Programas",
         nextQuestionAction: "Próxima pergunta",
+        nextStepAction: "Próximo",
         openActivityUrlAction: "Abrir URL",
+        previousStepAction: "Voltar",
         programActivityHeatmapSummary: "{{count}} revisões no último ano",
         programCardMenuAction: "Mais ações",
         programColorLabel: "Cor",
@@ -398,6 +434,32 @@ i18n.use(initReactI18next).init({
         programsPageTitle: "Programas",
         programsTableEmptyMessage: "Nenhum programa encontrado.",
         quizAverageTimeLabel: "Tempo médio por questão: {{duration}}",
+        quizCreationStepIndicator: "Etapa {{current}} de {{total}}",
+        quizImportAiLabel: "IA",
+        quizImportCreateAction: "Criar quiz ({{count}})",
+        quizImportDropzoneHint: "Apenas arquivos Markdown (.md)",
+        quizImportDropzoneLabel:
+          "Arraste o arquivo .md aqui ou clique para escolher",
+        quizImportEmptyFileMessage:
+          "Nenhuma pergunta encontrada neste arquivo. Confira se ele segue o formato do prompt.",
+        quizImportErrorMissingText: "Pergunta {{question}}: sem enunciado.",
+        quizImportErrorMultipleCorrectOptions:
+          "Pergunta {{question}}: mais de uma alternativa marcada como correta.",
+        quizImportErrorNoCorrectOption:
+          "Pergunta {{question}}: nenhuma alternativa marcada como correta.",
+        quizImportErrorTooFewOptions:
+          "Pergunta {{question}}: precisa de pelo menos 2 alternativas.",
+        quizImportInvalidFileMessage: "Escolha um arquivo Markdown (.md).",
+        quizImportPreviewCount_one: "{{count}} pergunta lida",
+        quizImportPreviewCount_other: "{{count}} perguntas lidas",
+        quizImportPromptCopied:
+          "Prompt copiado. Envie no {{ai}}, salve a resposta como arquivo .md e solte abaixo.",
+        quizImportPromptCopiedPaste:
+          "Prompt copiado. Cole no {{ai}}, salve a resposta como arquivo .md e solte abaixo.",
+        quizImportSendPromptAction: "Copiar prompt e abrir {{ai}}",
+        quizImportSkippedNote: "As perguntas com erro ficarão de fora.",
+        quizImportThemeLabel: "Tema",
+        quizImportThemePlaceholder: "ex.: Revolução Francesa",
         quizOptionTextLabel: "Texto da opção",
         quizQuestionProgressLabel: "Pergunta {{current}} de {{total}}",
         quizQuestionsEmptyMessage: "Nenhuma pergunta ainda.",
@@ -410,6 +472,13 @@ i18n.use(initReactI18next).init({
         quizReviewNoAnswerLabel: "Nenhuma resposta selecionada",
         quizReviewYourAnswerLabel: "Sua resposta:",
         quizScoreMaxLabel: "de {{max}} pontos",
+        quizSourceAiDescription:
+          "Gere no ChatGPT, Claude ou Gemini e importe o arquivo",
+        quizSourceAiTitle: "Importar de uma IA",
+        quizSourceLabel: "Como você quer criar as perguntas?",
+        quizSourceManualDescription:
+          "Escreva as perguntas você mesmo depois de salvar",
+        quizSourceManualTitle: "Criar manualmente",
         quizTotalTimeLabel: "Tempo total: {{duration}}",
         ratingAgainAction: "Errei",
         ratingEasyAction: "Fácil",

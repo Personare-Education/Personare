@@ -41,3 +41,18 @@ export const updateOptionInputSchema = z.object({
 export const softDeleteOptionInputSchema = z.object({
   id: z.string(),
 });
+
+export const createWithQuestionsInputSchema = z.object({
+  moduleId: z.string(),
+  questions: z
+    .array(
+      z.object({
+        options: z
+          .array(z.object({ isCorrect: z.boolean(), text: z.string().min(1) }))
+          .min(2),
+        text: z.string().min(1),
+      })
+    )
+    .min(1),
+  title: z.string().min(1),
+});
