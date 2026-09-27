@@ -26,6 +26,44 @@ vi.mock("@/actions/attachments", () => ({
   getAttachmentImageDataUrl: vi.fn(),
 }));
 
+/*
+ * Motion drives CountUp's spring from real time, which fake timers do not
+ * move. This stand-in keeps its contract -- shows `from` until startWhen,
+ * then the final value, and calls onEnd `duration` seconds later -- so the
+ * tests follow the result screen's steps on the fake clock.
+ */
+vi.mock("@/components/count-up", async () => {
+  const { useEffect } = await import("react");
+
+  function CountUpStub({
+    duration = 2,
+    format = String,
+    from = 0,
+    onEnd,
+    startWhen = true,
+    to,
+  }: {
+    duration?: number;
+    format?: (value: number) => string;
+    from?: number;
+    onEnd?: () => void;
+    startWhen?: boolean;
+    to: number;
+  }) {
+    useEffect(() => {
+      if (!startWhen) {
+        return;
+      }
+      const timeoutId = setTimeout(() => onEnd?.(), duration * 1000);
+      return () => clearTimeout(timeoutId);
+    }, [duration, onEnd, startWhen]);
+
+    return <span>{format(startWhen ? to : from)}</span>;
+  }
+
+  return { default: CountUpStub };
+});
+
 const { listQuizQuestionsWithOptions } = await import("@/actions/quiz");
 const { getAttachmentImageDataUrl } = await import("@/actions/attachments");
 const { default: QuizRunnerDialog } = await import(
@@ -68,6 +106,16 @@ const RUNNER_QUESTIONS = [
     text: "Quanto e 2 + 2?",
   },
 ];
+
+/**
+ * How long each count up (score, then each time card) runs, plus a little
+ * slack for the chart to mount its center label.
+ */
+const QUIZ_COUNT_UP_MS = 1600;
+
+async function waitForCountUps() {
+  await act(() => vi.advanceTimersByTimeAsync(QUIZ_COUNT_UP_MS * 2));
+}
 
 function renderRunner(activity: Activity | null = QUIZ_ACTIVITY) {
   const onFinished = vi.fn();
@@ -233,8 +281,10 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
 
-    // Score scale: 0 to 1000.
-    expect(await screen.findByText("1000")).toBeInTheDocument();
+    const averageTimeName = i18n.t("quizAverageTimeLabel");
+    const totalTimeName = i18n.t("quizTotalTimeLabel");
+
+    // The score counts up with the chart; the time cards wait for it.
     expect(
       screen.getByText(i18n.t("quizScoreMaxLabel", { max: 1000 }))
     ).toBeInTheDocument();
@@ -242,11 +292,24 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       screen.getByText(i18n.t("quizResultMessage", { correct: 2, total: 2 }))
     ).toBeInTheDocument();
     expect(
-      screen.getByText(i18n.t("quizTotalTimeLabel", { duration: "20s" }))
-    ).toBeInTheDocument();
+      screen.queryByRole("figure", { name: averageTimeName })
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText(i18n.t("quizAverageTimeLabel", { duration: "10s" }))
-    ).toBeInTheDocument();
+      screen.queryByRole("figure", { name: totalTimeName })
+    ).not.toBeInTheDocument();
+
+    // Score scale: 0 to 1000. Once it is counted, both time cards come in
+    // together and count up.
+    await act(() => vi.advanceTimersByTimeAsync(QUIZ_COUNT_UP_MS));
+    const averageTimeCard = screen.getByRole("figure", {
+      name: averageTimeName,
+    });
+    const totalTimeCard = screen.getByRole("figure", { name: totalTimeName });
+
+    await waitForCountUps();
+    expect(screen.getByText("1000")).toBeInTheDocument();
+    expect(within(averageTimeCard).getByText("10s")).toBeInTheDocument();
+    expect(within(totalTimeCard).getByText("20s")).toBeInTheDocument();
     expect(screen.queryAllByRole("radio")).toHaveLength(0);
   });
 
@@ -274,7 +337,8 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     await user.click(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
-    await screen.findByText("1000");
+    await waitForCountUps();
+    expect(screen.getByText("1000")).toBeInTheDocument();
 
     expect(onFinished).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Close" }));
@@ -312,7 +376,8 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
 
-    expect(await screen.findByText("500")).toBeInTheDocument();
+    await waitForCountUps();
+    expect(screen.getByText("500")).toBeInTheDocument();
     expect(
       screen.getByText(i18n.t("quizResultMessage", { correct: 1, total: 2 }))
     ).toBeInTheDocument();

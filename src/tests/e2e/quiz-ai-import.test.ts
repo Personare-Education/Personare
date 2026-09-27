@@ -253,6 +253,32 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   const chartBox = await chart.boundingBox();
   expect(reviewBox?.x ?? 0).toBeLessThan(chartBox?.x ?? 0);
 
+  // At most four answers are visible at once; the rest need a scroll. A
+  // short window can show fewer, since the dialog must still fit in it.
+  async function countVisibleAnswers(): Promise<number> {
+    return await review.getByRole("list").evaluate((list) => {
+      const listBox = list.getBoundingClientRect();
+      return Array.from(list.children).filter((item) => {
+        const itemBox = item.getBoundingClientRect();
+        return (
+          itemBox.top >= listBox.top - 1 && itemBox.bottom <= listBox.bottom + 1
+        );
+      }).length;
+    });
+  }
+  expect(await countVisibleAnswers()).toBeLessThanOrEqual(4);
+
+  const originalSize = await electronApp.evaluate(({ BrowserWindow }) => {
+    const [window] = BrowserWindow.getAllWindows();
+    const [width, height] = window.getContentSize();
+    window.setContentSize(width, 1200);
+    return { height, width };
+  });
+  await expect.poll(countVisibleAnswers).toBe(4);
+  await electronApp.evaluate(({ BrowserWindow }, size) => {
+    BrowserWindow.getAllWindows()[0].setContentSize(size.width, size.height);
+  }, originalSize);
+
   // The last answer is reachable by scrolling the answers column.
   const lastAnswer = review.getByRole("listitem").last();
   await lastAnswer.scrollIntoViewIfNeeded();
