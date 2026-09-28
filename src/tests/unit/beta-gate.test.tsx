@@ -48,6 +48,7 @@ const ACTIVATED = {
   activatedAt: "2026-09-28T00:00:00.000Z",
   codeHint: "PRSN-••••-••••-AB12",
 };
+const SIGNED_IN_AS_PATTERN = /Conectado como aluno@example.com/;
 const SITE_ACTIVATE_URL_PATTERN = /\/ativar\/$/;
 const SITE_BETA_URL_PATTERN = /\/beta\/$/;
 
@@ -71,7 +72,10 @@ describe("BetaGate", () => {
   });
 
   it("shows the app when the account has the beta", async () => {
-    vi.mocked(getBetaGate).mockResolvedValue({ kind: "activated", offline: false });
+    vi.mocked(getBetaGate).mockResolvedValue({
+      kind: "activated",
+      offline: false,
+    });
 
     renderGate();
 
@@ -94,16 +98,20 @@ describe("BetaGate", () => {
 
     renderGate();
     expect(
-      await screen.findByRole("heading", { name: "Entre para usar o Personare" })
+      await screen.findByRole("heading", {
+        name: "Entre para usar o Personare",
+      })
     ).toBeInTheDocument();
     expect(screen.queryByText("conteúdo do app")).not.toBeInTheDocument();
 
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
-      await user.click(screen.getByRole("button", { name: "Entrar com Google" }));
+      await user.click(
+        screen.getByRole("button", { name: "Entrar com Google" })
+      );
       expect(login).toHaveBeenCalled();
       await act(async () => {
-        vi.advanceTimersByTime(2100);
+        await vi.advanceTimersByTimeAsync(2100);
       });
     } finally {
       vi.useRealTimers();
@@ -124,9 +132,7 @@ describe("BetaGate", () => {
     expect(
       await screen.findByRole("heading", { name: "Ative seu beta" })
     ).toBeInTheDocument();
-    expect(
-      await screen.findByText(/Conectado como aluno@example.com/)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(SIGNED_IN_AS_PATTERN)).toBeInTheDocument();
 
     await user.type(
       screen.getByLabelText("Código de ativação"),
@@ -172,7 +178,9 @@ describe("BetaGate", () => {
 
     expect(logout).toHaveBeenCalled();
     expect(
-      await screen.findByRole("heading", { name: "Entre para usar o Personare" })
+      await screen.findByRole("heading", {
+        name: "Entre para usar o Personare",
+      })
     ).toBeInTheDocument();
   });
 
@@ -204,7 +212,9 @@ describe("BetaGate", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { name: "Entre para usar o Personare" })
+      await screen.findByRole("heading", {
+        name: "Entre para usar o Personare",
+      })
     ).toBeInTheDocument();
     expect(screen.queryByText("conteúdo do app")).not.toBeInTheDocument();
   });

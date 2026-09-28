@@ -56,7 +56,12 @@ function jwtFor(sub: string) {
 describe("beta.getGate", () => {
   let tmpDir: string;
   let tokenFile: string;
-  let client: ReturnType<typeof createRouterClient<Awaited<typeof import("@/ipc/beta")>["beta"]>>;
+  let client: Awaited<ReturnType<typeof loadClient>>;
+
+  async function loadClient() {
+    const { beta } = await import("@/ipc/beta");
+    return createRouterClient(beta);
+  }
 
   beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "personare-beta-gate-"));
@@ -67,8 +72,7 @@ describe("beta.getGate", () => {
     vi.mocked(checkBetaAccess).mockReset();
     vi.mocked(fetchCurrentUser).mockReset().mockResolvedValue(USER);
     vi.mocked(redeemBetaCode).mockReset();
-    const { beta } = await import("@/ipc/beta");
-    client = createRouterClient(beta);
+    client = await loadClient();
   });
 
   afterEach(() => {
@@ -138,7 +142,9 @@ describe("beta.getGate", () => {
   });
 
   describe("offline", () => {
-    async function checkOnlineAs(status: typeof ACTIVATED | typeof NOT_ACTIVATED) {
+    async function checkOnlineAs(
+      status: typeof ACTIVATED | typeof NOT_ACTIVATED
+    ) {
       vi.mocked(checkBetaAccess).mockResolvedValueOnce({ kind: "ok", status });
       await client.getGate();
       vi.mocked(checkBetaAccess).mockResolvedValue({ kind: "unreachable" });

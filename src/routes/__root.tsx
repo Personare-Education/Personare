@@ -2,6 +2,7 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { getPendingActivityRating } from "@/actions/review";
 import ActivityDifficultyDialog from "@/components/activity-difficulty-dialog";
+import BetaGate from "@/components/beta-gate";
 import StackContent from "@/components/stack-content";
 import BaseLayout from "@/layouts/base-layout";
 
@@ -27,20 +28,22 @@ function Root() {
   }, []);
 
   return (
-    <BaseLayout>
-      <StackContent>
-        <Outlet />
-      </StackContent>
-      <ActivityDifficultyDialog
-        activityId={pending?.activityId ?? null}
-        activityTitle={pending?.activityTitle ?? ""}
-        moduleName={pending?.moduleName ?? ""}
-        onOpenChange={handleOpenChange}
-        onRated={handleRated}
-        open={pending !== null}
-        programName={pending?.programName ?? ""}
-      />
-    </BaseLayout>
+    <BetaGate>
+      <BaseLayout>
+        <StackContent>
+          <Outlet />
+        </StackContent>
+        <ActivityDifficultyDialog
+          activityId={pending?.activityId ?? null}
+          activityTitle={pending?.activityTitle ?? ""}
+          moduleName={pending?.moduleName ?? ""}
+          onOpenChange={handleOpenChange}
+          onRated={handleRated}
+          open={pending !== null}
+          programName={pending?.programName ?? ""}
+        />
+      </BaseLayout>
+    </BetaGate>
   );
 }
 

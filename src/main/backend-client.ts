@@ -231,3 +231,34 @@ export async function redeemBetaCode(
     return { error: "unreachable" };
   }
 }
+
+export type BetaAccessResult =
+  | { kind: "ok"; status: BetaStatus }
+  | { kind: "unauthorized" }
+  | { kind: "unreachable" };
+
+/**
+ * Like fetchBetaStatus, but tells a rejected token (sign in again) apart
+ * from a backend that can't be reached (the app's offline grace period).
+ */
+export async function checkBetaAccess(
+  token: string
+): Promise<BetaAccessResult> {
+  try {
+    const response = await fetch(`${BACKEND_BASE_URL}/beta/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      return { kind: "unauthorized" };
+    }
+
+    if (!response.ok) {
+      return { kind: "unreachable" };
+    }
+
+    return { kind: "ok", status: (await response.json()) as BetaStatus };
+  } catch {
+    return { kind: "unreachable" };
+  }
+}

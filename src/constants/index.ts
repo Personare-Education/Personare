@@ -19,6 +19,13 @@ export const inDevelopment = ENVIRONMENT_VARIABLES.NODE_ENV === "development";
  */
 export const BACKEND_BASE_URL = "http://localhost:3333";
 
+/**
+ * The public website (personare-website), where the beta is applied for and
+ * activated. Like BACKEND_BASE_URL, still the local dev server until it is
+ * deployed.
+ */
+export const PERSONARE_SITE_URL = "http://localhost:5173";
+
 export const OAUTH_PROTOCOL = "personare";
 export const OAUTH_REDIRECT_URI = `${OAUTH_PROTOCOL}://oauth-callback`;
 export const CALENDAR_CONNECT_REDIRECT_URI = `${OAUTH_PROTOCOL}://calendar-connect-callback`;

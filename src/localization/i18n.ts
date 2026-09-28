@@ -64,6 +64,21 @@ i18n.use(initReactI18next).init({
           "Too many attempts in a row. Wait a minute and try again.",
         betaErrorUnreachable:
           "Couldn't reach the server. Check your connection and try again.",
+        betaGateActivateDescription:
+          "Personare is in closed beta. Enter the code you received by email to unlock it on this account.",
+        betaGateActivateOnSiteAction: "Activate on the website",
+        betaGateActivateTitle: "Activate your beta",
+        betaGateApplyAction: "Apply to the beta",
+        betaGateApplyHint: "No code yet?",
+        betaGateOfflineDescription:
+          "We couldn't check your beta access. Connect to the internet and try again.",
+        betaGateOfflineTitle: "You're offline",
+        betaGateRetryAction: "Try again",
+        betaGateSignedInAs: "Signed in as {{email}}",
+        betaGateSignInDescription:
+          "Personare is in closed beta. Sign in with the Google account your beta is activated on.",
+        betaGateSignInTitle: "Sign in to use Personare",
+        betaGateSwitchAccountAction: "Use another account",
         betaLoginRequiredHint:
           "Log in with your Google account in the Account tab to activate the beta.",
         betaNotActivatedLabel: "Not activated",
@@ -348,6 +363,21 @@ i18n.use(initReactI18next).init({
           "Muitas tentativas seguidas. Espere um minuto e tente de novo.",
         betaErrorUnreachable:
           "Não foi possível falar com o servidor. Verifique sua conexão e tente de novo.",
+        betaGateActivateDescription:
+          "O Personare está em beta fechado. Digite o código que você recebeu por email para liberar o app nesta conta.",
+        betaGateActivateOnSiteAction: "Ativar pelo site",
+        betaGateActivateTitle: "Ative seu beta",
+        betaGateApplyAction: "Candidate-se ao beta",
+        betaGateApplyHint: "Ainda não tem código?",
+        betaGateOfflineDescription:
+          "Não foi possível verificar seu acesso ao beta. Conecte-se à internet e tente de novo.",
+        betaGateOfflineTitle: "Sem conexão",
+        betaGateRetryAction: "Tentar de novo",
+        betaGateSignedInAs: "Conectado como {{email}}",
+        betaGateSignInDescription:
+          "O Personare está em beta fechado. Entre com a conta Google em que você ativou o beta.",
+        betaGateSignInTitle: "Entre para usar o Personare",
+        betaGateSwitchAccountAction: "Usar outra conta",
         betaLoginRequiredHint:
           "Entre com sua conta Google na aba Conta para ativar o beta.",
         betaNotActivatedLabel: "Não ativado",
