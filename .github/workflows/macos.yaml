@@ -40,6 +40,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Every part of the bundle, helpers included, must be validly signed:
+      # a broken signature makes a downloaded app "damaged" on Apple Silicon.
+      - name: Verify the app signature
+        run: codesign --verify --deep --strict --verbose=2 out/Personare-darwin-${{ matrix.arch }}/Personare.app
+
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:

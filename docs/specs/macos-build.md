@@ -22,7 +22,12 @@
   `copyExternalModules` mantém o da arquitetura alvo).
 - **`@electron-forge/maker-dmg`:** as dependências nativas dele (`appdmg`, `macos-alias`) são opcionais
   e só para `darwin` no lockfile, então o `npm ci` do Windows e do Linux as ignora.
-- **Assinatura ad hoc** pelo `resetAdHocDarwinSignature` do `FusesPlugin`, que só age em um `.app`.
+- **Assinatura ad hoc do bundle inteiro:** o empacotamento altera os apps auxiliares do Electron
+  (Helpers) dentro do `.app`, quebrando as assinaturas deles, e o Apple Silicon passou a chamar o app
+  baixado de "danificado". Um hook `postPackage` (`scripts/ad-hoc-sign.ts`) reassina todo o `.app` com
+  `codesign --force --deep --sign -`, e o workflow do macOS confere com `codesign --verify --deep --strict`.
+  Mesmo com a assinatura válida, o macOS ainda pode recusar como "danificado" um app sem Developer ID
+  baixado da internet; o README ensina o `xattr -cr`.
 - **Sem Developer ID:** o app não é assinado com um certificado da Apple nem notarizado, pois isso exige
   o Apple Developer Program (pago). Consequências, documentadas no README:
   - na primeira abertura o macOS bloqueia o app baixado ("não é possível verificar o desenvolvedor"),

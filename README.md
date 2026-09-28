@@ -103,6 +103,7 @@ The release ships a `.dmg` and a `.zip` for Apple Silicon (`arm64`) and Intel (`
 > [!WARNING]
 > The app is only signed ad hoc, not with an Apple Developer ID, and isn't notarized. So:
 > - The first time it is opened, macOS blocks it ("Apple could not verify…"). Open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
+> - If macOS says the app "is damaged and can't be opened", it is the download quarantine refusing an app without a Developer ID. After moving it to Applications, run in Terminal: `xattr -cr /Applications/Personare.app`
 > - Auto update doesn't work on macOS: Squirrel.Mac only installs signed updates. Download new versions from the Releases page.
 >
 > Signing and notarizing need an [Apple Developer Program](https://developer.apple.com/programs/) membership.
