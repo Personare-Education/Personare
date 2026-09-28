@@ -1,9 +1,10 @@
-import { Cloud, HardDrive, Settings2, User } from "lucide-react";
+import { Cloud, HardDrive, KeyRound, Settings2, User } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AccountSection from "@/components/account-section";
 import BackupExportDialog from "@/components/backup-export-dialog";
 import BackupImportDialog from "@/components/backup-import-dialog";
+import BetaActivationSection from "@/components/beta-activation-section";
 import DriveBackupDialog from "@/components/drive-backup-dialog";
 import DriveRestoreDialog from "@/components/drive-restore-dialog";
 import LangToggle from "@/components/lang-toggle";
@@ -20,7 +21,12 @@ import { Switch } from "@/components/ui/switch";
 import { useSettingsState } from "@/hooks/use-settings-state";
 import { cn } from "@/utils/tailwind";
 
-type SettingsCategory = "account" | "backup" | "driveBackup" | "general";
+type SettingsCategory =
+  | "account"
+  | "backup"
+  | "beta"
+  | "driveBackup"
+  | "general";
 
 interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
@@ -100,6 +106,7 @@ export default function SettingsDialog({
       label: t("settingsGeneralCategoryLabel"),
     },
     { icon: User, id: "account", label: t("accountSectionTitle") },
+    { icon: KeyRound, id: "beta", label: t("betaSectionTitle") },
     { icon: HardDrive, id: "backup", label: t("backupSectionTitle") },
     {
       icon: Cloud,
@@ -161,6 +168,7 @@ export default function SettingsDialog({
               {activeCategory === "account" && (
                 <AccountSection onDriveConnectedChange={setIsDriveConnected} />
               )}
+              {activeCategory === "beta" && <BetaActivationSection />}
               {activeCategory === "backup" && (
                 <div className="flex flex-col gap-2">
                   <h2 className="font-semibold text-lg">

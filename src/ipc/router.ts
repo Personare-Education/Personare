@@ -3,6 +3,7 @@ import { app } from "./app";
 import { attachments } from "./attachments";
 import { auth } from "./auth";
 import { backup } from "./backup";
+import { beta } from "./beta";
 import { calendarSync } from "./calendar-sync";
 import { database } from "./database";
 import { dialog } from "./dialog";
@@ -23,6 +24,7 @@ export const router = {
   attachments,
   auth,
   backup,
+  beta,
   calendarSync,
   database,
   dialog,

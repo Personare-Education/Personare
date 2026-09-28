@@ -48,6 +48,28 @@ i18n.use(initReactI18next).init({
           "Export all your data to an encrypted local file, or restore a previously exported one. Works independently of Google login. Importing a backup replaces all current data.",
         backupSectionTitle: "Local backup",
         backupToDriveAction: "Back up to Google Drive",
+        betaActivateAction: "Activate",
+        betaActivatedDetail:
+          "Code {{codeHint}}, activated on {{date}}. It is tied to this account for good.",
+        betaActivatedLabel: "Beta activated",
+        betaActivatingAction: "Activating…",
+        betaCodeLabel: "Activation code",
+        betaErrorAlreadyActivated:
+          "This account already has the beta activated.",
+        betaErrorCodeAlreadyUsed:
+          "This code has already been used by another account.",
+        betaErrorInvalidCode:
+          "We couldn't find that code. Check it and try again.",
+        betaErrorRateLimited:
+          "Too many attempts in a row. Wait a minute and try again.",
+        betaErrorUnreachable:
+          "Couldn't reach the server. Check your connection and try again.",
+        betaLoginRequiredHint:
+          "Log in with your Google account in the Account tab to activate the beta.",
+        betaNotActivatedLabel: "Not activated",
+        betaSectionDescription:
+          "Personare is in closed beta. If you were picked, activate it with the code you received by email. The code is tied to the account you are logged in with.",
+        betaSectionTitle: "Beta",
         calendarAddEventAction: "Add event",
         calendarAllDayLabel: "All day",
         calendarConnectedLabel: "Google Calendar connected",
@@ -312,6 +334,26 @@ i18n.use(initReactI18next).init({
           "Exporte todos os seus dados para um arquivo local criptografado, ou restaure um arquivo exportado anteriormente. Funciona independente de login Google. Importar um backup substitui todos os dados atuais.",
         backupSectionTitle: "Backup local",
         backupToDriveAction: "Fazer backup no Google Drive",
+        betaActivateAction: "Ativar",
+        betaActivatedDetail:
+          "Código {{codeHint}}, ativado em {{date}}. Ele fica vinculado a esta conta para sempre.",
+        betaActivatedLabel: "Beta ativado",
+        betaActivatingAction: "Ativando…",
+        betaCodeLabel: "Código de ativação",
+        betaErrorAlreadyActivated: "Esta conta já tem o beta ativado.",
+        betaErrorCodeAlreadyUsed: "Este código já foi usado por outra conta.",
+        betaErrorInvalidCode:
+          "Não encontramos esse código. Confira e tente de novo.",
+        betaErrorRateLimited:
+          "Muitas tentativas seguidas. Espere um minuto e tente de novo.",
+        betaErrorUnreachable:
+          "Não foi possível falar com o servidor. Verifique sua conexão e tente de novo.",
+        betaLoginRequiredHint:
+          "Entre com sua conta Google na aba Conta para ativar o beta.",
+        betaNotActivatedLabel: "Não ativado",
+        betaSectionDescription:
+          "O Personare está em beta fechado. Se você foi escolhido, ative com o código que recebeu por email. O código fica vinculado à conta em que você está logado.",
+        betaSectionTitle: "Beta",
         calendarAddEventAction: "Adicionar evento",
         calendarAllDayLabel: "Dia inteiro",
         calendarConnectedLabel: "Google Calendar conectado",
