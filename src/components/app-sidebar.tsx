@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, CalendarDays, GraduationCap } from "lucide-react";
+import { BookOpen, CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AccountMenu from "@/components/account-menu";
+import PersonareLogo from "@/components/personare-logo";
 import { StreakWidget } from "@/components/streak-widget";
 import {
   Sidebar,
@@ -37,8 +38,8 @@ export default function AppSidebar() {
               onClick={toggleSidebar}
               size="lg"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <GraduationCap className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center">
+                <PersonareLogo className="size-6" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{t("appName")}</span>

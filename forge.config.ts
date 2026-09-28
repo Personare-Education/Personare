@@ -30,17 +30,23 @@ const config: ForgeConfig = {
     },
   },
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({ setupIcon: "./assets/icon.ico" }),
     // macOS installer: drag Personare into Applications.
     new MakerDMG({}),
     // win32: portable build, extract and run Personare.exe without installing.
     new MakerZIP({}, ["darwin", "win32"]),
     // Packager names the Linux binary after productName; these default to package.json's name.
-    new MakerRpm({ options: { bin: "Personare" } }),
-    new MakerDeb({ options: { bin: "Personare" } }),
+    new MakerRpm({ options: { bin: "Personare", icon: "./assets/icon.png" } }),
+    new MakerDeb({ options: { bin: "Personare", icon: "./assets/icon.png" } }),
     {
       // ESM-only package: referenced by name so Forge loads it with import().
-      config: { options: { bin: "Personare", categories: ["Education"] } },
+      config: {
+        options: {
+          bin: "Personare",
+          categories: ["Education"],
+          icon: "./assets/icon.png",
+        },
+      },
       name: "@reforged/maker-appimage",
       // The maker claims support on every platform; the Windows job has no mksquashfs.
       platforms: ["linux"],
@@ -49,6 +55,8 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     extraResource: ["./drizzle"],
+    // Packager adds .ico (Windows) or .icns (macOS); see docs/specs/app-icon.md.
+    icon: "./assets/icon",
   },
   plugins: [
     new AutoUnpackNativesPlugin({}),

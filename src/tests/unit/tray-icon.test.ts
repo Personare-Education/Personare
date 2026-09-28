@@ -67,12 +67,22 @@ describe("createPlaceholderTrayIcon (Issue #20)", () => {
     const [buffer] = createFromBufferMock.mock.calls.at(-1) as [Buffer];
     expect(buffer.some((byte) => byte !== 0)).toBe(true);
 
-    // A circle filled by distance to center must cover its own center
-    // pixel, which should be fully opaque.
-    const centerPixelIndex =
-      (Math.floor(ICON_SIZE / 2) * ICON_SIZE + Math.floor(ICON_SIZE / 2)) *
-      RGBA_CHANNELS;
-    expect(buffer[centerPixelIndex + 3]).toBe(255);
+    // Personare's logo (docs/specs/app-icon.md): a 2x2 grid of rounded
+    // squares in the brand blue, fading from faint (top left) to solid
+    // (bottom right), with a transparent gap between them.
+    function alphaAt(x: number, y: number) {
+      return buffer[(y * ICON_SIZE + x) * RGBA_CHANNELS + 3];
+    }
+    const topLeft = alphaAt(8, 8);
+    const bottomRight = alphaAt(24, 24);
+    expect(topLeft).toBeGreaterThan(0);
+    expect(bottomRight).toBe(255);
+    expect(topLeft).toBeLessThan(bottomRight);
+    expect(alphaAt(16, 16)).toBe(0);
+    const brandBlue = (24 * ICON_SIZE + 24) * RGBA_CHANNELS;
+    expect([...buffer.subarray(brandBlue, brandBlue + 3)]).toEqual([
+      0x3b, 0x6c, 0xf6,
+    ]);
   });
 
   it("returns whatever nativeImage.createFromBuffer returns", () => {
