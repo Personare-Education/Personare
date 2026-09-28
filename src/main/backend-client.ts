@@ -184,3 +184,50 @@ export async function downloadDriveBackup(
     return { error: "unreachable" };
   }
 }
+
+export interface BetaStatus {
+  activated: boolean;
+  activatedAt: string | null;
+  codeHint: string | null;
+}
+
+export async function fetchBetaStatus(
+  token: string
+): Promise<BetaStatus | null> {
+  try {
+    const response = await fetch(`${BACKEND_BASE_URL}/beta/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as BetaStatus;
+  } catch {
+    return null;
+  }
+}
+
+export type BetaRedeemResult = BetaStatus | { error: string };
+
+export async function redeemBetaCode(
+  token: string,
+  code: string
+): Promise<BetaRedeemResult> {
+  try {
+    const response = await fetch(`${BACKEND_BASE_URL}/beta/redeem`, {
+      body: JSON.stringify({ code }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    const body = await response.json();
+
+    return body as BetaRedeemResult;
+  } catch {
+    return { error: "unreachable" };
+  }
+}

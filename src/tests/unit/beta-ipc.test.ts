@@ -9,6 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * namespace do not exist yet -- see docs/specs/beta-activation.md AC-4..6.
  */
 
+const BETA_ROUTER_REGISTRATION_PATTERN = /\bbeta\b/;
+
 describe("beta backend client", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
@@ -131,7 +133,7 @@ describe("beta IPC namespace", () => {
       "utf-8"
     );
 
-    expect(routerSource).toMatch(/\bbeta\b/);
+    expect(routerSource).toMatch(BETA_ROUTER_REGISTRATION_PATTERN);
   });
 
   it("getStatus is null when logged out, without calling the backend", async () => {
@@ -144,9 +146,9 @@ describe("beta IPC namespace", () => {
   it("redeem answers not_logged_in when logged out", async () => {
     const client = await loadClient();
 
-    await expect(client.redeem({ code: "PRSN-AAAA-BBBB-CCCC" })).resolves.toEqual(
-      { error: "not_logged_in" }
-    );
+    await expect(
+      client.redeem({ code: "PRSN-AAAA-BBBB-CCCC" })
+    ).resolves.toEqual({ error: "not_logged_in" });
     expect(fetch).not.toHaveBeenCalled();
   });
 

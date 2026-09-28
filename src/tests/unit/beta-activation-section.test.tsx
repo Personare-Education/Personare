@@ -25,6 +25,14 @@ const { default: BetaActivationSection } = await import(
   "@/components/beta-activation-section"
 );
 
+const LOGIN_HINT_PATTERN = /entre com sua conta google/i;
+const CODE_HINT_PATTERN = /PRSN-••••-••••-AB12/;
+const INVALID_CODE_PATTERN = /não encontramos esse código/i;
+const CODE_ALREADY_USED_PATTERN = /já foi usado por outra conta/i;
+const ALREADY_ACTIVATED_PATTERN = /já tem o beta ativado/i;
+const RATE_LIMITED_PATTERN = /espere um minuto/i;
+const UNREACHABLE_PATTERN = /não foi possível falar com o servidor/i;
+
 const SESSION = {
   avatarUrl: null,
   email: "aluno@example.com",
@@ -51,10 +59,10 @@ describe("BetaActivationSection", () => {
 
     render(<BetaActivationSection />);
 
+    expect(await screen.findByText(LOGIN_HINT_PATTERN)).toBeInTheDocument();
     expect(
-      await screen.findByText(/entre com sua conta google/i)
-    ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Código de ativação")).not.toBeInTheDocument();
+      screen.queryByLabelText("Código de ativação")
+    ).not.toBeInTheDocument();
     expect(getBetaStatus).not.toHaveBeenCalled();
   });
 
@@ -89,30 +97,35 @@ describe("BetaActivationSection", () => {
 
     expect(redeemBetaCode).toHaveBeenCalledWith("prsn-aaaa-bbbb-ab12");
     expect(await screen.findByText("Beta ativado")).toBeInTheDocument();
-    expect(screen.getByText(/PRSN-••••-••••-AB12/)).toBeInTheDocument();
-    expect(screen.queryByLabelText("Código de ativação")).not.toBeInTheDocument();
+    expect(screen.getByText(CODE_HINT_PATTERN)).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Código de ativação")
+    ).not.toBeInTheDocument();
   });
 
   it.each([
-    ["invalid_code", /não encontramos esse código/i],
-    ["code_already_used", /já foi usado por outra conta/i],
-    ["already_activated", /já tem o beta ativado/i],
-    ["rate_limited", /espere um minuto/i],
-    ["unreachable", /não foi possível falar com o servidor/i],
-  ])("shows an alert for %s and keeps the typed code", async (error, message) => {
-    vi.mocked(getSession).mockResolvedValue(SESSION);
-    vi.mocked(getBetaStatus).mockResolvedValue(NOT_ACTIVATED);
-    vi.mocked(redeemBetaCode).mockResolvedValue({ error });
-    const user = userEvent.setup();
+    ["invalid_code", INVALID_CODE_PATTERN],
+    ["code_already_used", CODE_ALREADY_USED_PATTERN],
+    ["already_activated", ALREADY_ACTIVATED_PATTERN],
+    ["rate_limited", RATE_LIMITED_PATTERN],
+    ["unreachable", UNREACHABLE_PATTERN],
+  ])(
+    "shows an alert for %s and keeps the typed code",
+    async (error, message) => {
+      vi.mocked(getSession).mockResolvedValue(SESSION);
+      vi.mocked(getBetaStatus).mockResolvedValue(NOT_ACTIVATED);
+      vi.mocked(redeemBetaCode).mockResolvedValue({ error });
+      const user = userEvent.setup();
 
-    render(<BetaActivationSection />);
-    const input = await screen.findByLabelText("Código de ativação");
-    await user.type(input, "PRSN-AAAA-BBBB-CCCC");
-    await user.click(screen.getByRole("button", { name: "Ativar" }));
+      render(<BetaActivationSection />);
+      const input = await screen.findByLabelText("Código de ativação");
+      await user.type(input, "PRSN-AAAA-BBBB-CCCC");
+      await user.click(screen.getByRole("button", { name: "Ativar" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(message);
-    expect(input).toHaveValue("PRSN-AAAA-BBBB-CCCC");
-  });
+      expect(await screen.findByRole("alert")).toHaveTextContent(message);
+      expect(input).toHaveValue("PRSN-AAAA-BBBB-CCCC");
+    }
+  );
 
   it("shows the activated state straight away for an account that already activated", async () => {
     vi.mocked(getSession).mockResolvedValue(SESSION);
@@ -121,7 +134,7 @@ describe("BetaActivationSection", () => {
     render(<BetaActivationSection />);
 
     expect(await screen.findByText("Beta ativado")).toBeInTheDocument();
-    expect(screen.getByText(/PRSN-••••-••••-AB12/)).toBeInTheDocument();
+    expect(screen.getByText(CODE_HINT_PATTERN)).toBeInTheDocument();
   });
 
   it("is translated to English", async () => {
@@ -133,6 +146,8 @@ describe("BetaActivationSection", () => {
 
     expect(await screen.findByText("Not activated")).toBeInTheDocument();
     expect(screen.getByLabelText("Activation code")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Activate" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Activate" })
+    ).toBeInTheDocument();
   });
 });
