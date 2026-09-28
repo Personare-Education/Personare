@@ -7,3 +7,7 @@ export function getBetaStatus() {
 export function redeemBetaCode(code: string) {
   return ipc.client.beta.redeem({ code });
 }
+
+export function getBetaGate() {
+  return ipc.client.beta.getGate();
+}

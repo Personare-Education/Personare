@@ -10,6 +10,7 @@ import { connectDrive, getDriveConnectionStatus } from "@/actions/drive-backup";
 import DeleteAccountDialog from "@/components/delete-account-dialog";
 import ScopeConsentDialog from "@/components/scope-consent-dialog";
 import { Button } from "@/components/ui/button";
+import { notifySessionChanged } from "@/utils/session-events";
 
 const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 120_000;
@@ -134,6 +135,7 @@ export default function AccountSection({
 
   const handleLogoutClick = useCallback(() => {
     logout().then(() => {
+      notifySessionChanged();
       setSession(null);
       setIsCalendarConnected(false);
       setIsDriveConnected(false);
@@ -192,6 +194,7 @@ export default function AccountSection({
 
   const handleAccountDeleted = useCallback(() => {
     setIsDeleteDialogOpen(false);
+    notifySessionChanged();
     setSession(null);
     setIsCalendarConnected(false);
     setIsDriveConnected(false);

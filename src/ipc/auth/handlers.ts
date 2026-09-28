@@ -3,6 +3,7 @@ import { os } from "@orpc/server";
 import { shell } from "electron";
 import { z } from "zod";
 import { BACKEND_BASE_URL, OAUTH_REDIRECT_URI } from "@/constants";
+import { forgetBetaStatus } from "@/ipc/beta/gate";
 import { setCalendarConnected } from "@/ipc/calendar-sync/state";
 import { setDriveConnected } from "@/ipc/drive-backup/state";
 import { clearToken } from "@/main/auth-token-storage";
@@ -32,6 +33,7 @@ function clearLocalSession() {
   setCalendarConnected(false);
   setDriveConnected(false);
   clearToken(getAuthTokenFilePath());
+  forgetBetaStatus();
 }
 
 export const logout = os.handler(() => {
