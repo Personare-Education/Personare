@@ -241,8 +241,10 @@ function QuizImportPreview({ parsed }: { parsed: ParsedQuiz }) {
       <p className="font-medium">
         {t("quizImportPreviewCount", { count: parsed.questions.length })}
       </p>
-      {/* No nowrap: a long question would widen the whole dialog. */}
-      <ol className="flex flex-col gap-1 text-muted-foreground">
+      {/* No nowrap: a long question would widen the whole dialog. The list
+          scrolls on its own, or a long quiz stretches the dialog to the
+          window's height. */}
+      <ol className="flex max-h-40 flex-col gap-1 overflow-y-auto pr-1 text-muted-foreground [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
         {parsed.questions.map((question, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: the list is rebuilt from scratch for every file and never reordered.
           <li className="flex gap-1" key={index}>

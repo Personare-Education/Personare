@@ -185,6 +185,19 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
     .setInputFiles(longFile);
   await expect(dialog.getByText("10 questions read")).toBeVisible();
 
+  // The preview scrolls within its own short list, so a long quiz doesn't
+  // stretch the dialog to the whole window: the step itself needs no scroll.
+  const preview = dialog.getByRole("list");
+  expect(
+    await preview.evaluate((list) => list.scrollHeight > list.clientHeight)
+  ).toBe(true);
+  expect(
+    await dialog
+      .locator("form > div")
+      .nth(1)
+      .evaluate((step) => step.scrollHeight <= step.clientHeight + 1)
+  ).toBe(true);
+
   const viewport =
     page.viewportSize() ??
     (await page.evaluate(() => ({
