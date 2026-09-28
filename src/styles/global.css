@@ -56,6 +56,8 @@
   --heatmap-level-3: 0.8;
   --heatmap-level-4: 1;
   --card-tint-strength: 38%;
+  /* Personare's brand blue, the logo's accent (same as the website). */
+  --brand: #3b6cf6;
   /* Rows with a review due today or in focus from the calendar pulse in it. */
   --review-highlight: var(--chart-2);
 }
@@ -102,6 +104,7 @@
 }
 
 @theme inline {
+  --color-brand: var(--brand);
   --font-sans: "Geist", sans-serif;
   --font-mono: "Geist Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);

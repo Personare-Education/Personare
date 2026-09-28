@@ -79,3 +79,23 @@ test("fuses plugin re-signs the macOS app ad hoc after flipping the fuses", () =
     fusesConfig: { resetAdHocDarwinSignature: true },
   });
 });
+
+/*
+ * Spec: docs/specs/app-icon.md -- the app and its installers use Personare's
+ * icon instead of Electron's.
+ */
+
+test("packages the app with Personare's icon", () => {
+  // Packager adds .ico (Windows) or .icns (macOS) to this base path.
+  expect(config.packagerConfig?.icon).toBe("./assets/icon");
+});
+
+test("the Windows installer uses Personare's icon", () => {
+  const maker = config.makers?.find(
+    (candidate) => "name" in candidate && candidate.name === "squirrel"
+  );
+
+  expect(maker).toMatchObject({
+    configOrConfigFetcher: { setupIcon: "./assets/icon.ico" },
+  });
+});
