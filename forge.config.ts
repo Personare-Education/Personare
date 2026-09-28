@@ -8,6 +8,7 @@ import { AutoUnpackNativesPlugin } from "@electron-forge/plugin-auto-unpack-nati
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
+import { adHocSignMacApps } from "./scripts/ad-hoc-sign";
 import { copyExternalModules } from "./scripts/copy-external-modules";
 import { EXTERNAL_MODULES } from "./scripts/external-modules";
 
@@ -21,6 +22,11 @@ const config: ForgeConfig = {
       arch
     ) => {
       await copyExternalModules(buildPath, { arch, platform });
+    },
+    // Last, once the fuses are flipped: the whole macOS bundle must carry a
+    // valid ad hoc signature, or Apple Silicon calls the app "damaged".
+    postPackage: async (_forgeConfig, { outputPaths, platform }) => {
+      await adHocSignMacApps(platform, outputPaths);
     },
   },
   makers: [
