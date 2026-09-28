@@ -351,6 +351,17 @@ describe("QuizRunnerDialog (Issue #95)", () => {
    * dialog stays open and shakes softly instead.
    */
   it("stays open and shakes when clicked outside", async () => {
+    // jsdom has no Web Animations API. The shake runs through it, apart from
+    // the dialog's CSS open animation: swapping that CSS animation for a
+    // shake replayed the open animation afterwards, so the dialog blinked.
+    let endShake: () => void = () => undefined;
+    const animate = vi.fn(() => ({
+      finished: new Promise<void>((resolve) => {
+        endShake = resolve;
+      }),
+    }));
+    HTMLElement.prototype.animate =
+      animate as unknown as HTMLElement["animate"];
     const { onOpenChange } = renderRunner();
     await screen.findByText(RUNNER_QUESTIONS[0].text);
     // Radix starts listening for outside clicks a tick after opening.
@@ -364,6 +375,15 @@ describe("QuizRunnerDialog (Issue #95)", () => {
 
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog")).toHaveAttribute("data-shaking");
+    expect(animate).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("dialog").className).not.toContain("dialog-shake");
+
+    // The mark comes off once the shake is over.
+    await act(async () => {
+      endShake();
+      await Promise.resolve();
+    });
+    expect(screen.getByRole("dialog")).not.toHaveAttribute("data-shaking");
   });
 
   it("completes the quiz from the result screen's button, like closing it", async () => {
