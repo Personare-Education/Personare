@@ -99,4 +99,3 @@ test("the Windows installer uses Personare's icon", () => {
     configOrConfigFetcher: { setupIcon: "./assets/icon.ico" },
   });
 });
-
