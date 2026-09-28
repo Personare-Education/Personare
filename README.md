@@ -96,6 +96,17 @@ When you open the app, it will check for updates automatically. If an update is 
 
 The auto update is implemented using [update-electron-app](https://github.com/electron/update-electron-app) to check the updates and apply them. For the publishing, it is using the [Electron Forge's GitHub publisher](https://www.electronforge.io/config/publishers/github).
 
+## macOS
+
+The release ships a `.dmg` and a `.zip` for Apple Silicon (`arm64`) and Intel (`x64`) Macs, built on GitHub's macOS runners (see [`docs/specs/macos-build.md`](docs/specs/macos-build.md)); they can't be built on Windows or Linux.
+
+> [!WARNING]
+> The app is only signed ad hoc, not with an Apple Developer ID, and isn't notarized. So:
+> - The first time it is opened, macOS blocks it ("Apple could not verify…"). Open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
+> - Auto update doesn't work on macOS: Squirrel.Mac only installs signed updates. Download new versions from the Releases page.
+>
+> Signing and notarizing need an [Apple Developer Program](https://developer.apple.com/programs/) membership.
+
 ## Documentation
 
 Check out the full documentation [here](https://github.com/Personare-Education/Personare).

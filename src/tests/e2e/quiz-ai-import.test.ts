@@ -273,16 +273,17 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   }
   expect(await countVisibleAnswers()).toBeLessThanOrEqual(4);
 
-  const originalSize = await electronApp.evaluate(({ BrowserWindow }) => {
-    const [window] = BrowserWindow.getAllWindows();
-    const [width, height] = window.getContentSize();
-    window.setContentSize(width, 1200);
-    return { height, width };
+  // The list itself is cut right at the bottom of the fourth answer. Checked
+  // on the list rather than by growing the window: macOS caps a window to its
+  // screen, and a CI screen is too short for four of these long answers.
+  const cutAtFourthAnswer = await review.getByRole("list").evaluate((list) => {
+    const fourth = list.children[3] as HTMLElement;
+    return (
+      Number.parseFloat((list as HTMLElement).style.maxHeight) ===
+      fourth.offsetTop + fourth.offsetHeight
+    );
   });
-  await expect.poll(countVisibleAnswers).toBe(4);
-  await electronApp.evaluate(({ BrowserWindow }, size) => {
-    BrowserWindow.getAllWindows()[0].setContentSize(size.width, size.height);
-  }, originalSize);
+  expect(cutAtFourthAnswer).toBe(true);
 
   // The last answer is reachable by scrolling the answers column.
   const lastAnswer = review.getByRole("listitem").last();

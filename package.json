@@ -1,6 +1,6 @@
 {
   "name": "personare",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "private": true,
   "description": "Dashboard desktop para academicos organizarem estudos com FSRS e curva do esquecimento",
   "license": "MIT",
@@ -70,6 +70,7 @@
     "@biomejs/biome": "^2.5.7",
     "@electron-forge/cli": "^7.11.2",
     "@electron-forge/maker-deb": "^7.11.2",
+    "@electron-forge/maker-dmg": "^7.11.2",
     "@electron-forge/maker-rpm": "^7.11.2",
     "@electron-forge/maker-squirrel": "^7.11.2",
     "@electron-forge/maker-zip": "^7.11.2",

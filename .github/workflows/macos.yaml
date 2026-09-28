@@ -1,0 +1,59 @@
+name: macOS
+
+# Builds the macOS installers and runs the e2e suite on the packaged app, so
+# packaging changes are proven on a Mac before a release
+# (docs/specs/macos-build.md). The .dmg/.zip are attached as artifacts.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - forge.config.ts
+      - package.json
+      - package-lock.json
+      - scripts/**
+      - src/main.ts
+      - src/main/**
+      - .github/workflows/macos.yaml
+  workflow_dispatch:
+
+jobs:
+  make-macos:
+    timeout-minutes: 30
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-latest is Apple Silicon; the Intel build is cross-packaged.
+        arch: [arm64, x64]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Make installers
+        run: npm run make -- --arch=${{ matrix.arch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: personare-macos-${{ matrix.arch }}
+          path: |
+            out/make/**/*.dmg
+            out/make/**/*.zip
+          if-no-files-found: error
+
+      # The runner can only launch the build matching its own CPU.
+      - name: Install Playwright Browsers
+        if: matrix.arch == 'arm64'
+        run: npx playwright install chromium
+
+      - name: Run Playwright tests on the packaged app
+        if: matrix.arch == 'arm64'
+        run: npm run test:e2e -- --workers=1

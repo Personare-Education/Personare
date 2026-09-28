@@ -81,4 +81,37 @@ describe("createPlaceholderTrayIcon (Issue #20)", () => {
 
     expect(createPlaceholderTrayIcon()).toBe(fakeIcon);
   });
+
+  /*
+   * Spec: docs/specs/macos-build.md -- macOS sizes menu bar icons in points:
+   * the 32px buffer marked as @2x shows at 16pt, crisp on Retina, instead of
+   * a 32pt circle towering over the menu bar.
+   */
+  it("marks the icon as @2x on macOS", () => {
+    createFromBufferMock.mockReturnValue({ isEmpty: () => false });
+
+    createPlaceholderTrayIcon("darwin");
+
+    const [, options] = createFromBufferMock.mock.calls.at(-1) as [
+      Buffer,
+      { scaleFactor?: number },
+    ];
+    expect(options).toEqual({
+      height: ICON_SIZE,
+      scaleFactor: 2,
+      width: ICON_SIZE,
+    });
+  });
+
+  it("keeps the icon at 1x elsewhere", () => {
+    createFromBufferMock.mockReturnValue({ isEmpty: () => false });
+
+    createPlaceholderTrayIcon("win32");
+
+    const [, options] = createFromBufferMock.mock.calls.at(-1) as [
+      Buffer,
+      { scaleFactor?: number },
+    ];
+    expect(options).toEqual({ height: ICON_SIZE, width: ICON_SIZE });
+  });
 });
