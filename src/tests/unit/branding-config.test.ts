@@ -14,8 +14,10 @@ const ROOT = path.resolve(import.meta.dirname, "../../..");
 const ELECTRON_SHADCN_RE = /electron-shadcn/i;
 const LUAN_ROGER_RE = /LuanRoger/i;
 const FORGE_OWNER_RE = /owner:\s*["']Personare-Education["']/;
-const FORGE_NAME_RE = /name:\s*["']Personare["']/;
-const MAIN_REPO_RE = /repo:\s*["']Personare-Education\/Personare["']/;
+// Releases live in a public repo of their own so the code repo can be
+// private (docs/specs/public-releases-repo.md).
+const FORGE_RELEASES_REPO_RE = /name:\s*["']personare-releases["']/;
+const MAIN_REPO_RE = /repo:\s*["']Personare-Education\/personare-releases["']/;
 
 test("package.json author reflects Personare identity, not LuanRoger", () => {
   const pkg = JSON.parse(
@@ -36,7 +38,16 @@ test("forge.config.ts publisher points to the Personare GitHub repository", () =
   expect(forgeConfigSource).not.toMatch(ELECTRON_SHADCN_RE);
   expect(forgeConfigSource).not.toMatch(LUAN_ROGER_RE);
   expect(forgeConfigSource).toMatch(FORGE_OWNER_RE);
-  expect(forgeConfigSource).toMatch(FORGE_NAME_RE);
+  expect(forgeConfigSource).toMatch(FORGE_RELEASES_REPO_RE);
+});
+
+test("the Publish Release workflow publishes with a token that can write to the releases repo", () => {
+  const workflow = readFileSync(
+    path.join(ROOT, ".github", "workflows", "publish.yaml"),
+    "utf-8"
+  );
+
+  expect(workflow).toContain("GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}");
 });
 
 test("src/main.ts auto-updater points to the Personare GitHub repository", () => {
