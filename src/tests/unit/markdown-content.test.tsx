@@ -41,4 +41,13 @@ describe("MarkdownContent (Issue #96)", () => {
 
     expect(container.querySelector(".katex-display")).not.toBeNull();
   });
+
+  it("renders LaTeX between \\(...\\) as a KaTeX formula", () => {
+    const { container } = render(
+      <MarkdownContent content={"\\(\\text{A} \\rightarrow \\text{B}\\)"} />
+    );
+
+    expect(container.querySelector(".katex")).not.toBeNull();
+    expect(container.textContent).not.toContain("\\(");
+  });
 });
