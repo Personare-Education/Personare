@@ -128,7 +128,7 @@ Rules:
 - Each question starts with a "## Question N" line, followed by its statement.
 - Each answer is a "- [ ]" list item; mark exactly ONE right answer per question with "- [x]".
 - Use 3 to 5 answers per question.
-- Write math in LaTeX, between $...$ (inline) or $$...$$ (block).
+- Use LaTeX only for actual math, always between $...$ (inline) or $$...$$ (block) — never \\(...\\) or \\[...\\]. Write plain text (words, sequences, arrows like →) as normal text, not LaTeX.
 - Provide the result as a downloadable file named quiz.md. If you cannot create files, put the whole quiz in a single markdown code block.`,
   "pt-BR": (
     theme
@@ -151,7 +151,7 @@ Regras:
 - Cada pergunta começa com uma linha "## Pergunta N", seguida do enunciado.
 - Cada alternativa é um item de lista "- [ ]"; marque exatamente UMA alternativa correta por pergunta com "- [x]".
 - Use de 3 a 5 alternativas por pergunta.
-- Escreva fórmulas matemáticas em LaTeX, entre $...$ (na linha) ou $$...$$ (em bloco).
+- Use LaTeX só para fórmulas matemáticas, sempre entre $...$ (na linha) ou $$...$$ (em bloco) — nunca \\(...\\) ou \\[...\\]. Escreva texto comum (palavras, sequências, setas como →) como texto normal, não em LaTeX.
 - Entregue o resultado como um arquivo para download chamado quiz.md. Se não puder gerar arquivos, coloque o quiz inteiro em um único bloco de código markdown.`,
 };
 
