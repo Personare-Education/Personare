@@ -17,6 +17,7 @@ const FORGE_OWNER_RE = /owner:\s*["']Personare-Education["']/;
 // Releases live in a public repo of their own so the code repo can be
 // private (docs/specs/public-releases-repo.md).
 const FORGE_RELEASES_REPO_RE = /name:\s*["']personare-releases["']/;
+const RELEASES_TOKEN_RE = /GITHUB_TOKEN: \$\{\{ secrets\.RELEASES_TOKEN \}\}/;
 const MAIN_REPO_RE = /repo:\s*["']Personare-Education\/personare-releases["']/;
 
 test("package.json author reflects Personare identity, not LuanRoger", () => {
@@ -47,7 +48,7 @@ test("the Publish Release workflow publishes with a token that can write to the 
     "utf-8"
   );
 
-  expect(workflow).toContain("GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}");
+  expect(workflow).toMatch(RELEASES_TOKEN_RE);
 });
 
 test("src/main.ts auto-updater points to the Personare GitHub repository", () => {
