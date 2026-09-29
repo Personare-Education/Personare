@@ -38,7 +38,10 @@ jobs:
       - name: Install and build
         run: npm ci
 
+      # Releases go to Personare-Education/personare-releases, which the
+      # workflow's own GITHUB_TOKEN can't write to: RELEASES_TOKEN is a
+      # fine-grained token with Contents read/write on that repo.
       - name: Publish Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: npm run publish -- ${{ matrix.arch && format('--arch={0}', matrix.arch) || '' }}

@@ -100,8 +100,10 @@ const config: ForgeConfig = {
       config: {
         draft: true,
         prerelease: true,
+        // Public, releases only, so the code repo can stay private
+        // (docs/specs/public-releases-repo.md).
         repository: {
-          name: "Personare",
+          name: "personare-releases",
           owner: "Personare-Education",
         },
       },

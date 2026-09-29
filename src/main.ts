@@ -187,7 +187,7 @@ async function installExtensions() {
 function checkForUpdates() {
   updateElectronApp({
     updateSource: {
-      repo: "Personare-Education/Personare",
+      repo: "Personare-Education/personare-releases",
       type: UpdateSourceType.ElectronPublicUpdateService,
     },
   });
