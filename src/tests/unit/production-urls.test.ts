@@ -20,7 +20,9 @@ describe("backend and website URLs", () => {
   test("the packaged app uses the deployed backend and website", async () => {
     const constants = await constantsFor("production");
 
-    expect(constants.BACKEND_BASE_URL).toBe("https://personare-backend.fly.dev");
+    expect(constants.BACKEND_BASE_URL).toBe(
+      "https://personare-backend.fly.dev"
+    );
     expect(constants.PERSONARE_SITE_URL).toBe(
       "https://personare-website.wandering-pond-32a8.workers.dev"
     );

@@ -14,17 +14,21 @@ export const ENVIRONMENT_VARIABLES = {
 export const inDevelopment = ENVIRONMENT_VARIABLES.NODE_ENV === "development";
 
 /**
- * No production backend is deployed yet (Issue #25/#26/#27 are still in
- * progress) -- this must become a real URL before Fase 2 ships to users.
+ * The shared backend (study-butler-backend on Fly.io). `npm start` talks to
+ * a local one instead (docs/specs/production-urls.md). No trailing slash:
+ * callers append the path.
  */
-export const BACKEND_BASE_URL = "http://localhost:3333";
+export const BACKEND_BASE_URL = inDevelopment
+  ? "http://localhost:3333"
+  : "https://personare-backend.fly.dev";
 
 /**
  * The public website (personare-website), where the beta is applied for and
- * activated. Like BACKEND_BASE_URL, still the local dev server until it is
- * deployed.
+ * activated. Local dev server under `npm start`, like BACKEND_BASE_URL.
  */
-export const PERSONARE_SITE_URL = "http://localhost:5173";
+export const PERSONARE_SITE_URL = inDevelopment
+  ? "http://localhost:5173"
+  : "https://personare-website.wandering-pond-32a8.workers.dev";
 
 export const OAUTH_PROTOCOL = "personare";
 export const OAUTH_REDIRECT_URI = `${OAUTH_PROTOCOL}://oauth-callback`;
