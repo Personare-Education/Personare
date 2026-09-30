@@ -29,4 +29,12 @@ describe("normalizeMathDelimiters", () => {
       "`\\(a\\)` and\n```\n\\[b\\]\n```\n$c$"
     );
   });
+
+  it("rewrites the Markdown-escaped \\\\(...\\\\) that Gemini writes", () => {
+    expect(
+      normalizeMathDelimiters(
+        "\\\\(\\text{Problema} \\rightarrow \\text{Código}\\\\) e \\\\(10 \\ \\% \\ 3\\\\)"
+      )
+    ).toBe("$\\text{Problema} \\rightarrow \\text{Código}$ e $10 \\ \\% \\ 3$");
+  });
 });

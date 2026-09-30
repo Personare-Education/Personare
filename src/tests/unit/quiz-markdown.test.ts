@@ -54,6 +54,18 @@ describe("parseQuizMarkdown", () => {
     expect(questions).toHaveLength(2);
   });
 
+  it("keeps a code block inside the question text", () => {
+    const code = "```c\nint x = 1;\nif (x) {\n    x++;\n}\n```";
+    const markdown = `\`\`\`\n## Pergunta 1\nConsidere o código:\n${code}\n\nQual o valor?\n\n- [ ] 1\n- [x] 2\n`;
+
+    const { errors, questions } = parseQuizMarkdown(markdown);
+
+    expect(errors).toEqual([]);
+    expect(questions[0].text).toBe(
+      `Considere o código:\n${code}\n\nQual o valor?`
+    );
+  });
+
   it("accepts Windows line endings", () => {
     const { questions } = parseQuizMarkdown(
       TWO_QUESTIONS.replace(/\n/g, "\r\n")

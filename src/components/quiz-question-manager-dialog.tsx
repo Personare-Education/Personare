@@ -61,11 +61,11 @@ function QuizQuestionRow({
 
   return (
     <li className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2">
-        <MarkdownContent content={question.text} />
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <MarkdownContent className="flex-1" content={question.text} />
         <ImageAttachmentViewer fileName={question.imagePath} />
       </div>
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <Button
           aria-label={editLabel}
           onClick={handleEditClick}
@@ -204,16 +204,17 @@ export default function QuizQuestionManagerDialog({
   return (
     <>
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent>
+        {/* Capped to the window: the question list scrolls, the header stays put. */}
+        <DialogContent className="max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{activity?.title}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <div className="flex justify-end">
-              <Button onClick={handleAddClick}>
-                {t("addQuizQuestionAction")}
-              </Button>
-            </div>
+          <div className="flex justify-end">
+            <Button onClick={handleAddClick}>
+              {t("addQuizQuestionAction")}
+            </Button>
+          </div>
+          <div className="-mx-1 min-h-0 overflow-y-auto px-1 pb-2 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
             {questions.length === 0 ? (
               <p>{t("quizQuestionsEmptyMessage")}</p>
             ) : (

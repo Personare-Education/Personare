@@ -60,41 +60,52 @@ function validate(
   return null;
 }
 
+interface QuestionBlock {
+  options: ParsedQuizOption[];
+  textLines: string[];
+}
+
 /**
  * Each question starts at a `## ` heading (its text is ignored); the lines
  * up to its first `- [ ]`/`- [x]` item are the question text, and those items
- * are the options. Anything before the first heading and code fences are
- * skipped, since AIs tend to wrap the file in chatter and ``` blocks.
+ * are the options. Anything before the first heading and code fences outside
+ * the question text are skipped, since AIs tend to wrap the file in chatter
+ * and ``` blocks; a code block inside the question text is kept as is.
  */
 export function parseQuizMarkdown(markdown: string): ParsedQuiz {
-  const blocks: string[][] = [];
+  const blocks: QuestionBlock[] = [];
+  let inCodeBlock = false;
 
   for (const line of markdown.split(LINE_BREAK)) {
-    if (CODE_FENCE.test(line)) {
+    const block = blocks.at(-1);
+    const isFence = CODE_FENCE.test(line);
+
+    if (block && block.options.length === 0 && (isFence || inCodeBlock)) {
+      if (isFence) {
+        inCodeBlock = !inCodeBlock;
+      }
+      block.textLines.push(line);
+      continue;
+    }
+    if (isFence) {
       continue;
     }
     if (QUESTION_HEADING.test(line)) {
-      blocks.push([]);
-    } else {
-      blocks.at(-1)?.push(line);
+      blocks.push({ options: [], textLines: [] });
+      continue;
+    }
+
+    const option = OPTION_LINE.exec(line);
+    if (option) {
+      block?.options.push({ isCorrect: option[1] !== " ", text: option[2] });
+    } else if (block && block.options.length === 0) {
+      block.textLines.push(line);
     }
   }
 
   const result: ParsedQuiz = { errors: [], questions: [] };
 
-  blocks.forEach((lines, index) => {
-    const textLines: string[] = [];
-    const options: ParsedQuizOption[] = [];
-
-    for (const line of lines) {
-      const option = OPTION_LINE.exec(line);
-      if (option) {
-        options.push({ isCorrect: option[1] !== " ", text: option[2] });
-      } else if (options.length === 0) {
-        textLines.push(line);
-      }
-    }
-
+  blocks.forEach(({ options, textLines }, index) => {
     const question = { options, text: textLines.join("\n").trim() };
     const reason = validate(question);
 

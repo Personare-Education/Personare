@@ -24,7 +24,7 @@ Enunciado, com uma ou mais linhas (Markdown e LaTeX: $...$ ou $$...$$).
 - O enunciado são as linhas entre o título e a primeira alternativa.
 - Alternativas são itens de lista de tarefas (`- [ ]` / `- [x]`, também com `*`). Exatamente uma
   marcada como correta.
-- Tolerância a respostas de IA: texto antes do primeiro `## ` e cercas de código (```) são ignorados.
+- Tolerância a respostas de IA: texto antes do primeiro `## ` e cercas de código (```) fora do enunciado são ignorados; um bloco de código dentro do enunciado é mantido. LaTeX entre `\(...\)`/`\[...\]` (inclusive escapado como `\\(...\\)`) é convertido para `$...$`/`$$...$$` na renderização.
 - Uma pergunta inválida (sem enunciado, menos de 2 alternativas, ou sem exatamente 1 correta) vira um
   erro com o número da pergunta e **não** impede as válidas.
 
