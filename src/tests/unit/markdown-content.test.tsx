@@ -50,4 +50,15 @@ describe("MarkdownContent (Issue #96)", () => {
     expect(container.querySelector(".katex")).not.toBeNull();
     expect(container.textContent).not.toContain("\\(");
   });
+
+  it("renders a fenced code block as a styled <pre>, keeping its lines", () => {
+    const { container } = render(
+      <MarkdownContent content={"```c\nint x = 1;\nx++;\n```"} />
+    );
+
+    const pre = container.querySelector("pre");
+    expect(pre).not.toBeNull();
+    expect(pre).toHaveClass("bg-muted");
+    expect(pre?.textContent).toBe("int x = 1;\nx++;\n");
+  });
 });

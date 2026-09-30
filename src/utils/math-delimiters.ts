@@ -1,13 +1,14 @@
 /**
  * AIs (Gemini in particular) often write LaTeX with the \(...\) and \[...\]
  * delimiters, which remark-math does not understand: rendered as-is they show
- * up as raw LaTeX source. Rewrites them to the $...$/$$...$$ delimiters
+ * up as raw LaTeX source. They also come Markdown-escaped, as \\(...\\), which
+ * would render as \(...\). Rewrites both to the $...$/$$...$$ delimiters
  * KaTeX renders, leaving code blocks and inline code untouched.
  */
 
 const CODE_SEGMENT = /(```[\s\S]*?(?:```|$)|`[^`\n]*`)/;
-const DISPLAY_MATH = /\\\[([\s\S]+?)\\\]/g;
-const INLINE_MATH = /\\\(([\s\S]+?)\\\)/g;
+const DISPLAY_MATH = /\\{1,2}\[([\s\S]+?)\\{1,2}\]/g;
+const INLINE_MATH = /\\{1,2}\(([\s\S]+?)\\{1,2}\)/g;
 
 export function normalizeMathDelimiters(markdown: string): string {
   return markdown
