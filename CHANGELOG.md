@@ -6,6 +6,29 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.8] - 2026-09-30
+
+### Fixed
+
+- **Fórmulas de quizzes gerados pelo Gemini ainda apareciam como código LaTeX**
+  ([#145](https://github.com/Personare-Education/Personare/pull/145)). O Gemini escreve os
+  delimitadores escapados para Markdown (`\\(...\\)`), e a correção do alpha.7 só reconhecia
+  `\(...\)`: sobrava uma `\` que deixava o `$` literal. As duas formas agora são renderizadas.
+- **Blocos de código no enunciado de uma pergunta viravam uma linha só** na importação do quiz, e
+  blocos e código inline não tinham estilo. O código é mantido como está e exibido com fundo, borda
+  e fonte monoespaçada. Quizzes importados antes precisam ser reimportados.
+- **O dialog "Gerenciar perguntas" passava da altura da janela** com muitas perguntas, escondendo o
+  título. Agora ele cabe na janela e só a lista rola.
+
+## [0.1.0-alpha.7] - 2026-09-29
+
+### Fixed
+
+- **Fórmulas LaTeX entre `\(...\)` e `\[...\]` apareciam como código**
+  ([#143](https://github.com/Personare-Education/Personare/pull/143)). Esses delimitadores agora são
+  renderizados como `$...$`/`$$...$$`, e o prompt de geração de quiz pede à IA para usar LaTeX só
+  em fórmulas.
+
 ## [0.1.0-alpha.4] - 2026-09-26
 
 ### Added
