@@ -92,6 +92,8 @@ function FlashcardRow({
 
 interface FlashcardManagerDialogProps {
   activity: Activity | null;
+  /** The program's color, for the card in the flashcard form. */
+  color?: string | null;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   /**
@@ -104,6 +106,7 @@ interface FlashcardManagerDialogProps {
 
 export default function FlashcardManagerDialog({
   activity,
+  color = null,
   onOpenChange,
   open,
   startWithNewItem = false,
@@ -210,6 +213,7 @@ export default function FlashcardManagerDialog({
         </DialogContent>
       </Dialog>
       <FlashcardFormDialog
+        color={color}
         flashcard={formFlashcard}
         onOpenChange={handleFormOpenChange}
         onSubmit={handleFormSubmit}

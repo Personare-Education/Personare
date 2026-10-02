@@ -73,6 +73,17 @@ const DUE_ITEMS = [
   },
 ];
 
+function card() {
+  return screen.getByRole("button", { name: i18n.t("flipFlashcardAction") });
+}
+
+/** The face the card currently shows (the other one is aria-hidden). */
+function visibleFace() {
+  return card().querySelector(
+    '[data-face]:not([aria-hidden="true"])'
+  ) as HTMLElement;
+}
+
 function renderSession(activity: Activity | null = REVIEW_ACTIVITY) {
   const onOpenChange = vi.fn();
 
@@ -192,6 +203,59 @@ describe("ReviewSessionDialog (Issue #16)", () => {
       screen.getByRole("button", { name: i18n.t("revealAnswerAction") })
     ).toBeInTheDocument();
     expect(listDue).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * docs/specs/flashcard-editor-and-creation-flow.md AC-11..13: the card is
+   * the same flipping card as the flashcard editor's.
+   */
+  it("shows the card on its front, unflipped, before revealing", async () => {
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    expect(card()).toHaveAttribute("aria-pressed", "false");
+    expect(visibleFace()).toHaveAttribute("data-face", "front");
+  });
+
+  it("flips the card to the back when the answer is revealed", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("revealAnswerAction") })
+    );
+
+    expect(card()).toHaveAttribute("aria-pressed", "true");
+    expect(visibleFace()).toHaveTextContent(DUE_ITEMS[0].back);
+  });
+
+  it("reveals the answer when the card itself is clicked", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.click(card());
+
+    expect(visibleFace()).toHaveTextContent(DUE_ITEMS[0].back);
+    expect(
+      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+    ).toBeInTheDocument();
+  });
+
+  it("shows the next card on its front, without its back, after a rating", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+    await user.click(card());
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+    );
+
+    await screen.findByText(DUE_ITEMS[1].front);
+    expect(card()).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByText(DUE_ITEMS[1].back)).not.toBeInTheDocument();
   });
 
   it("shows the session-complete message after rating the last item in the queue", async () => {

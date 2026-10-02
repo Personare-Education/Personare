@@ -37,6 +37,14 @@
 9. **Concluir:** envia o que estiver no editor, valida, salva e fecha. Sem nada, só fecha.
 10. Ao editar um card existente, o primeiro salvamento o atualiza; os seguintes são criados.
 
+### Revisão do baralho
+
+11. A sessão de revisão mostra o flashcard no **mesmo cartão que gira**: começa na frente, e
+    **Revelar resposta** (ou clicar no cartão) gira o cartão para o verso e mostra as avaliações.
+12. O verso só entra no cartão quando é revelado: antes disso, não está na tela nem na árvore.
+13. Depois de avaliar, o próximo card aparece já na frente, **sem** girar de volta (girar de volta
+    mostraria o verso do próximo card no meio do giro).
+
 ## Escolhas técnicas
 
 - `onSubmit(flashcardId | null, values): Promise<void>`. A janela decide quando fechar, e o
@@ -45,6 +53,6 @@
 - A página decide o que abrir depois de criar com `followUpForCreatedActivity(type)`
   (`src/utils/activity-follow-up.ts`), uma função pura e testada. Um quiz que chega pelo `onSubmit`
   é sempre o manual: o de IA chega pelo `onImportQuiz`.
-- O giro é CSS 3D (`perspective`, `transform-3d`, `backface-hidden`, `rotate-y-180`), com
+- O cartão é o componente `FlipCard`, usado pela janela de flashcard e pela revisão. O giro é CSS 3D (`perspective`, `transform-3d`, `backface-hidden`, `rotate-y-180`), com
   `motion-reduce` sem animação.
 - O `MarkdownComposer` ganha `disabled`. O `MarkdownEditor` antigo deixa de ser usado e é removido.

@@ -60,34 +60,47 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
   await page.getByRole("radio", { name: CREATE_MANUALLY }).click();
   await page.getByRole("button", { name: "Save" }).click();
 
-  const quizRow = page.getByRole("row", { name: new RegExp(quizName) });
-  await quizRow.getByLabel("Manage questions").click();
+  // Creating a manual quiz opens its question manager with the form for the
+  // first question already up (docs/specs/flashcard-editor-and-creation-flow.md).
   const manager = page.getByRole("dialog", { name: quizName });
+  const questionForm = page.getByRole("dialog").last();
+  const editor = questionForm.getByRole("textbox", {
+    name: "Question text or alternative",
+  });
 
-  // The first option is always the correct one.
-  async function addQuestion(text: string, right: string, wrong: string) {
-    await manager.getByRole("button", { name: "Add question" }).click();
-    const questionForm = page.getByRole("dialog").last();
-    await questionForm
-      .getByRole("textbox", { name: "Question text" })
-      .fill(text);
-    const optionInputs = questionForm.getByRole("textbox", {
-      name: "Option text",
-    });
-    await optionInputs.nth(0).fill(right);
-    await optionInputs.nth(1).fill(wrong);
-    await questionForm.getByRole("radio").first().check();
-    await questionForm.getByRole("button", { name: "Save" }).click();
-
-    // Saving closes the question form; the question manager stays open.
-    await expect(manager.getByText(text)).toBeVisible();
+  // One editor: the first submission is the question, the next ones its
+  // alternatives (docs/specs/quiz-question-single-editor.md).
+  async function send(text: string) {
+    await editor.fill(text);
+    await editor.press("Shift+Enter");
   }
 
-  await addQuestion("2 + 2?", "4", "5");
-  await addQuestion("3 + 3?", "6", "7");
+  // The first alternative is always the correct one.
+  async function writeQuestion(text: string, right: string, wrong: string) {
+    await send(text);
+    await send(right);
+    await send(wrong);
+    await questionForm
+      .getByRole("button", { name: "Mark as correct" })
+      .first()
+      .click();
+  }
+
+  await writeQuestion("2 + 2?", "4", "5");
+  await questionForm.getByRole("button", { name: "Add question" }).click();
+  // Saved and reset for the next question.
+  await expect(
+    questionForm.getByRole("region", { name: "Question text" })
+  ).toHaveCount(0);
+  await writeQuestion("3 + 3?", "6", "7");
+  await questionForm.getByRole("button", { name: "Done" }).click();
+
+  await expect(manager.getByText("2 + 2?")).toBeVisible();
+  await expect(manager.getByText("3 + 3?")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
+  const quizRow = page.getByRole("row", { name: new RegExp(quizName) });
   await quizRow.getByLabel("Take quiz").click();
   const runner = page.getByRole("dialog", { name: quizName });
   // One right, one wrong: both chart sections must show up.

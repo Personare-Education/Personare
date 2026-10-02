@@ -19,6 +19,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Flashcards com o mesmo editor.** O primeiro envio é a frente e o segundo o verso, num cartão que
   gira ao ser clicado. Cada face tem **Editar**, e **Adicionar flashcard** e **Concluir** funcionam
   como nas perguntas do Quiz.
+- **A revisão do baralho usa o mesmo cartão.** **Revelar resposta** (ou um clique no cartão) gira o
+  cartão para o verso. O próximo card já aparece na frente, sem mostrar o verso dele no meio do giro.
+- **Os flashcards têm a cor do programa**, com o mesmo gradiente e brilho dos cards de programa, no
+  editor e na revisão.
 - **Criar um Quiz manual ou um baralho de Flashcards já abre o primeiro item.** Depois de salvar a
   atividade, a janela da primeira pergunta (ou do primeiro card) abre direto, e ao concluir aparece a
   lista do que foi criado.

@@ -1,12 +1,7 @@
 import { Pencil } from "lucide-react";
-import {
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import FlipCard from "@/components/flip-card";
 import ImageAttachmentViewer from "@/components/image-attachment-viewer";
 import MarkdownComposer from "@/components/markdown-composer";
 import MarkdownContent from "@/components/markdown-content";
@@ -18,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { resolveProgramColor } from "@/constants/program-appearance";
 import { useDialogShake } from "@/hooks/use-dialog-shake";
-import { cn } from "@/utils/tailwind";
 
 export interface FlashcardFormValue {
   back: string;
@@ -51,8 +46,6 @@ interface Faces {
 const EMPTY_DRAFT: FaceContent = { imagePath: null, text: "" };
 const EMPTY_FACES: Faces = { back: null, front: null };
 const FADE_MS = 150;
-const FLIP_KEYS = new Set(["Enter", " "]);
-
 function facesFromFlashcard(flashcard: FlashcardFormValue | null): Faces {
   if (!flashcard) {
     return EMPTY_FACES;
@@ -95,47 +88,21 @@ function fade(element: HTMLElement | null, from: number, to: number) {
     .catch(() => undefined);
 }
 
-interface CardFaceProps {
-  content: FaceContent | null;
-  face: Face;
-  isEditing: boolean;
-  isVisible: boolean;
-}
-
-function CardFace({ content, face, isEditing, isVisible }: CardFaceProps) {
+function FaceText({ content }: { content: FaceContent | null }) {
   const { t } = useTranslation();
 
-  return (
-    <div
-      aria-hidden={!isVisible}
-      className={cn(
-        "backface-hidden flex min-h-44 flex-col gap-2 rounded-xl border p-4 shadow-sm [grid-area:1/1]",
-        face === "back" ? "rotate-y-180 bg-muted/40" : "bg-card",
-        isEditing && "ring-2 ring-ring/40"
-      )}
-      data-face={face}
-    >
-      <span className="text-muted-foreground text-xs">
-        {face === "front" ? t("flashcardFrontLabel") : t("flashcardBackLabel")}
-        {isEditing ? ` · ${t("quizComposerEditingLabel")}` : ""}
-      </span>
-      <div className="flex flex-1 items-center justify-center text-center">
-        {content ? (
-          <MarkdownContent className="text-base" content={content.text} />
-        ) : (
-          <span className="text-muted-foreground text-sm">
-            {t("flashcardFaceEmptyMessage")}
-          </span>
-        )}
-      </div>
-      <span className="self-center text-[0.625rem] text-muted-foreground">
-        {t("flashcardFlipHint")}
-      </span>
-    </div>
+  return content ? (
+    <MarkdownContent className="text-base" content={content.text} />
+  ) : (
+    <span className="text-muted-foreground text-sm">
+      {t("flashcardFaceEmptyMessage")}
+    </span>
   );
 }
 
 interface FlashcardFormDialogProps {
+  /** The program's color, for the card. */
+  color?: string | null;
   flashcard: FlashcardFormValue | null;
   onOpenChange: (open: boolean) => void;
   /**
@@ -156,6 +123,7 @@ interface FlashcardFormDialogProps {
  * vertical axis when clicked. It only closes through "Done" or its X.
  */
 export default function FlashcardFormDialog({
+  color = null,
   flashcard,
   onOpenChange,
   onSubmit,
@@ -229,16 +197,6 @@ export default function FlashcardFormDialog({
   const handleFlip = useCallback(() => {
     setShowingBack((prev) => !prev);
   }, []);
-
-  const handleCardKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (FLIP_KEYS.has(event.key)) {
-        event.preventDefault();
-        handleFlip();
-      }
-    },
-    [handleFlip]
-  );
 
   const visibleFace: Face = showingBack ? "back" : "front";
   const visibleContent = faces[visibleFace];
@@ -331,6 +289,14 @@ export default function FlashcardFormDialog({
     }
   }, [onOpenChange, saveCurrent]);
 
+  const faceLabel = (face: Face) => {
+    const label =
+      face === "front" ? t("flashcardFrontLabel") : t("flashcardBackLabel");
+    return editing === face
+      ? `${label} · ${t("quizComposerEditingLabel")}`
+      : label;
+  };
+
   const target = targetFace(faces, editing);
   let submitLabel = t("flashcardComposerCompleteLabel");
   let placeholder = t("flashcardComposerCompletePlaceholder");
@@ -367,36 +333,17 @@ export default function FlashcardFormDialog({
           className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4"
           ref={bodyRef}
         >
-          {/* biome-ignore lint/a11y/useSemanticElements: the card holds Markdown blocks, which a <button> cannot contain. */}
-          <div
-            aria-label={t("flipFlashcardAction")}
-            aria-pressed={showingBack}
-            className="perspective-distant mx-auto w-full max-w-md cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
-            onClick={handleFlip}
-            onKeyDown={handleCardKeyDown}
-            role="button"
-            tabIndex={0}
-          >
-            <div
-              className={cn(
-                "transform-3d grid transition-transform duration-500 ease-out motion-reduce:transition-none",
-                showingBack && "rotate-y-180"
-              )}
-            >
-              <CardFace
-                content={faces.front}
-                face="front"
-                isEditing={editing === "front"}
-                isVisible={!showingBack}
-              />
-              <CardFace
-                content={faces.back}
-                face="back"
-                isEditing={editing === "back"}
-                isVisible={showingBack}
-              />
-            </div>
-          </div>
+          <FlipCard
+            back={<FaceText content={faces.back} />}
+            backLabel={faceLabel("back")}
+            color={resolveProgramColor(color)}
+            flipped={showingBack}
+            front={<FaceText content={faces.front} />}
+            frontLabel={faceLabel("front")}
+            highlightedFace={editing}
+            hint={t("flashcardFlipHint")}
+            onFlip={handleFlip}
+          />
           <div className="flex items-center justify-center gap-2">
             <Button
               disabled={!visibleContent}

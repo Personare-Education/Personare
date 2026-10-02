@@ -65,6 +65,8 @@ function ModuleActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [programName, setProgramName] = useState("");
+  // The program's color, for the flashcards (editor and review).
+  const [programColor, setProgramColor] = useState<string | null>(null);
   const [moduleName, setModuleName] = useState("");
   const [reviewStateByActivityId, setReviewStateByActivityId] = useState<
     Record<string, ActivityReviewState | undefined>
@@ -124,6 +126,7 @@ function ModuleActivitiesPage() {
     listPrograms().then((programs) => {
       const program = programs.find((item) => item.id === programId);
       setProgramName(program?.name ?? "");
+      setProgramColor(program?.color ?? null);
     });
   }, [programId]);
 
@@ -394,12 +397,14 @@ function ModuleActivitiesPage() {
       />
       <FlashcardManagerDialog
         activity={activityBeingManagedFlashcards}
+        color={programColor}
         onOpenChange={handleFlashcardManagerOpenChange}
         open={activityBeingManagedFlashcards !== null}
         startWithNewItem={startingFollowUp === "flashcards"}
       />
       <ReviewSessionDialog
         activity={activityInReview}
+        color={programColor}
         onOpenChange={handleReviewSessionOpenChange}
         open={activityInReview !== null}
       />
