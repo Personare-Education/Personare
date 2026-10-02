@@ -15,8 +15,9 @@ ganha a sua cor, numa cascata coluna por coluna: atraso `coluna × 45ms + linha 
 
 1. As células do `ActivityHeatmap` "preenchem" com a mesma animação do site (mesmos tempos e curva).
    A cor e a opacidade de cada nível continuam as do app.
-2. A cascata começa na **primeira semana visível**. O heatmap tem 53 semanas e rola até o fim, e as
-   semanas escondidas à esquerda não atrasam as visíveis.
+2. A cascata vai **do dia mais recente para o mais antigo**: começa na última semana (à direita,
+   a parte que o card mostra, já que o heatmap rola até o fim) e, dentro de cada semana, do último
+   dia para o primeiro.
 3. A animação toca **quando as contagens chegam**. Um heatmap ainda sem dados não anima, e uma
    atualização posterior dos dados (outra revisão feita) não repete a animação.
 4. Com `prefers-reduced-motion: reduce`, não há animação.
@@ -25,7 +26,7 @@ ganha a sua cor, numa cascata coluna por coluna: atraso `coluna × 45ms + linha 
 
 - CSS em `src/styles/global.css`: `@keyframes heatmap-cell-fill` e a classe `.heatmap-cell`, que lê
   `--col` e `--row` de cada célula.
-- O componente passa `--col` como a coluna **relativa à primeira visível** (nunca negativa), medida
-  em `useLayoutEffect`, antes do primeiro paint, junto com a rolagem até o fim.
+- O componente passa `--col` como a distância da semana até a mais recente e `--row` como a
+  distância do dia até o último da semana: o atraso cresce com a idade do dia.
 - As células só ganham `.heatmap-cell` quando há contagens. O grupo de células é remontado (por
   `key`) só na passagem de "sem dados" para "com dados", e é isso que faz a animação tocar uma vez.

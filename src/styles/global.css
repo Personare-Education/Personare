@@ -184,9 +184,9 @@
 /*
  * The program cards' heatmap "fills in" once its counts arrive, like the
  * website's (docs/specs/heatmap-fill-animation.md): each cell starts as an
- * empty day, a little smaller, and takes its color, week by week from the
- * first visible one (--col) and day by day (--row). The color and opacity
- * it ends on are the cell's own inline style.
+ * empty day, a little smaller, and takes its color, from the most recent
+ * day to the oldest: week by week (--col) and day by day (--row). The color
+ * and opacity it ends on are the cell's own inline style.
  */
 @keyframes heatmap-cell-fill {
   from {

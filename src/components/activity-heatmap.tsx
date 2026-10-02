@@ -30,9 +30,6 @@ const LEVEL_OPACITY: Record<HeatmapLevel, string> = {
   4: "var(--heatmap-level-4)",
 };
 
-/** A cell (size-2.5, 10px) plus the gap between weeks (3px). */
-const WEEK_PITCH_PX = 13;
-
 export function ActivityHeatmap({
   color,
   counts,
@@ -41,10 +38,6 @@ export function ActivityHeatmap({
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
-  // The fill animation cascades from the first week the card shows: the
-  // grid scrolls to its end, so the weeks hidden on the left must not delay
-  // the visible ones (docs/specs/heatmap-fill-animation.md AC-2).
-  const [firstVisibleWeek, setFirstVisibleWeek] = useState(0);
   const heatmapWeeks = useMemo(
     () => buildHeatmapWeeks(counts, { weeks }),
     [counts, weeks]
@@ -54,8 +47,6 @@ export function ActivityHeatmap({
     [counts]
   );
 
-  // A layout effect: measured before the first paint, so the cascade
-  // already starts at the right week.
   useLayoutEffect(() => {
     const node = scrollRef.current;
     if (!node) {
@@ -63,12 +54,8 @@ export function ActivityHeatmap({
     }
 
     const updateScrollability = () => {
-      const hiddenWidth = node.scrollWidth - node.clientWidth;
-      const scrollable = hiddenWidth > 0;
+      const scrollable = node.scrollWidth > node.clientWidth;
       setIsScrollable(scrollable);
-      setFirstVisibleWeek(
-        scrollable ? Math.floor(hiddenWidth / WEEK_PITCH_PX) : 0
-      );
 
       if (scrollable) {
         node.scrollLeft = node.scrollWidth;
@@ -121,8 +108,10 @@ export function ActivityHeatmap({
                 style={
                   day
                     ? ({
-                        "--col": Math.max(0, weekIndex - firstVisibleWeek),
-                        "--row": dayIndex,
+                        // Most recent first (AC-2): the delay grows with
+                        // the day's age, week by week, then day by day.
+                        "--col": heatmapWeeks.length - 1 - weekIndex,
+                        "--row": week.length - 1 - dayIndex,
                         backgroundColor:
                           day.level === 0 ? "var(--heatmap-empty-cell)" : color,
                         opacity: day.level === 0 ? 1 : LEVEL_OPACITY[day.level],

@@ -9,7 +9,7 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ### Added
 
 - **O heatmap dos cards de programa "preenche" ao carregar**, com a mesma animação do site: cada dia
-  começa vazio e ganha a cor numa cascata semana a semana, a partir da primeira semana visível. Toca
+  começa vazio e ganha a cor numa cascata do dia mais recente para o mais antigo. Toca
   uma vez, quando os dados chegam, e não anima com "reduzir movimento" ligado no sistema.
 
 ### Changed

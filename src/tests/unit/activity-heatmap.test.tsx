@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { format, subDays } from "date-fns";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
 import "@/localization/i18n";
 
@@ -37,7 +37,7 @@ describe("ActivityHeatmap (Issue #99)", () => {
 
 /**
  * RED phase (docs/specs/heatmap-fill-animation.md): the cells "fill in"
- * with the website's animation, cascading from the first visible week, and
+ * with the website's animation, from the most recent day to the oldest, and
  * only once the counts arrive.
  */
 describe("ActivityHeatmap fill animation", () => {
@@ -74,7 +74,7 @@ describe("ActivityHeatmap fill animation", () => {
     expect(container.querySelector(".heatmap-cell")).toBeNull();
   });
 
-  it("gives each cell its column and row for the cascade", () => {
+  it("cascades from the most recent day to the oldest", () => {
     const { container } = render(
       <ActivityHeatmap color="#ef4444" counts={COUNTS} weeks={4} />
     );
@@ -90,39 +90,13 @@ describe("ActivityHeatmap fill animation", () => {
         if (!cell.classList.contains("heatmap-cell")) {
           continue;
         }
-        expect(cell.style.getPropertyValue("--col")).toBe(String(week));
-        expect(cell.style.getPropertyValue("--row")).toBe(String(row));
+        // Most recent first: week 3 (the last of 4) and the last day of a
+        // week have no delay.
+        expect(cell.style.getPropertyValue("--col")).toBe(String(3 - week));
+        expect(cell.style.getPropertyValue("--row")).toBe(
+          String(days.length - 1 - row)
+        );
       }
-    }
-  });
-
-  it("starts the cascade at the first visible week when the heatmap scrolls", () => {
-    const scrollWidth = vi
-      .spyOn(HTMLElement.prototype, "scrollWidth", "get")
-      .mockReturnValue(4 * 13);
-    const clientWidth = vi
-      .spyOn(HTMLElement.prototype, "clientWidth", "get")
-      .mockReturnValue(2 * 13);
-    try {
-      const { container } = render(
-        <ActivityHeatmap color="#ef4444" counts={COUNTS} weeks={4} />
-      );
-      const weekColumns = Array.from(
-        container.querySelectorAll<HTMLElement>("[role='img'] > div")
-      );
-      const colOf = (week: number) =>
-        weekColumns[week]
-          .querySelector<HTMLElement>(".heatmap-cell")
-          ?.style.getPropertyValue("--col");
-
-      // 4 weeks, room for 2: weeks 0-1 are hidden on the left.
-      expect(colOf(0)).toBe("0");
-      expect(colOf(1)).toBe("0");
-      expect(colOf(2)).toBe("0");
-      expect(colOf(3)).toBe("1");
-    } finally {
-      scrollWidth.mockRestore();
-      clientWidth.mockRestore();
     }
   });
 
