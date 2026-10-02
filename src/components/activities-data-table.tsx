@@ -16,6 +16,7 @@ import { openExternalLink } from "@/actions/shell";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
+import { RATING_LABEL_KEYS } from "@/components/rating-buttons";
 import ReviewHighlightTableFrame from "@/components/review-highlight-table-frame";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import {
@@ -27,7 +28,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { resolveEventCalendarLocale } from "@/utils/event-calendar-i18n";
 import type { ReviewHighlight } from "@/utils/review-highlight";
+import { formatRelativeDue } from "@/utils/review-time";
 
 export interface Activity {
   createdAt: Date;
@@ -52,12 +55,9 @@ const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<string, string> = {
   quiz: "activityTypeQuiz",
 };
 
-const RATING_TRANSLATION_KEYS: Record<string, string> = {
-  again: "ratingAgainAction",
-  easy: "ratingEasyAction",
-  good: "ratingGoodAction",
-  hard: "ratingHardAction",
-};
+// A whole activity's rating, in its own words (docs/specs/rating-clarity.md AC-2).
+const RATING_TRANSLATION_KEYS: Record<string, string> =
+  RATING_LABEL_KEYS.activity;
 
 type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
@@ -110,7 +110,8 @@ function ActivityRow({
   onViewPdf,
   reviewState,
 }: ActivityRowProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const locale = resolveEventCalendarLocale(i18n.language);
 
   // The first action is what clicking the row does.
   const actions = useMemo<RowAction[]>(() => {
@@ -224,7 +225,14 @@ function ActivityRow({
         ) : null}
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {reviewState ? format(reviewState.dueDate, "yyyy-MM-dd") : null}
+        {reviewState ? (
+          <time
+            dateTime={format(reviewState.dueDate, "yyyy-MM-dd")}
+            title={format(reviewState.dueDate, "PPPP", { locale })}
+          >
+            {formatRelativeDue(reviewState.dueDate, new Date(), t)}
+          </time>
+        ) : null}
       </TableCell>
     </ActionableTableRow>
   );

@@ -17,11 +17,21 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   mostra o número de revisões pendentes.
 - **Atalhos na revisão:** Espaço revela a resposta, e as teclas 1 a 4 avaliam (Errei, Difícil, Bom,
   Fácil).
+- **Cada botão de avaliação mostra quando seria a próxima revisão** ("Bom · 4 dias", "Errei · 1
+  minuto"), calculado pelo próprio FSRS para aquele item.
+- **Atividades têm uma escala própria:** "Não entendi / Com esforço / Entendi / Fácil demais" no
+  lugar de "Errei / Difícil / Bom / Fácil", que fica para os flashcards.
 - **"N para revisar" nos cards de programa**, e um selo visível de "Revisão para hoje" / "Revisão
   atrasada" na linha da tabela (antes, só leitores de tela recebiam esse texto).
 
 ### Changed
 
+- **Tabela de atividades:** a coluna "Progresso" passa a se chamar "Última avaliação", e a próxima
+  revisão aparece como "hoje", "amanhã", "em 4 dias" ou "atrasada há 2 dias", com a data completa ao
+  passar o mouse.
+- O seletor de idioma mostra "English" e "Português"; um tempo de quiz abaixo de um segundo aparece
+  como "<1s"; a lista do resultado do quiz se chama "Respostas"; e "Sincronizar agora" explica por que
+  está desabilitado.
 - **Tipografia nova, no espírito da do Claude.** Newsreader (serifada de texto, com itálico de verdade)
   nos títulos e no conteúdo de estudo (perguntas, alternativas, flashcards), e Instrument Sans em toda
   a interface. As duas são gratuitas e vêm dentro do app. Isso também corrige um bug antigo: o app pedia

@@ -32,6 +32,8 @@ vi.mock("@/actions/review", () => ({
   ensureReviewItems: vi.fn().mockResolvedValue(undefined),
   listDue: vi.fn().mockResolvedValue([]),
   markActivityDifficulty: vi.fn().mockResolvedValue({}),
+  previewActivityRatings: vi.fn().mockResolvedValue({}),
+  previewItemRatings: vi.fn().mockResolvedValue({}),
   submitRating: vi.fn().mockResolvedValue({}),
 }));
 vi.mock("@/actions/shell", () => ({

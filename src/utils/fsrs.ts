@@ -1,5 +1,11 @@
 import type { Card, Grade, ReviewLog, StateType } from "ts-fsrs";
-import { createEmptyCard, fsrs, generatorParameters, State } from "ts-fsrs";
+import {
+  createEmptyCard,
+  fsrs,
+  generatorParameters,
+  Rating,
+  State,
+} from "ts-fsrs";
 
 /**
  * ts-fsrs's default enable_short_term:true treats a rating as one step in
@@ -99,6 +105,42 @@ export function applyRating(
       : shortTermScheduler;
 
   return scheduler.next(toFsrsCard(row), now, rating);
+}
+
+export type PreviewRating = "again" | "hard" | "good" | "easy";
+
+const PREVIEW_GRADES: Record<PreviewRating, Grade> = {
+  again: Rating.Again,
+  easy: Rating.Easy,
+  good: Rating.Good,
+  hard: Rating.Hard,
+};
+
+/**
+ * When the next review would be for each rating (docs/specs/rating-clarity.md
+ * AC-1), with the same scheduler applyRating uses -- a whole Activity's
+ * rating passes shortTermEnabled: false, like markActivityDifficulty. A null
+ * row is an item never reviewed (a fresh card).
+ */
+export function previewRatings(
+  row: ReviewItemRow | null,
+  now: Date,
+  options?: { shortTermEnabled?: boolean }
+): Record<PreviewRating, Date> {
+  const scheduler =
+    options?.shortTermEnabled === false
+      ? longTermScheduler
+      : shortTermScheduler;
+  const card = row ? toFsrsCard(row) : createEmptyCard(now);
+  const preview = {} as Record<PreviewRating, Date>;
+  for (const [rating, grade] of Object.entries(PREVIEW_GRADES)) {
+    preview[rating as PreviewRating] = scheduler.next(
+      card,
+      now,
+      grade
+    ).card.due;
+  }
+  return preview;
 }
 
 export function fromFsrsCard(card: Card): ReviewItemUpdateFields {

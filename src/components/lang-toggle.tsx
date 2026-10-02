@@ -24,7 +24,7 @@ export default function LangToggle() {
           value={lang.key}
           variant="outline"
         >
-          {`${lang.prefix}`}
+          {lang.nativeName}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

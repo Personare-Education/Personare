@@ -16,6 +16,8 @@ vi.mock("@/actions/review", () => ({
   ensureReviewItems: vi.fn().mockResolvedValue(undefined),
   listDue: vi.fn(),
   markActivityDifficulty: vi.fn().mockResolvedValue({}),
+  previewActivityRatings: vi.fn().mockResolvedValue({}),
+  previewItemRatings: vi.fn().mockResolvedValue({}),
   submitRating: vi.fn().mockResolvedValue({}),
 }));
 vi.mock("@/actions/shell", () => ({
@@ -137,7 +139,7 @@ describe("TodaySessionDialog", () => {
     await user.click(button(i18n.t("todayOpenPdfAction")));
     expect(openActivityFile).toHaveBeenCalledWith(PDF.activityFilePath);
 
-    await user.click(button(i18n.t("ratingGoodAction")));
+    await user.click(button(i18n.t("activityRatingGoodAction")));
 
     expect(markActivityDifficulty).toHaveBeenCalledWith("pdf", "good");
     expect(await screen.findByText(LINK.activityTitle)).toBeInTheDocument();
@@ -150,7 +152,7 @@ describe("TodaySessionDialog", () => {
     await user.click(button(i18n.t("todayOpenLinkAction")));
     expect(openExternalLink).toHaveBeenCalledWith(LINK.activityUrl);
 
-    await user.click(button(i18n.t("ratingHardAction")));
+    await user.click(button(i18n.t("activityRatingHardAction")));
     expect(markActivityDifficulty).toHaveBeenCalledWith("link", "hard");
   });
 
@@ -170,7 +172,7 @@ describe("TodaySessionDialog", () => {
 
     await user.click(button(i18n.t("takeQuizAction")));
     await user.click(button("quiz-runner-finish"));
-    await user.click(button(i18n.t("ratingAgainAction")));
+    await user.click(button(i18n.t("activityRatingAgainAction")));
 
     expect(markActivityDifficulty).toHaveBeenCalledWith("quiz", "again");
   });
@@ -201,7 +203,7 @@ describe("TodaySessionDialog", () => {
     const user = userEvent.setup();
     renderSession([PDF, LINK]);
     await user.click(button(i18n.t("todayOpenPdfAction")));
-    await user.click(button(i18n.t("ratingGoodAction")));
+    await user.click(button(i18n.t("activityRatingGoodAction")));
     await screen.findByText(LINK.activityTitle);
     await user.click(button(i18n.t("todaySkipAction")));
 
