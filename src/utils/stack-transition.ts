@@ -8,7 +8,9 @@
 export type StackTransitionType = "stack-push" | "stack-pop";
 
 const STACK_ROUTES: [RegExp, number][] = [
-  [/^\/$/, 0],
+  // Programs moved to /programs when Today became the opening screen
+  // (docs/specs/today-review-queue.md); Today itself is a sidebar jump.
+  [/^\/programs\/?$/, 0],
   [/^\/programs\/[^/]+\/?$/, 1],
   [/^\/programs\/[^/]+\/modules\/[^/]+\/?$/, 2],
 ];

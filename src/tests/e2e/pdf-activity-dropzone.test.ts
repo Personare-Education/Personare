@@ -48,6 +48,9 @@ test("creates a PDF activity through the file step's drop-zone", async () => {
   const moduleName = `E2E Pdf Module ${uniqueSuffix}`;
   const pdfTitle = `E2E Pdf ${uniqueSuffix}`;
 
+  // The app opens on Today; programs live under "Programs"
+  // (docs/specs/today-review-queue.md).
+  await page.getByRole("link", { exact: true, name: "Programs" }).click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();

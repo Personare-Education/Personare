@@ -233,12 +233,18 @@ function ModuleActivitiesPage() {
     }
   }, []);
 
-  const handleFlashcardManagerOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setActivityBeingManagedFlashcards(null);
-      setStartingFollowUp(null);
-    }
-  }, []);
+  // New flashcards are due at once: the rows' review chips must know
+  // (docs/specs/today-review-queue.md AC-11).
+  const handleFlashcardManagerOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setActivityBeingManagedFlashcards(null);
+        setStartingFollowUp(null);
+        refreshSchedule();
+      }
+    },
+    [refreshSchedule]
+  );
 
   const handleReviewSessionOpenChange = useCallback(
     (open: boolean) => {

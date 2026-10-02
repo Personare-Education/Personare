@@ -1,152 +1,261 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { format } from "date-fns";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  createProgram,
-  groupActivityCountsByProgram,
-  listProgramActivityCounts,
-  listPrograms,
-  type ProgramActivityCount,
-  softDeleteProgram,
-  updateProgram,
-} from "@/actions/programs";
-import DeleteProgramDialog from "@/components/delete-program-dialog";
-import ProgramFormDialog, {
-  type ProgramFormSubmitValues,
-} from "@/components/program-form-dialog";
-import ProgramsCardGrid, {
-  type Program,
-} from "@/components/programs-card-grid";
+import TodayItemCard from "@/components/today-item-card";
+import TodaySessionDialog from "@/components/today-session-dialog";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { resolveProgramColor } from "@/constants/program-appearance";
+import { useTodayQueue } from "@/hooks/use-today-queue";
+import { resolveEventCalendarLocale } from "@/utils/event-calendar-i18n";
+import { cn } from "@/utils/tailwind";
+import type {
+  TodayGroup,
+  TodayItem,
+  TodayQueue,
+  Upcoming,
+} from "@/utils/today-queue";
 
-function ProgramsPage() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [activityCounts, setActivityCounts] = useState<ProgramActivityCount[]>(
-    []
+function ProgramGroup({
+  group,
+  onSelect,
+}: {
+  group: TodayGroup;
+  onSelect: (item: TodayItem) => void;
+}) {
+  return (
+    <section aria-label={group.programName} className="flex flex-col gap-3">
+      <h2 className="flex items-center gap-2 font-medium text-sm">
+        <span
+          aria-hidden="true"
+          className="size-2.5 rounded-full"
+          style={{ backgroundColor: resolveProgramColor(group.programColor) }}
+        />
+        {group.programName}
+      </h2>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {group.items.map((item) => (
+          <TodayItemCard
+            item={item}
+            key={item.activityId}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </section>
   );
-  const [, startTransition] = useTransition();
-  const [formProgram, setFormProgram] = useState<Program | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [programPendingDelete, setProgramPendingDelete] =
-    useState<Program | null>(null);
+}
 
-  const activityCountsByProgramId = useMemo(
-    () => groupActivityCountsByProgram(activityCounts),
-    [activityCounts]
-  );
-
-  const refreshPrograms = useCallback(() => {
-    startTransition(() => {
-      listPrograms().then(setPrograms);
-    });
-  }, []);
-
-  useEffect(() => {
-    refreshPrograms();
-  }, [refreshPrograms]);
-
-  useEffect(() => {
-    listProgramActivityCounts().then(setActivityCounts);
-  }, []);
-
-  const handleCreateClick = useCallback(() => {
-    setFormProgram(null);
-    setIsFormOpen(true);
-  }, []);
-
-  const handleEdit = useCallback((program: Program) => {
-    setFormProgram(program);
-    setIsFormOpen(true);
-  }, []);
-
-  const handleRequestDelete = useCallback((program: Program) => {
-    setProgramPendingDelete(program);
-  }, []);
-
-  const handleNavigateToModules = useCallback(
-    (program: Program) => {
-      navigate({
-        params: { programId: program.id },
-        to: "/programs/$programId",
-      });
-    },
-    [navigate]
-  );
-
-  const handleFormOpenChange = useCallback((open: boolean) => {
-    setIsFormOpen(open);
-  }, []);
-
-  const handleFormSubmit = useCallback(
-    ({ color, icon, name }: ProgramFormSubmitValues) => {
-      const submit = formProgram
-        ? updateProgram(formProgram.id, name, { color, icon })
-        : createProgram(name, { color, icon });
-
-      submit.then(() => {
-        setIsFormOpen(false);
-        refreshPrograms();
-      });
-    },
-    [formProgram, refreshPrograms]
-  );
-
-  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setProgramPendingDelete(null);
-    }
-  }, []);
-
-  const handleConfirmDelete = useCallback(() => {
-    if (!programPendingDelete) {
-      return;
-    }
-
-    softDeleteProgram(programPendingDelete.id).then(() => {
-      setProgramPendingDelete(null);
-      refreshPrograms();
-    });
-  }, [programPendingDelete, refreshPrograms]);
+function UpcomingWeek({ upcoming }: { upcoming: Upcoming }) {
+  const { i18n, t } = useTranslation();
+  const locale = resolveEventCalendarLocale(i18n.language);
+  const peak = Math.max(1, ...upcoming.days.map((day) => day.count));
 
   return (
-    <div className="flex h-full flex-col gap-4 p-2">
-      <div className="flex items-center justify-between">
-        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
-          {t("programsPageTitle")}
-        </h1>
-        <Button onClick={handleCreateClick}>{t("createProgramAction")}</Button>
+    <section
+      aria-label={t("todayUpcomingTitle")}
+      className="flex flex-col gap-3"
+    >
+      <h2 className="font-medium text-sm">{t("todayUpcomingTitle")}</h2>
+      <ol className="grid grid-cols-7 gap-2">
+        {upcoming.days.map((day) => (
+          <li
+            className="flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2"
+            key={day.date.toISOString()}
+          >
+            <span className="text-muted-foreground text-xs capitalize">
+              {format(day.date, "EEE", { locale })}
+            </span>
+            {/* The day's load, as a bar: how the week is spread at a glance. */}
+            <span className="flex h-8 w-2 items-end overflow-hidden rounded-full bg-foreground/5">
+              <span
+                className="w-full rounded-full bg-brand"
+                style={{ height: `${(day.count / peak) * 100}%` }}
+              />
+            </span>
+            <span
+              className={cn(
+                "font-medium text-sm tabular-nums",
+                day.count === 0 && "text-muted-foreground"
+              )}
+            >
+              {day.count}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="text-muted-foreground text-sm">
+        {upcoming.nextDate
+          ? t("todayNextReview", {
+              date: format(upcoming.nextDate, "PPPP", { locale }),
+            })
+          : t("todayNothingScheduled")}
+      </p>
+    </section>
+  );
+}
+
+function DueToday({
+  onSelect,
+  onStart,
+  queue,
+}: {
+  onSelect: (item: TodayItem) => void;
+  onStart: () => void;
+  queue: TodayQueue;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-serif text-2xl">
+            {t("todayDueSummary", { count: queue.dueCount })}
+          </span>
+          {queue.overdueCount > 0 ? (
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive text-xs">
+              {t("todayOverdueSummary", { count: queue.overdueCount })}
+            </span>
+          ) : null}
+        </p>
+        <Button onClick={onStart} size="lg">
+          {t("todayStartAction")}
+        </Button>
       </div>
-      <ProgramsCardGrid
-        activityCountsByProgramId={activityCountsByProgramId}
-        onEdit={handleEdit}
-        onNavigateToModules={handleNavigateToModules}
-        onRequestDelete={handleRequestDelete}
-        programs={programs}
-      />
-      <ProgramFormDialog
-        onOpenChange={handleFormOpenChange}
-        onSubmit={handleFormSubmit}
-        open={isFormOpen}
-        program={formProgram}
-      />
-      <DeleteProgramDialog
-        onConfirm={handleConfirmDelete}
-        onOpenChange={handleDeleteDialogOpenChange}
-        open={programPendingDelete !== null}
-        program={programPendingDelete}
+      <div className="flex flex-col gap-8">
+        {queue.groups.map((group) => (
+          <ProgramGroup
+            group={group}
+            key={group.programId}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** Nothing left for today: how the day went and when to come back (AC-8). */
+function DayClosed({
+  reviewedToday,
+  streak,
+  upcoming,
+}: {
+  reviewedToday: number;
+  streak: number;
+  upcoming: Upcoming;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex max-w-2xl flex-col gap-8">
+      <div className="flex flex-col gap-2">
+        <p className="font-medium font-serif text-2xl">
+          {reviewedToday ? t("todayDayDoneTitle") : t("todayFreeDayTitle")}
+        </p>
+        {reviewedToday || streak ? (
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+            {reviewedToday ? (
+              <span>{t("todayReviewedToday", { count: reviewedToday })}</span>
+            ) : null}
+            {streak ? <span>{t("todayStreak", { count: streak })}</span> : null}
+          </p>
+        ) : null}
+      </div>
+      <UpcomingWeek upcoming={upcoming} />
+      {upcoming.nextDate ? null : (
+        <Button asChild className="self-start" variant="outline">
+          <Link to="/programs">{t("todayGoToProgramsAction")}</Link>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The opening screen (docs/specs/today-review-queue.md): what is due today,
+ * a single "Start" for the whole day, and -- with nothing left -- how the
+ * day went and when to come back.
+ */
+export function TodayPage() {
+  const { i18n, t } = useTranslation();
+  const { now, queue, retry, reviewedToday, status, streak, upcoming } =
+    useTodayQueue();
+  const [sessionItems, setSessionItems] = useState<TodayItem[] | null>(null);
+  const locale = resolveEventCalendarLocale(i18n.language);
+
+  const handleStartClick = useCallback(() => {
+    if (queue) {
+      setSessionItems(queue.items);
+    }
+  }, [queue]);
+
+  const handleSelect = useCallback((item: TodayItem) => {
+    setSessionItems([item]);
+  }, []);
+
+  const handleSessionOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setSessionItems(null);
+    }
+  }, []);
+
+  const hasDue = Boolean(queue && queue.dueCount > 0);
+
+  return (
+    <div className="flex h-full flex-col gap-8 p-2">
+      <header className="flex flex-col gap-1">
+        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
+          {t("todayPageTitle")}
+        </h1>
+        <p className="text-muted-foreground text-sm first-letter:uppercase">
+          {format(now, "PPPP", { locale })}
+        </p>
+      </header>
+
+      {status === "loading" && !queue ? (
+        <div aria-busy="true" className="flex flex-col gap-3">
+          <Skeleton className="h-8 w-72" />
+          <Skeleton className="h-24 w-full max-w-md" />
+        </div>
+      ) : null}
+
+      {status === "error" ? (
+        <div className="flex flex-col items-start gap-3" role="alert">
+          <p className="text-sm">{t("todayLoadError")}</p>
+          <Button onClick={retry} variant="outline">
+            {t("todayRetryAction")}
+          </Button>
+        </div>
+      ) : null}
+
+      {queue && hasDue ? (
+        <DueToday
+          onSelect={handleSelect}
+          onStart={handleStartClick}
+          queue={queue}
+        />
+      ) : null}
+
+      {queue && !hasDue && upcoming ? (
+        <DayClosed
+          reviewedToday={reviewedToday ?? 0}
+          streak={streak ?? 0}
+          upcoming={upcoming}
+        />
+      ) : null}
+
+      <TodaySessionDialog
+        items={sessionItems ?? []}
+        onOpenChange={handleSessionOpenChange}
+        open={sessionItems !== null}
       />
     </div>
   );
 }
 
 export const Route = createFileRoute("/")({
-  component: ProgramsPage,
+  component: TodayPage,
 });

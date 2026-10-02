@@ -44,7 +44,10 @@ const PROGRAMS: Program[] = [
   },
 ];
 
-function renderGrid(programs: Program[] = PROGRAMS) {
+function renderGrid(
+  programs: Program[] = PROGRAMS,
+  dueCountByProgramId: Map<string, number> = new Map()
+) {
   const onEdit = vi.fn();
   const onRequestDelete = vi.fn();
   const onNavigateToModules = vi.fn();
@@ -52,6 +55,7 @@ function renderGrid(programs: Program[] = PROGRAMS) {
   render(
     <ProgramsCardGrid
       activityCountsByProgramId={new Map()}
+      dueCountByProgramId={dueCountByProgramId}
       onEdit={onEdit}
       onNavigateToModules={onNavigateToModules}
       onRequestDelete={onRequestDelete}
@@ -63,6 +67,18 @@ function renderGrid(programs: Program[] = PROGRAMS) {
 }
 
 describe("ProgramsCardGrid", () => {
+  /** docs/specs/today-review-queue.md AC-10 */
+  it("says how many reviews are due on a program's card, and nothing when none are", () => {
+    renderGrid(PROGRAMS, new Map([[PROGRAMS[0].id, 4]]));
+
+    expect(
+      screen.getByText(i18n.t("programDueCount", { count: 4 }))
+    ).toBeInTheDocument();
+    expect(
+      screen.queryAllByText(i18n.t("programDueCount", { count: 0 }))
+    ).toHaveLength(0);
+  });
+
   it("renders a card for each program with its name", () => {
     renderGrid();
 

@@ -7,10 +7,22 @@ import {
 } from "@tanstack/react-router";
 import { cleanup, render, screen } from "@testing-library/react";
 import i18n from "i18next";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import AppSidebar from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import "@/localization/i18n";
+
+// The Today item's count comes from the review schedule
+// (docs/specs/today-review-queue.md AC-1).
+vi.mock("@/actions/calendar", () => ({
+  ensureReviewItems: vi.fn().mockResolvedValue(undefined),
+  listSchedule: vi.fn().mockResolvedValue([]),
+}));
+const { listSchedule } = await import("@/actions/calendar");
+
+beforeEach(() => {
+  vi.mocked(listSchedule).mockResolvedValue([]);
+});
 
 /*
  * Spec: Issue #17 - Sidebar de navegacao.
@@ -34,6 +46,10 @@ function renderSidebarAt(initialPath: string) {
     getParentRoute: () => rootRoute,
     path: "/",
   });
+  const programsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/programs",
+  });
   const calendarioRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/calendario",
@@ -44,6 +60,7 @@ function renderSidebarAt(initialPath: string) {
   });
   const routeTree = rootRoute.addChildren([
     indexRoute,
+    programsRoute,
     calendarioRoute,
     calendarRoute,
   ]);
@@ -69,14 +86,57 @@ test("i18n has translated labels for the Programs and Calendar nav items in en a
   expect(ptBR.navCalendar).toBeTruthy();
 });
 
-test("renders a Programas item linking to '/'", async () => {
+test("renders a Today item first, linking to '/'", async () => {
   renderSidebarAt("/");
 
-  const homeLink = await screen.findByRole("link", {
+  const todayLink = await screen.findByRole("link", {
+    name: new RegExp(i18n.t("navToday")),
+  });
+  const links = screen.getAllByRole("link");
+
+  expect(todayLink).toHaveAttribute("href", "/");
+  expect(links.indexOf(todayLink)).toBeLessThan(
+    links.indexOf(screen.getByRole("link", { name: i18n.t("navPrograms") }))
+  );
+});
+
+test("shows how many reviews are due today on the Today item", async () => {
+  const now = new Date();
+  vi.mocked(listSchedule).mockResolvedValue(
+    ["1", "2", "3"].map((id) => ({
+      activityFilePath: null,
+      activityId: `a${id}`,
+      activityTitle: "A",
+      activityType: "pdf",
+      activityUrl: null,
+      dueDate: now,
+      front: null,
+      id,
+      moduleId: "m",
+      moduleName: "M",
+      programColor: null,
+      programId: "p",
+      programName: "P",
+    }))
+  );
+  renderSidebarAt("/");
+
+  const todayLink = await screen.findByRole("link", {
+    name: new RegExp(i18n.t("navToday")),
+  });
+
+  expect(await screen.findByText("3")).toBeInTheDocument();
+  expect(todayLink).toHaveTextContent("3");
+});
+
+test("renders a Programas item linking to '/programs'", async () => {
+  renderSidebarAt("/");
+
+  const programsLink = await screen.findByRole("link", {
     name: i18n.t("navPrograms"),
   });
 
-  expect(homeLink).toHaveAttribute("href", "/");
+  expect(programsLink).toHaveAttribute("href", "/programs");
 });
 
 test("renders a Calendario item linking to a calendar route", async () => {
@@ -108,7 +168,7 @@ test("active route indicator moves with the current location", async () => {
   renderSidebarAt("/");
 
   const homeLinkAtRoot = await screen.findByRole("link", {
-    name: i18n.t("navPrograms"),
+    name: new RegExp(i18n.t("navToday")),
   });
   const calendarLinkAtRoot = await screen.findByRole("link", {
     name: i18n.t("navCalendar"),
@@ -122,7 +182,7 @@ test("active route indicator moves with the current location", async () => {
   renderSidebarAt(calendarHref);
 
   const homeLinkAtCalendar = await screen.findByRole("link", {
-    name: i18n.t("navPrograms"),
+    name: new RegExp(i18n.t("navToday")),
   });
   const calendarLinkAtCalendar = await screen.findByRole("link", {
     name: i18n.t("navCalendar"),

@@ -95,6 +95,9 @@ test("walks from a calendar event to the pulsing module and activity", async () 
   await recordStackTransitions();
 
   // Program > module > quiz, pushing a level deeper each time.
+  // The app opens on Today; programs live under "Programs"
+  // (docs/specs/today-review-queue.md).
+  await page.getByRole("link", { exact: true, name: "Programs" }).click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();
