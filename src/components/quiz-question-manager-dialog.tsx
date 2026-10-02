@@ -91,12 +91,19 @@ interface QuizQuestionManagerDialogProps {
   activity: Activity | null;
   onOpenChange: (open: boolean) => void;
   open: boolean;
+  /**
+   * Opens the new-item form right away (docs/specs/flashcard-editor-and-creation-flow.md
+   * AC-1/AC-2): right after the activity is created, writing its first item
+   * is the next step.
+   */
+  startWithNewItem?: boolean;
 }
 
 export default function QuizQuestionManagerDialog({
   activity,
   onOpenChange,
   open,
+  startWithNewItem = false,
 }: QuizQuestionManagerDialogProps) {
   const { t } = useTranslation();
   const [questions, setQuestions] = useState<QuizQuestionWithOptions[]>([]);
@@ -115,6 +122,13 @@ export default function QuizQuestionManagerDialog({
   useEffect(() => {
     refreshQuestions();
   }, [refreshQuestions]);
+
+  useEffect(() => {
+    if (open && startWithNewItem) {
+      setFormQuestion(null);
+      setIsFormOpen(true);
+    }
+  }, [open, startWithNewItem]);
 
   const handleAddClick = useCallback(() => {
     setFormQuestion(null);
@@ -144,8 +158,15 @@ export default function QuizQuestionManagerDialog({
     setIsFormOpen(nextOpen);
   }, []);
 
+  /**
+   * Saves one question from QuizQuestionFormDialog, which stays open to
+   * write the next one (docs/specs/quiz-question-single-editor.md). The
+   * alternatives are created one at a time so they are stored (and later
+   * listed, by creation) in the order the form has them.
+   */
   const handleFormSubmit = useCallback(
-    (
+    async (
+      questionId: string | null,
       text: string,
       imagePath: string | null,
       options: QuizQuestionSubmitOption[]
@@ -154,49 +175,34 @@ export default function QuizQuestionManagerDialog({
         return;
       }
 
-      if (formQuestion) {
-        const questionId = formQuestion.id;
-        const staleOptionIds = formQuestion.options.map((option) => option.id);
-
-        updateQuizQuestion(questionId, text, imagePath)
-          .then(() =>
-            Promise.all(staleOptionIds.map((id) => softDeleteQuizOption(id)))
-          )
-          .then(() =>
-            Promise.all(
-              options.map((option) =>
-                createQuizOption(
-                  questionId,
-                  option.text,
-                  option.isCorrect,
-                  option.imagePath
-                )
-              )
-            )
-          )
-          .then(() => {
-            setIsFormOpen(false);
-            refreshQuestions();
-          });
+      let savedQuestionId: string;
+      if (questionId) {
+        const staleOptionIds =
+          formQuestion?.id === questionId
+            ? formQuestion.options.map((option) => option.id)
+            : [];
+        await updateQuizQuestion(questionId, text, imagePath);
+        await Promise.all(staleOptionIds.map((id) => softDeleteQuizOption(id)));
+        savedQuestionId = questionId;
       } else {
-        createQuizQuestion(activity.id, text, imagePath)
-          .then((created) =>
-            Promise.all(
-              options.map((option) =>
-                createQuizOption(
-                  created.id,
-                  option.text,
-                  option.isCorrect,
-                  option.imagePath
-                )
-              )
-            )
-          )
-          .then(() => {
-            setIsFormOpen(false);
-            refreshQuestions();
-          });
+        const created = await createQuizQuestion(activity.id, text, imagePath);
+        savedQuestionId = created.id;
       }
+
+      await options.reduce<Promise<unknown>>(
+        (previous, option) =>
+          previous.then(() =>
+            createQuizOption(
+              savedQuestionId,
+              option.text,
+              option.isCorrect,
+              option.imagePath
+            )
+          ),
+        Promise.resolve()
+      );
+
+      refreshQuestions();
     },
     [activity, formQuestion, refreshQuestions]
   );

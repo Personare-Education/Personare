@@ -82,6 +82,30 @@ describe("attachments IPC namespace (Issue #96)", () => {
     });
   });
 
+  /**
+   * docs/specs/quiz-question-single-editor.md: an image pasted from the
+   * clipboard has no file path, so the renderer sends its bytes instead.
+   */
+  describe("saveImageData", () => {
+    it("writes the base64 bytes into userData/attachments under a generated name", async () => {
+      const { fileName } = await client.saveImageData({
+        data: Buffer.from([9, 8, 7]).toString("base64"),
+        extension: ".png",
+      });
+
+      expect(fileName).toMatch(PNG_FILE_NAME_PATTERN);
+      expect(
+        fs.readFileSync(path.join(userDataDir, "attachments", fileName))
+      ).toEqual(Buffer.from([9, 8, 7]));
+    });
+
+    it("rejects an extension that is not an image's", async () => {
+      await expect(
+        client.saveImageData({ data: "AQID", extension: ".exe" as never })
+      ).rejects.toThrow();
+    });
+  });
+
   describe("getImageDataUrl", () => {
     it("returns a base64 data URL for a previously saved image", async () => {
       const { fileName } = await client.saveImage({

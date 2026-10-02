@@ -45,6 +45,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRateOnReturn } from "@/hooks/use-rate-on-return";
 import { useReviewSchedule } from "@/hooks/use-review-schedule";
+import {
+  type ActivityFollowUp,
+  followUpForCreatedActivity,
+} from "@/utils/activity-follow-up";
 import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
 import {
   getFocusedActivityIds,
@@ -77,6 +81,10 @@ function ModuleActivitiesPage() {
   );
   const [activityBeingManagedFlashcards, setActivityBeingManagedFlashcards] =
     useState<Activity | null>(null);
+  // Set right after creating a quiz or a deck: its manager opens with the
+  // form for the first item already up.
+  const [startingFollowUp, setStartingFollowUp] =
+    useState<ActivityFollowUp | null>(null);
   const [activityInReview, setActivityInReview] = useState<Activity | null>(
     null
   );
@@ -141,6 +149,7 @@ function ModuleActivitiesPage() {
   }, []);
 
   const handleManageQuiz = useCallback((activity: Activity) => {
+    setStartingFollowUp(null);
     setActivityBeingManaged(activity);
   }, []);
 
@@ -154,6 +163,7 @@ function ModuleActivitiesPage() {
   }, []);
 
   const handleManageFlashcards = useCallback((activity: Activity) => {
+    setStartingFollowUp(null);
     setActivityBeingManagedFlashcards(activity);
   }, []);
 
@@ -172,13 +182,26 @@ function ModuleActivitiesPage() {
       url: string | null,
       filePath: string | null
     ) => {
-      const submit = formActivity
-        ? updateActivity(formActivity.id, title, type, url, filePath)
-        : createActivity(moduleId, title, type, url, filePath);
+      if (formActivity) {
+        updateActivity(formActivity.id, title, type, url, filePath).then(() => {
+          setIsFormOpen(false);
+          refreshActivities();
+        });
+        return;
+      }
 
-      submit.then(() => {
+      createActivity(moduleId, title, type, url, filePath).then((created) => {
         setIsFormOpen(false);
         refreshActivities();
+
+        // docs/specs/flashcard-editor-and-creation-flow.md AC-1..3
+        const followUp = followUpForCreatedActivity(type);
+        setStartingFollowUp(followUp);
+        if (followUp === "quizQuestions") {
+          setActivityBeingManaged(created);
+        } else if (followUp === "flashcards") {
+          setActivityBeingManagedFlashcards(created);
+        }
       });
     },
     [formActivity, moduleId, refreshActivities]
@@ -197,6 +220,7 @@ function ModuleActivitiesPage() {
   const handleQuizManagerOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setActivityBeingManaged(null);
+      setStartingFollowUp(null);
     }
   }, []);
 
@@ -209,6 +233,7 @@ function ModuleActivitiesPage() {
   const handleFlashcardManagerOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setActivityBeingManagedFlashcards(null);
+      setStartingFollowUp(null);
     }
   }, []);
 
@@ -359,6 +384,7 @@ function ModuleActivitiesPage() {
         activity={activityBeingManaged}
         onOpenChange={handleQuizManagerOpenChange}
         open={activityBeingManaged !== null}
+        startWithNewItem={startingFollowUp === "quizQuestions"}
       />
       <QuizRunnerDialog
         activity={activityTakingQuiz}
@@ -370,6 +396,7 @@ function ModuleActivitiesPage() {
         activity={activityBeingManagedFlashcards}
         onOpenChange={handleFlashcardManagerOpenChange}
         open={activityBeingManagedFlashcards !== null}
+        startWithNewItem={startingFollowUp === "flashcards"}
       />
       <ReviewSessionDialog
         activity={activityInReview}

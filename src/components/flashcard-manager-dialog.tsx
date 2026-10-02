@@ -94,12 +94,19 @@ interface FlashcardManagerDialogProps {
   activity: Activity | null;
   onOpenChange: (open: boolean) => void;
   open: boolean;
+  /**
+   * Opens the new-item form right away (docs/specs/flashcard-editor-and-creation-flow.md
+   * AC-1/AC-2): right after the activity is created, writing its first item
+   * is the next step.
+   */
+  startWithNewItem?: boolean;
 }
 
 export default function FlashcardManagerDialog({
   activity,
   onOpenChange,
   open,
+  startWithNewItem = false,
 }: FlashcardManagerDialogProps) {
   const { t } = useTranslation();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -119,6 +126,13 @@ export default function FlashcardManagerDialog({
   useEffect(() => {
     refreshFlashcards();
   }, [refreshFlashcards]);
+
+  useEffect(() => {
+    if (open && startWithNewItem) {
+      setFormFlashcard(null);
+      setIsFormOpen(true);
+    }
+  }, [open, startWithNewItem]);
 
   const handleAddClick = useCallback(() => {
     setFormFlashcard(null);
@@ -143,22 +157,24 @@ export default function FlashcardManagerDialog({
     setIsFormOpen(nextOpen);
   }, []);
 
+  /**
+   * Saves one card from FlashcardFormDialog, which stays open to write the
+   * next one and closes itself (docs/specs/flashcard-editor-and-creation-flow.md).
+   */
   const handleFormSubmit = useCallback(
-    (values: FlashcardFormSubmitValue) => {
+    async (flashcardId: string | null, values: FlashcardFormSubmitValue) => {
       if (!activity) {
         return;
       }
 
-      const submit = formFlashcard
-        ? updateFlashcard(formFlashcard.id, values)
-        : createFlashcard(activity.id, values);
-
-      submit.then(() => {
-        setIsFormOpen(false);
-        refreshFlashcards();
-      });
+      if (flashcardId) {
+        await updateFlashcard(flashcardId, values);
+      } else {
+        await createFlashcard(activity.id, values);
+      }
+      refreshFlashcards();
     },
-    [activity, formFlashcard, refreshFlashcards]
+    [activity, refreshFlashcards]
   );
 
   return (

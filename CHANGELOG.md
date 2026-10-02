@@ -6,6 +6,23 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Changed
+
+- **Escrever perguntas do Quiz com um editor só.** A Dialog de perguntas deixa de ter um campo por
+  enunciado e por alternativa: há um único editor Markdown, no estilo do GitHub (abas Escrever e
+  Pré-visualizar, barra de formatação, imagem colada, arrastada ou escolhida). Shift+Enter (ou o
+  botão) envia: o primeiro envio vira o enunciado, os seguintes viram alternativas, empilhados já
+  renderizados. Cada item tem **Editar** (volta para o editor), as alternativas têm **Marcar como
+  correta** e podem ser reordenadas arrastando, com a animação do Sortable do ReUI (ou pelo teclado:
+  Espaço e setas). **Adicionar pergunta** salva e já abre a próxima; **Concluir** salva e fecha. A
+  Dialog não fecha mais por um clique fora ou pelo Esc: ela balança, como no quiz em andamento.
+- **Flashcards com o mesmo editor.** O primeiro envio é a frente e o segundo o verso, num cartão que
+  gira ao ser clicado. Cada face tem **Editar**, e **Adicionar flashcard** e **Concluir** funcionam
+  como nas perguntas do Quiz.
+- **Criar um Quiz manual ou um baralho de Flashcards já abre o primeiro item.** Depois de salvar a
+  atividade, a janela da primeira pergunta (ou do primeiro card) abre direto, e ao concluir aparece a
+  lista do que foi criado.
+
 ## [0.1.0-alpha.8] - 2026-09-30
 
 ### Fixed

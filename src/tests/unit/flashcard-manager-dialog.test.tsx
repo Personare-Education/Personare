@@ -39,6 +39,7 @@ vi.mock("@/actions/attachments", () => ({
   deleteAttachmentImage: vi.fn(),
   getAttachmentImageDataUrl: vi.fn(),
   saveAttachmentImage: vi.fn(),
+  saveAttachmentImageData: vi.fn(),
 }));
 
 const {
@@ -79,7 +80,10 @@ const EXISTING_FLASHCARDS = [
   },
 ];
 
-function renderManager(activity: Activity | null = DECK_ACTIVITY) {
+function renderManager(
+  activity: Activity | null = DECK_ACTIVITY,
+  startWithNewItem = false
+) {
   const onOpenChange = vi.fn();
 
   render(
@@ -87,10 +91,29 @@ function renderManager(activity: Activity | null = DECK_ACTIVITY) {
       activity={activity}
       onOpenChange={onOpenChange}
       open={activity !== null}
+      startWithNewItem={startWithNewItem}
     />
   );
 
   return { onOpenChange };
+}
+
+function editor() {
+  return screen.getByRole("textbox", {
+    name: i18n.t("flashcardComposerLabel"),
+  });
+}
+
+async function send(user: ReturnType<typeof userEvent.setup>, text: string) {
+  await user.type(editor(), `${text}{Shift>}{Enter}{/Shift}`);
+}
+
+function visibleFaceText() {
+  return (
+    screen
+      .getByRole("button", { name: i18n.t("flipFlashcardAction") })
+      .querySelector('[data-face]:not([aria-hidden="true"])')?.textContent ?? ""
+  );
 }
 
 beforeEach(() => {
@@ -181,12 +204,7 @@ describe("FlashcardManagerDialog (Issue #15)", () => {
     });
     await user.click(editButtons[0]);
 
-    expect(screen.getByLabelText(i18n.t("flashcardFrontLabel"))).toHaveValue(
-      EXISTING_FLASHCARDS[0].front
-    );
-    expect(screen.getByLabelText(i18n.t("flashcardBackLabel"))).toHaveValue(
-      EXISTING_FLASHCARDS[0].back
-    );
+    expect(visibleFaceText()).toContain(EXISTING_FLASHCARDS[0].front);
   });
 
   it("opens an empty flashcard form when the add-flashcard action is clicked", async () => {
@@ -198,13 +216,21 @@ describe("FlashcardManagerDialog (Issue #15)", () => {
       screen.getByRole("button", { name: i18n.t("addFlashcardAction") })
     );
 
-    expect(screen.getByLabelText(i18n.t("flashcardFrontLabel"))).toHaveValue(
-      ""
-    );
-    expect(screen.getByLabelText(i18n.t("flashcardBackLabel"))).toHaveValue("");
+    expect(editor()).toHaveValue("");
+    expect(editor()).not.toBeDisabled();
   });
 
-  it("creates the flashcard when a new one is submitted", async () => {
+  it("opens the new-flashcard form right away when started with a new item", async () => {
+    renderManager(DECK_ACTIVITY, true);
+
+    expect(
+      await screen.findByRole("textbox", {
+        name: i18n.t("flashcardComposerLabel"),
+      })
+    ).toHaveValue("");
+  });
+
+  it("creates the flashcard when a new one is saved", async () => {
     const user = userEvent.setup();
     vi.mocked(createFlashcard).mockResolvedValue({
       activityId: DECK_ACTIVITY.id,
@@ -220,16 +246,10 @@ describe("FlashcardManagerDialog (Issue #15)", () => {
     await user.click(
       screen.getByRole("button", { name: i18n.t("addFlashcardAction") })
     );
-    await user.type(
-      screen.getByLabelText(i18n.t("flashcardFrontLabel")),
-      "Frente nova"
-    );
-    await user.type(
-      screen.getByLabelText(i18n.t("flashcardBackLabel")),
-      "Verso novo"
-    );
+    await send(user, "Frente nova");
+    await send(user, "Verso novo");
     await user.click(
-      screen.getByRole("button", { name: i18n.t("saveAction") })
+      screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
     );
 
     await waitFor(() => {
@@ -260,11 +280,13 @@ describe("FlashcardManagerDialog (Issue #15)", () => {
     });
     await user.click(editButtons[0]);
 
-    const frontInput = screen.getByLabelText(i18n.t("flashcardFrontLabel"));
-    await user.clear(frontInput);
-    await user.type(frontInput, "Frente editada");
     await user.click(
-      screen.getByRole("button", { name: i18n.t("saveAction") })
+      screen.getByRole("button", { name: i18n.t("editFlashcardFrontAction") })
+    );
+    await user.clear(editor());
+    await send(user, "Frente editada");
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
     );
 
     await waitFor(() => {

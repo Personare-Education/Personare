@@ -6,6 +6,7 @@ import { app } from "electron";
 import {
   deleteImageInputSchema,
   getImageDataUrlInputSchema,
+  saveImageDataInputSchema,
   saveImageInputSchema,
 } from "./schemas";
 
@@ -32,6 +33,19 @@ export const saveImage = os.input(saveImageInputSchema).handler(({ input }) => {
 
   return { fileName };
 });
+
+export const saveImageData = os
+  .input(saveImageDataInputSchema)
+  .handler(({ input }) => {
+    const fileName = `${randomUUID()}${input.extension}`;
+
+    fs.writeFileSync(
+      path.join(attachmentsDir(), fileName),
+      Buffer.from(input.data, "base64")
+    );
+
+    return { fileName };
+  });
 
 export const getImageDataUrl = os
   .input(getImageDataUrlInputSchema)
