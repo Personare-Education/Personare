@@ -2,6 +2,7 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { getPendingActivityRating } from "@/actions/review";
 import ActivityDifficultyDialog from "@/components/activity-difficulty-dialog";
+import AppToaster from "@/components/app-toaster";
 import BetaGate from "@/components/beta-gate";
 import StackContent from "@/components/stack-content";
 import BaseLayout from "@/layouts/base-layout";
@@ -43,6 +44,9 @@ function Root() {
           programName={pending?.programName ?? ""}
         />
       </BaseLayout>
+      {/* Outside the layout: its stack-content view transition makes a
+          stacking context that would trap notices under a dialog's overlay. */}
+      <AppToaster />
     </BetaGate>
   );
 }

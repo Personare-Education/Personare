@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   createFlashcard,
   listFlashcards,
+  restoreFlashcard,
   softDeleteFlashcard,
   updateFlashcard,
 } from "@/actions/flashcards";
@@ -21,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { showUndoToast } from "@/utils/undo-toast";
 
 interface Flashcard {
   back: string;
@@ -147,13 +149,27 @@ export default function FlashcardManagerDialog({
     setIsFormOpen(true);
   }, []);
 
+  // Brings back what was just deleted (docs/specs/safety-net.md AC-2).
+  const undoDelete = useCallback(
+    (id: string) => {
+      restoreFlashcard(id).then(refreshFlashcards);
+    },
+    [refreshFlashcards]
+  );
+
   const handleDeleteClick = useCallback(
     (flashcard: Flashcard) => {
       Promise.resolve(softDeleteFlashcard(flashcard.id)).then(() => {
         refreshFlashcards();
+        // docs/specs/safety-net.md AC-1
+        showUndoToast({
+          message: t("flashcardDeletedMessage"),
+          onUndo: () => undoDelete(flashcard.id),
+          undoLabel: t("undoAction"),
+        });
       });
     },
-    [refreshFlashcards]
+    [refreshFlashcards, t, undoDelete]
   );
 
   const handleFormOpenChange = useCallback((nextOpen: boolean) => {

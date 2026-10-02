@@ -24,6 +24,11 @@ export function updateActivity(
   return ipc.client.activities.update({ filePath, id, title, type, url });
 }
 
+/** Undoes the soft delete (docs/specs/safety-net.md). */
+export function restoreActivity(id: string) {
+  return ipc.client.activities.restore({ id });
+}
+
 export function softDeleteActivity(id: string) {
   return ipc.client.activities.softDelete({ id });
 }

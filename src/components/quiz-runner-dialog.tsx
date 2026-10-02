@@ -15,6 +15,16 @@ import CountUp from "@/components/count-up";
 import ImageAttachmentViewer from "@/components/image-attachment-viewer";
 import MarkdownContent from "@/components/markdown-content";
 import { RadialChartStacked } from "@/components/radial-chart-stacked";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -344,6 +354,9 @@ export default function QuizRunnerDialog({
   const [result, setResult] = useState<QuizScore | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [finishedAt, setFinishedAt] = useState<number | null>(null);
+  // Which questions already have a choice (docs/specs/safety-net.md AC-6/7).
+  const [answeredIds, setAnsweredIds] = useState<Set<string>>(new Set());
+  const [isConfirmingLeave, setIsConfirmingLeave] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -352,8 +365,24 @@ export default function QuizRunnerDialog({
       setResult(null);
       setStartedAt(Date.now());
       setFinishedAt(null);
+      setAnsweredIds(new Set());
+      setIsConfirmingLeave(false);
     }
   }, [open]);
+
+  const handleChoiceChange = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      const input = event.target as HTMLInputElement;
+      if (input.type === "radio" && input.name) {
+        setAnsweredIds((prev) => new Set(prev).add(input.name));
+      }
+    },
+    []
+  );
+
+  const handlePreviousClick = useCallback(() => {
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  }, []);
 
   useEffect(() => {
     if (activity) {
@@ -412,13 +441,27 @@ export default function QuizRunnerDialog({
    */
   const handleDialogOpenChange = useCallback(
     (nextOpen: boolean) => {
+      // Abandoning answers asks first (docs/specs/safety-net.md AC-7).
+      if (!(nextOpen || result) && answeredIds.size > 0) {
+        setIsConfirmingLeave(true);
+        return;
+      }
       if (!nextOpen && result && activity) {
         onFinished(activity);
       }
       onOpenChange(nextOpen);
     },
-    [activity, onFinished, onOpenChange, result]
+    [activity, answeredIds, onFinished, onOpenChange, result]
   );
+
+  const handleLeaveConfirmOpenChange = useCallback((nextOpen: boolean) => {
+    setIsConfirmingLeave(nextOpen);
+  }, []);
+
+  const handleLeaveClick = useCallback(() => {
+    setIsConfirmingLeave(false);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   const handleCompleteClick = useCallback(() => {
     handleDialogOpenChange(false);
@@ -489,6 +532,7 @@ export default function QuizRunnerDialog({
                 })),
                 name: question.id,
               }))}
+              onChange={handleChoiceChange}
               onItemChange={handleItemChange}
               ref={formRef}
             >
@@ -501,7 +545,21 @@ export default function QuizRunnerDialog({
                 ))}
               </div>
             </Questionnaire>
+            {currentQuestion && !answeredIds.has(currentQuestion.id) ? (
+              <p className="text-muted-foreground text-xs">
+                {t("quizUnansweredHint")}
+              </p>
+            ) : null}
             <DialogFooter>
+              {currentIndex > 0 ? (
+                <Button
+                  onClick={handlePreviousClick}
+                  type="button"
+                  variant="outline"
+                >
+                  {t("quizPreviousQuestionAction")}
+                </Button>
+              ) : null}
               <Button onClick={handleAdvanceClick} type="button">
                 {isLastQuestion
                   ? t("finishQuizAction")
@@ -511,6 +569,25 @@ export default function QuizRunnerDialog({
           </>
         )}
       </DialogContent>
+      <AlertDialog
+        onOpenChange={handleLeaveConfirmOpenChange}
+        open={isConfirmingLeave}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("quizLeaveTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("quizLeaveDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("quizLeaveStayAction")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLeaveClick}>
+              {t("quizLeaveConfirmAction")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

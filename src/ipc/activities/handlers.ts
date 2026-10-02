@@ -2,7 +2,10 @@ import { os } from "@orpc/server";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { activities as activitiesTable } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
-import { cascadeSoftDeleteActivity } from "@/ipc/shared/cascade-soft-delete";
+import {
+  cascadeRestoreActivity,
+  cascadeSoftDeleteActivity,
+} from "@/ipc/shared/cascade-soft-delete";
 import {
   createActivityInputSchema,
   listActivitiesInputSchema,
@@ -74,6 +77,28 @@ export const update = os
       .where(eq(activitiesTable.id, input.id))
       .returning()
       .get();
+  });
+
+/** Undoes softDelete: the row and what its deletion hid (docs/specs/safety-net.md). */
+export const restore = os
+  .input(softDeleteActivityInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const row = db
+      .select({ deletedAt: activitiesTable.deletedAt })
+      .from(activitiesTable)
+      .where(eq(activitiesTable.id, input.id))
+      .get();
+    if (!row?.deletedAt) {
+      return;
+    }
+
+    db.update(activitiesTable)
+      .set({ deletedAt: null })
+      .where(eq(activitiesTable.id, input.id))
+      .run();
+
+    cascadeRestoreActivity(db, input.id, row.deletedAt);
   });
 
 export const softDelete = os

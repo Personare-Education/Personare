@@ -31,10 +31,15 @@ vi.mock("@/actions/quiz", () => ({
   createQuizOption: vi.fn(),
   createQuizQuestion: vi.fn(),
   listQuizQuestionsWithOptions: vi.fn(),
+  restoreQuizQuestion: vi.fn().mockResolvedValue(undefined),
   softDeleteQuizOption: vi.fn(),
   softDeleteQuizQuestion: vi.fn(),
   updateQuizQuestion: vi.fn(),
 }));
+vi.mock("@/utils/undo-toast", () => ({
+  showUndoToast: vi.fn(),
+}));
+
 vi.mock("@/actions/dialog", () => ({
   selectImageFile: vi.fn(),
 }));
@@ -50,9 +55,11 @@ const {
   createQuizQuestion,
   listQuizQuestionsWithOptions,
   softDeleteQuizOption,
+  restoreQuizQuestion,
   softDeleteQuizQuestion,
   updateQuizQuestion,
 } = await import("@/actions/quiz");
+const { showUndoToast } = await import("@/utils/undo-toast");
 const { default: QuizQuestionManagerDialog } = await import(
   "@/components/quiz-question-manager-dialog"
 );
@@ -328,5 +335,29 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
         null
       );
     });
+  });
+
+  /** docs/specs/safety-net.md AC-1, AC-2 */
+  it("offers to undo a deleted question, bringing it back", async () => {
+    const user = userEvent.setup();
+    vi.mocked(softDeleteQuizQuestion).mockResolvedValue(undefined);
+    renderManager();
+    await screen.findByText(EXISTING_QUESTIONS[0].text);
+
+    await user.click(
+      screen.getAllByRole("button", {
+        name: i18n.t("deleteQuizQuestionAction"),
+      })[0]
+    );
+
+    await waitFor(() => expect(showUndoToast).toHaveBeenCalledTimes(1));
+    const [{ message, onUndo }] = vi.mocked(showUndoToast).mock.calls[0];
+    expect(message).toBe(i18n.t("quizQuestionDeletedMessage"));
+
+    onUndo();
+
+    await waitFor(() =>
+      expect(restoreQuizQuestion).toHaveBeenCalledWith(EXISTING_QUESTIONS[0].id)
+    );
   });
 });

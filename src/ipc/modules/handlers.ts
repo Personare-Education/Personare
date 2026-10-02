@@ -2,7 +2,10 @@ import { os } from "@orpc/server";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { modules as modulesTable } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
-import { cascadeSoftDeleteModule } from "@/ipc/shared/cascade-soft-delete";
+import {
+  cascadeRestoreModule,
+  cascadeSoftDeleteModule,
+} from "@/ipc/shared/cascade-soft-delete";
 import {
   createModuleInputSchema,
   listModulesInputSchema,
@@ -62,6 +65,28 @@ export const update = os.input(updateModuleInputSchema).handler(({ input }) => {
     .returning()
     .get();
 });
+
+/** Undoes softDelete: the row and what its deletion hid (docs/specs/safety-net.md). */
+export const restore = os
+  .input(softDeleteModuleInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const row = db
+      .select({ deletedAt: modulesTable.deletedAt })
+      .from(modulesTable)
+      .where(eq(modulesTable.id, input.id))
+      .get();
+    if (!row?.deletedAt) {
+      return;
+    }
+
+    db.update(modulesTable)
+      .set({ deletedAt: null })
+      .where(eq(modulesTable.id, input.id))
+      .run();
+
+    cascadeRestoreModule(db, input.id, row.deletedAt);
+  });
 
 export const softDelete = os
   .input(softDeleteModuleInputSchema)

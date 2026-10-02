@@ -13,6 +13,7 @@ import {
   listProgramActivityCounts,
   listPrograms,
   type ProgramActivityCount,
+  restoreProgram,
   softDeleteProgram,
   updateProgram,
 } from "@/actions/programs";
@@ -25,6 +26,7 @@ import ProgramsCardGrid, {
 } from "@/components/programs-card-grid";
 import { Button } from "@/components/ui/button";
 import { useDueReviews } from "@/hooks/use-due-count";
+import { showUndoToast } from "@/utils/undo-toast";
 
 function ProgramsPage() {
   const { t } = useTranslation();
@@ -107,16 +109,31 @@ function ProgramsPage() {
     }
   }, []);
 
+  // Brings back what was just deleted (docs/specs/safety-net.md AC-2).
+  const undoDelete = useCallback(
+    (id: string) => {
+      restoreProgram(id).then(refreshPrograms);
+    },
+    [refreshPrograms]
+  );
+
   const handleConfirmDelete = useCallback(() => {
     if (!programPendingDelete) {
       return;
     }
 
-    softDeleteProgram(programPendingDelete.id).then(() => {
+    const deleted = programPendingDelete;
+    softDeleteProgram(deleted.id).then(() => {
       setProgramPendingDelete(null);
       refreshPrograms();
+      // docs/specs/safety-net.md AC-1
+      showUndoToast({
+        message: t("programDeletedMessage", { name: deleted.name }),
+        onUndo: () => undoDelete(deleted.id),
+        undoLabel: t("undoAction"),
+      });
     });
-  }, [programPendingDelete, refreshPrograms]);
+  }, [programPendingDelete, refreshPrograms, t, undoDelete]);
 
   return (
     <div className="flex h-full flex-col gap-4 p-2">

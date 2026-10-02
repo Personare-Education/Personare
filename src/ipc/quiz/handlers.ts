@@ -2,7 +2,10 @@ import { os } from "@orpc/server";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { activities, quizOptions, quizQuestions } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
-import { cascadeSoftDeleteQuizQuestion } from "@/ipc/shared/cascade-soft-delete";
+import {
+  cascadeRestoreQuizQuestion,
+  cascadeSoftDeleteQuizQuestion,
+} from "@/ipc/shared/cascade-soft-delete";
 import {
   createOptionInputSchema,
   createQuestionInputSchema,
@@ -91,6 +94,28 @@ export const softDeleteQuestion = os
       .run();
 
     cascadeSoftDeleteQuizQuestion(db, input.id, now);
+  });
+
+/** Undoes softDelete: the row and what its deletion hid (docs/specs/safety-net.md). */
+export const restoreQuestion = os
+  .input(softDeleteQuestionInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const row = db
+      .select({ deletedAt: quizQuestions.deletedAt })
+      .from(quizQuestions)
+      .where(eq(quizQuestions.id, input.id))
+      .get();
+    if (!row?.deletedAt) {
+      return;
+    }
+
+    db.update(quizQuestions)
+      .set({ deletedAt: null })
+      .where(eq(quizQuestions.id, input.id))
+      .run();
+
+    cascadeRestoreQuizQuestion(db, input.id, row.deletedAt);
   });
 
 export const listOptions = os

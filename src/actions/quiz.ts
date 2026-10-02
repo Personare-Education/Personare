@@ -21,6 +21,11 @@ export function updateQuizQuestion(
   return ipc.client.quiz.updateQuestion({ id, imagePath, text });
 }
 
+/** Undoes the soft delete (docs/specs/safety-net.md). */
+export function restoreQuizQuestion(id: string) {
+  return ipc.client.quiz.restoreQuestion({ id });
+}
+
 export function softDeleteQuizQuestion(id: string) {
   return ipc.client.quiz.softDeleteQuestion({ id });
 }
