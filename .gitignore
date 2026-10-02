@@ -108,3 +108,6 @@ out/
 
 # LLM Council session transcripts (local reference only)
 docs/council/
+
+# /brag launch video output
+brag-output/
