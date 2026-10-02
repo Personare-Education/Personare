@@ -6,6 +6,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **O heatmap dos cards de programa "preenche" ao carregar**, com a mesma animação do site: cada dia
+  começa vazio e ganha a cor numa cascata semana a semana, a partir da primeira semana visível. Toca
+  uma vez, quando os dados chegam, e não anima com "reduzir movimento" ligado no sistema.
+
 ### Changed
 
 - **Escrever perguntas do Quiz com um editor só.** A Dialog de perguntas deixa de ter um campo por
