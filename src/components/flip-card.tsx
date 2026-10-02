@@ -5,6 +5,7 @@ import {
   useCallback,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { programTintStyle } from "@/utils/program-tint";
 import { cn } from "@/utils/tailwind";
 
 export type FlipCardFace = "back" | "front";
@@ -12,20 +13,16 @@ export type FlipCardFace = "back" | "front";
 const FLIP_KEYS = new Set(["Enter", " "]);
 
 /**
- * The program's color on the card, the same treatment as the program cards
- * (src/components/programs-card-grid.tsx): a tinted gradient from the top
- * and a colored ring with a soft glow. The back is a little more tinted, so
- * the two faces read apart.
+ * The program's color on the card, the same treatment as the program cards.
+ * The back is a little more tinted, so the two faces read apart.
  */
 function faceStyle(color: string, face: FlipCardFace): CSSProperties {
-  const tint =
-    face === "back"
-      ? "calc(var(--card-tint-strength) + 12%)"
-      : "var(--card-tint-strength)";
-  return {
-    backgroundImage: `linear-gradient(to bottom, color-mix(in srgb, ${color} ${tint}, transparent), transparent 75%)`,
-    boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 35%, transparent), 0 0 20px 0 color-mix(in srgb, ${color} 25%, transparent)`,
-  };
+  return programTintStyle(color, {
+    strength:
+      face === "back"
+        ? "calc(var(--card-tint-strength) + 12%)"
+        : "var(--card-tint-strength)",
+  });
 }
 
 interface FaceProps {

@@ -152,7 +152,7 @@ function ProgramModulesPage() {
           size="icon"
           variant="outline"
         >
-          <Link to="/">
+          <Link to="/programs">
             <ArrowLeft />
           </Link>
         </Button>

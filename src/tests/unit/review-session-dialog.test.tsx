@@ -258,6 +258,42 @@ describe("ReviewSessionDialog (Issue #16)", () => {
     expect(screen.queryByText(DUE_ITEMS[1].back)).not.toBeInTheDocument();
   });
 
+  /**
+   * docs/specs/today-review-queue.md AC-7: Space reveals the answer and the
+   * keys 1-4 rate it (again, hard, good, easy).
+   */
+  it("reveals the answer with Space", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.keyboard(" ");
+
+    expect(visibleFace()).toHaveTextContent(DUE_ITEMS[0].back);
+  });
+
+  it("rates the revealed card with the number keys", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+    await user.keyboard(" ");
+
+    await user.keyboard("3");
+
+    expect(submitRating).toHaveBeenCalledWith(DUE_ITEMS[0].id, "good");
+    expect(await screen.findByText(DUE_ITEMS[1].front)).toBeInTheDocument();
+  });
+
+  it("ignores the number keys before the answer is revealed", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.keyboard("3");
+
+    expect(submitRating).not.toHaveBeenCalled();
+  });
+
   it("shows the session-complete message after rating the last item in the queue", async () => {
     vi.mocked(listDue).mockResolvedValue([DUE_ITEMS[0]]);
     const user = userEvent.setup();

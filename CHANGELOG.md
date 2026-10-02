@@ -6,6 +6,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Tela "Hoje", a nova tela de abertura.** Diz quantas revisões vencem hoje (e quantas estão
+  atrasadas), lista o que vence agrupado por programa, cada item num cartão na cor do seu programa, e
+  tem um único **Começar** que percorre o dia inteiro: baralhos com o cartão que gira, PDFs e links
+  abertos e avaliados ali mesmo, quizzes respondidos e avaliados. Dá para pular itens e fechar no
+  meio sem perder nada. Sem nada pendente, mostra o fechamento do dia (revisões feitas, sequência de
+  dias) e os próximos 7 dias. Programas passa para o item **Programas** da barra lateral, e **Hoje**
+  mostra o número de revisões pendentes.
+- **Atalhos na revisão:** Espaço revela a resposta, e as teclas 1 a 4 avaliam (Errei, Difícil, Bom,
+  Fácil).
+- **"N para revisar" nos cards de programa**, e um selo visível de "Revisão para hoje" / "Revisão
+  atrasada" na linha da tabela (antes, só leitores de tela recebiam esse texto).
+
 ### Changed
 
 - **Tipografia nova, no espírito da do Claude.** Newsreader (serifada de texto, com itálico de verdade)

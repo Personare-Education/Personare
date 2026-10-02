@@ -795,6 +795,63 @@ describe("review IPC namespace (Issue #16)", () => {
       expect(scheduled.programId).toBeTruthy();
     });
 
+    /**
+     * docs/specs/today-review-queue.md: the "Today" screen opens each item
+     * (a PDF's file, a link's URL), tells decks apart and paints it in its
+     * program's color, all from this one list.
+     */
+    it("includes the activity's type, URL and file, and the program's name and color", async () => {
+      await flashcardsClient.create({
+        activityId,
+        back: "Capital do Brasil",
+        front: "Brasilia",
+      });
+      await reviewClient.ensureReviewItems({ activityId });
+
+      const [scheduled] = await reviewClient.listSchedule();
+
+      expect(scheduled).toMatchObject({
+        activityFilePath: null,
+        activityType: "flashcard_deck",
+        activityUrl: null,
+        programColor: null,
+        programName: "Bacharelado II",
+      });
+    });
+
+    it("carries an activity-scoped row's type and URL too", async () => {
+      const program = await programsClient.create({
+        color: "#22c55e",
+        name: "Programa Link",
+      });
+      const module = await modulesClient.create({
+        name: "Modulo Link",
+        programId: program.id,
+      });
+      const link = await activitiesClient.create({
+        filePath: null,
+        moduleId: module.id,
+        title: "Aula",
+        type: "link",
+        url: "https://example.com/aula",
+      });
+      await reviewClient.markActivityDifficulty({
+        activityId: link.id,
+        rating: "good",
+      });
+
+      const scheduled = (await reviewClient.listSchedule()).find(
+        (item) => item.activityId === link.id
+      );
+
+      expect(scheduled).toMatchObject({
+        activityType: "link",
+        activityUrl: "https://example.com/aula",
+        programColor: "#22c55e",
+        programName: "Programa Link",
+      });
+    });
+
     it("returns review_items across every activity, not scoped to one", async () => {
       await flashcardsClient.create({
         activityId,

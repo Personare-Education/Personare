@@ -4,15 +4,21 @@ import { ipc } from "@/ipc/manager";
 import { toLocalDayKey } from "@/utils/review-highlight";
 
 export interface ScheduleRow {
+  activityFilePath: string | null;
   activityId: string;
   activityTitle: string;
+  activityType: string;
+  activityUrl: string | null;
   dueDate: Date;
   /** Only set for a Flashcard-scoped row -- null for an Activity-scoped one (Issue #77). */
   front: string | null;
   id: string;
   moduleId: string;
   moduleName: string;
+  /** Null for a program created before colors existed. */
+  programColor: string | null;
   programId: string;
+  programName: string;
 }
 
 export interface CalendarEventData {
