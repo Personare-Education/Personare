@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  Fragment,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { buildHeatmapWeeks, type HeatmapLevel } from "@/utils/activity-heatmap";
 import { cn } from "@/utils/tailwind";
@@ -40,9 +47,9 @@ export function ActivityHeatmap({
     [counts]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = scrollRef.current;
-    if (!node || typeof ResizeObserver === "undefined") {
+    if (!node) {
       return;
     }
 
@@ -57,11 +64,19 @@ export function ActivityHeatmap({
 
     updateScrollability();
 
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
     const observer = new ResizeObserver(updateScrollability);
     observer.observe(node);
 
     return () => observer.disconnect();
   }, []);
+
+  // AC-3: animate once the counts arrive. The cells are remounted (a new
+  // key) only when going from no data to data, so a later update -- another
+  // review done -- does not replay it.
+  const hasCounts = total > 0;
 
   return (
     <div
@@ -74,34 +89,41 @@ export function ActivityHeatmap({
       ref={scrollRef}
       role="img"
     >
-      {heatmapWeeks.map((week, weekIndex) => (
-        <div
-          aria-hidden="true"
-          className="flex shrink-0 flex-col gap-[3px]"
-          // biome-ignore lint/suspicious/noArrayIndexKey: weeks/days are a fixed-size grid, never reordered.
-          key={weekIndex}
-        >
-          {week.map((day, dayIndex) => (
-            <div
-              className={cn(
-                "size-2.5 rounded-xs",
-                day ? undefined : "bg-transparent"
-              )}
-              key={day?.date ?? dayIndex}
-              style={
-                day
-                  ? {
-                      backgroundColor:
-                        day.level === 0 ? "var(--heatmap-empty-cell)" : color,
-                      opacity: day.level === 0 ? 1 : LEVEL_OPACITY[day.level],
-                    }
-                  : undefined
-              }
-              title={day ? `${day.date}: ${day.count}` : undefined}
-            />
-          ))}
-        </div>
-      ))}
+      <Fragment key={hasCounts ? "filled" : "empty"}>
+        {heatmapWeeks.map((week, weekIndex) => (
+          <div
+            aria-hidden="true"
+            className="flex shrink-0 flex-col gap-[3px]"
+            // biome-ignore lint/suspicious/noArrayIndexKey: weeks/days are a fixed-size grid, never reordered.
+            key={weekIndex}
+          >
+            {week.map((day, dayIndex) => (
+              <div
+                className={cn(
+                  "size-2.5 rounded-xs",
+                  day ? undefined : "bg-transparent",
+                  day && hasCounts && "heatmap-cell"
+                )}
+                key={day?.date ?? dayIndex}
+                style={
+                  day
+                    ? ({
+                        // Most recent first (AC-2): the delay grows with
+                        // the day's age, week by week, then day by day.
+                        "--col": heatmapWeeks.length - 1 - weekIndex,
+                        "--row": week.length - 1 - dayIndex,
+                        backgroundColor:
+                          day.level === 0 ? "var(--heatmap-empty-cell)" : color,
+                        opacity: day.level === 0 ? 1 : LEVEL_OPACITY[day.level],
+                      } as CSSProperties)
+                    : undefined
+                }
+                title={day ? `${day.date}: ${day.count}` : undefined}
+              />
+            ))}
+          </div>
+        ))}
+      </Fragment>
     </div>
   );
 }
