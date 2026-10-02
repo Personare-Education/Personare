@@ -86,4 +86,11 @@ describe("MarkdownContent (Issue #96)", () => {
       expect(stylesheet).toContain(selector);
     }
   });
+
+  it("renders an inline fraction at the text size, like \\dfrac", () => {
+    const { container } = render(<MarkdownContent content="$\frac{1}{9}$" />);
+
+    expect(container.querySelector(".mfrac")).not.toBeNull();
+    expect(container.querySelector(".sizing")).toBeNull();
+  });
 });
