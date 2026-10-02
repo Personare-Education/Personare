@@ -119,7 +119,9 @@ function ProgramsPage() {
   return (
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="flex items-center justify-between">
-        <h1 className="font-bold text-2xl">{t("programsPageTitle")}</h1>
+        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
+          {t("programsPageTitle")}
+        </h1>
         <Button onClick={handleCreateClick}>{t("createProgramAction")}</Button>
       </div>
       <ProgramsCardGrid

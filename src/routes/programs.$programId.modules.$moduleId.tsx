@@ -317,7 +317,9 @@ function ModuleActivitiesPage() {
   return (
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="font-bold text-2xl">{t("activitiesPageTitle")}</h1>
+        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
+          {t("activitiesPageTitle")}
+        </h1>
         <Button onClick={handleCreateClick}>{t("createActivityAction")}</Button>
       </div>
       <div className="flex items-center gap-2">

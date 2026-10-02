@@ -6,6 +6,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Changed
+
+- **Tipografia nova, no espírito da do Claude.** Newsreader (serifada de texto, com itálico de verdade)
+  nos títulos e no conteúdo de estudo (perguntas, alternativas, flashcards), e Instrument Sans em toda
+  a interface. As duas são gratuitas e vêm dentro do app. Isso também corrige um bug antigo: o app pedia
+  a fonte "Geist", mas ela era registrada como "Geist Variable", então tudo caía na Arial.
+
 ### Added
 
 - **O heatmap dos cards de programa "preenche" ao carregar**, com a mesma animação do site: cada dia

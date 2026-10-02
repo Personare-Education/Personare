@@ -171,7 +171,7 @@ export default function SettingsDialog({
               {activeCategory === "beta" && <BetaActivationSection />}
               {activeCategory === "backup" && (
                 <div className="flex flex-col gap-2">
-                  <h2 className="font-semibold text-lg">
+                  <h2 className="font-medium font-serif text-xl">
                     {t("backupSectionTitle")}
                   </h2>
                   <p className="text-muted-foreground text-sm">
@@ -190,7 +190,7 @@ export default function SettingsDialog({
               {activeCategory === "driveBackup" &&
                 (isDriveConnected ? (
                   <div className="flex flex-col gap-2">
-                    <h2 className="font-semibold text-lg">
+                    <h2 className="font-medium font-serif text-xl">
                       {t("driveBackupSectionTitle")}
                     </h2>
                     <p className="text-muted-foreground text-sm">

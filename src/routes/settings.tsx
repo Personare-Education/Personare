@@ -35,7 +35,9 @@ export function SettingsPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-2">
-      <h1 className="font-bold text-2xl">{t("settingsPageTitle")}</h1>
+      <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
+        {t("settingsPageTitle")}
+      </h1>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <Switch
@@ -51,7 +53,9 @@ export function SettingsPage() {
       </div>
       <AccountSection onDriveConnectedChange={setIsDriveConnected} />
       <div className="flex flex-col gap-2">
-        <h2 className="font-semibold text-lg">{t("backupSectionTitle")}</h2>
+        <h2 className="font-medium font-serif text-xl">
+          {t("backupSectionTitle")}
+        </h2>
         <p className="text-muted-foreground text-sm">
           {t("backupSectionDescription")}
         </p>
@@ -66,7 +70,7 @@ export function SettingsPage() {
       </div>
       {isDriveConnected ? (
         <div className="flex flex-col gap-2">
-          <h2 className="font-semibold text-lg">
+          <h2 className="font-medium font-serif text-xl">
             {t("driveBackupSectionTitle")}
           </h2>
           <p className="text-muted-foreground text-sm">
