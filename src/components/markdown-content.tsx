@@ -1,6 +1,6 @@
 import "katex/dist/katex.min.css";
 import ReactMarkdown, { type Components } from "react-markdown";
-import rehypeKatex from "rehype-katex";
+import rehypeKatex, { type Options as KatexOptions } from "rehype-katex";
 import remarkMath from "remark-math";
 import { normalizeMathDelimiters } from "@/utils/math-delimiters";
 import { cn } from "@/utils/tailwind";
@@ -35,6 +35,12 @@ const components: Components = {
   ),
 };
 
+/**
+ * Inline, KaTeX shrinks a fraction's numerator and denominator, too small to
+ * read in a quiz question. \dfrac keeps them at the text size.
+ */
+const katexOptions: KatexOptions = { macros: { "\\frac": "\\dfrac" } };
+
 export default function MarkdownContent({
   className,
   content,
@@ -43,7 +49,7 @@ export default function MarkdownContent({
     <div className={cn("min-w-0 text-sm", className)}>
       <ReactMarkdown
         components={components}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[[rehypeKatex, katexOptions]]}
         remarkPlugins={[remarkMath]}
       >
         {normalizeMathDelimiters(content)}
