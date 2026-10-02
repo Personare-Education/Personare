@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import QuizQuestionFormDialog, {
   type QuizQuestionFormValue,
@@ -12,23 +13,47 @@ vi.mock("@/actions/dialog", () => ({
 }));
 vi.mock("@/actions/attachments", () => ({
   deleteAttachmentImage: vi.fn(),
+  getAttachmentImageDataUrl: vi.fn(),
   saveAttachmentImage: vi.fn(),
+  saveAttachmentImageData: vi.fn(),
 }));
 
 /**
- * RED phase (Issue #14, then extended by Issue #96, Spec Driven TDD).
- * QuizQuestionFormDialog manages ONE question and its alternatives at a
- * time. It must enforce -- in the form itself, before calling onSubmit --
- * at least 2 alternatives with non-empty text and exactly 1 of them marked
- * as correct. Marking "the correct" alternative uses role="radio" controls.
+ * dnd-kit cannot run a real pointer drag in jsdom, so the real ReUI Sortable
+ * is wrapped to capture what it was given: calling its onValueChange is
+ * exactly what a finished drag does.
+ */
+const sortable = vi.hoisted(() => ({
+  onValueChange: undefined as ((value: unknown[]) => void) | undefined,
+  value: [] as unknown[],
+}));
+vi.mock("@/components/reui/sortable", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/components/reui/sortable")>();
+  function CapturingSortable<T>(
+    props: ComponentProps<typeof actual.Sortable<T>>
+  ) {
+    sortable.onValueChange = props.onValueChange as (value: unknown[]) => void;
+    sortable.value = props.value;
+    return <actual.Sortable {...props} />;
+  }
+  return { ...actual, Sortable: CapturingSortable };
+});
+
+const LATEX_PATTERN = /latex/i;
+
+/**
+ * RED phase (docs/specs/quiz-question-single-editor.md). The dialog has ONE
+ * Markdown editor. The first submission becomes the question's heading, the
+ * next ones its alternatives, shown above the editor as a stack of rendered
+ * cards. Cards can be edited (their content goes back to the editor) and
+ * alternatives reordered by dragging (ReUI's Sortable). "Add question" saves and resets for the
+ * next question; "Done" saves and closes. The dialog only closes through
+ * "Done" or its X -- not by clicking outside or pressing Escape.
  *
- * Issue #96 (docs/specs/issue-96-markdown-latex-imagens.md AC-5) moves the
- * question text and each option's text from a single-line <Input> to a
- * MarkdownEditor (Markdown + LaTeX), and adds an optional image to the
- * question and to each option via ImageAttachmentField. onSubmit gains a
- * middle `imagePath` argument (the question's own image) between `text` and
- * `options`, and each submitted option now also carries its own
- * `imagePath`.
+ * Issue #14's rules still hold: a question needs a heading, at least 2
+ * alternatives and exactly 1 of them marked as correct -- through each
+ * alternative's "mark as correct" button (aria-pressed).
  */
 
 const EXISTING_QUESTION: QuizQuestionFormValue = {
@@ -59,7 +84,7 @@ const EXISTING_QUESTION: QuizQuestionFormValue = {
 
 function renderDialog(question: QuizQuestionFormValue | null = null) {
   const onOpenChange = vi.fn();
-  const onSubmit = vi.fn();
+  const onSubmit = vi.fn().mockResolvedValue(undefined);
 
   render(
     <QuizQuestionFormDialog
@@ -73,214 +98,345 @@ function renderDialog(question: QuizQuestionFormValue | null = null) {
   return { onOpenChange, onSubmit };
 }
 
-function optionTextInputs() {
-  return screen.getAllByLabelText(i18n.t("quizOptionTextLabel"));
+function editor() {
+  return screen.getByRole("textbox", {
+    name: i18n.t("quizComposerLabel"),
+  }) as HTMLTextAreaElement;
 }
 
-function correctOptionRadios() {
-  return screen.getAllByRole("radio");
+async function send(user: ReturnType<typeof userEvent.setup>, text: string) {
+  await user.type(editor(), `${text}{Shift>}{Enter}{/Shift}`);
 }
 
-function clickSave() {
-  return userEvent
-    .setup()
-    .click(screen.getByRole("button", { name: i18n.t("saveAction") }));
+function heading() {
+  return screen.getByRole("region", { name: i18n.t("quizHeadingLabel") });
 }
 
-describe("QuizQuestionFormDialog (Issue #14)", () => {
-  it("renders a question text input", () => {
+function optionItems() {
+  return within(
+    screen.getByRole("list", { name: i18n.t("quizOptionsLabel") })
+  ).queryAllByRole("listitem");
+}
+
+function optionTexts() {
+  return optionItems().map((item) => item.textContent ?? "");
+}
+
+function button(name: string) {
+  return screen.getByRole("button", { name });
+}
+
+async function buildValidQuestion(user: ReturnType<typeof userEvent.setup>) {
+  await send(user, "Pergunta valida");
+  await send(user, "Primeira alternativa");
+  await send(user, "Segunda alternativa");
+  await user.click(markCorrectButtons()[1]);
+}
+
+function markCorrectButtons() {
+  return screen.getAllByRole("button", {
+    name: i18n.t("markCorrectQuizOptionAction"),
+  });
+}
+
+describe("QuizQuestionFormDialog -- single editor", () => {
+  it("has a single text editor", () => {
     renderDialog(null);
 
+    expect(screen.getAllByRole("textbox")).toHaveLength(1);
+  });
+
+  it("does not advertise LaTeX support", () => {
+    renderDialog(null);
+
+    expect(screen.queryByText(LATEX_PATTERN)).not.toBeInTheDocument();
+  });
+
+  it("turns the first submission into the heading and clears the editor", async () => {
+    const user = userEvent.setup();
+    renderDialog(null);
+
+    await send(user, "Qual e a capital?");
+
+    expect(heading()).toHaveTextContent("Qual e a capital?");
+    expect(editor()).toHaveValue("");
+    expect(optionItems()).toHaveLength(0);
+  });
+
+  it("turns the following submissions into alternatives, in order", async () => {
+    const user = userEvent.setup();
+    renderDialog(null);
+
+    await send(user, "Pergunta");
+    await send(user, "Alfa");
+    await user.type(editor(), "Beta");
+    await user.click(button(i18n.t("addQuizOptionAction")));
+
+    expect(optionItems()).toHaveLength(2);
+    expect(optionTexts()[0]).toContain("Alfa");
+    expect(optionTexts()[1]).toContain("Beta");
+  });
+
+  it("ignores an empty submission", async () => {
+    const user = userEvent.setup();
+    renderDialog(null);
+
+    await user.type(editor(), "{Shift>}{Enter}{/Shift}");
+
     expect(
-      screen.getByLabelText(i18n.t("quizQuestionTextLabel"))
+      screen.queryByRole("region", { name: i18n.t("quizHeadingLabel") })
+    ).not.toBeInTheDocument();
+  });
+
+  it("loads the heading into the editor on edit and replaces it in place", async () => {
+    const user = userEvent.setup();
+    renderDialog(null);
+    await send(user, "Original");
+    await send(user, "Alternativa");
+
+    await user.click(button(i18n.t("editQuizHeadingAction")));
+    expect(editor()).toHaveValue("Original");
+
+    await user.clear(editor());
+    await send(user, "Editado");
+
+    expect(heading()).toHaveTextContent("Editado");
+    expect(optionItems()).toHaveLength(1);
+  });
+
+  it("replaces an edited alternative in place and gives back the unsent draft", async () => {
+    const user = userEvent.setup();
+    renderDialog(EXISTING_QUESTION);
+    await user.type(editor(), "rascunho");
+
+    await user.click(
+      within(optionItems()[0]).getByRole("button", {
+        name: i18n.t("editQuizOptionAction"),
+      })
+    );
+    expect(editor()).toHaveValue("Sao Paulo");
+
+    await user.clear(editor());
+    await send(user, "Salvador");
+
+    expect(optionTexts()[0]).toContain("Salvador");
+    expect(optionItems()).toHaveLength(3);
+    expect(editor()).toHaveValue("rascunho");
+  });
+
+  it("pre-fills the heading and alternatives of an existing question", () => {
+    renderDialog(EXISTING_QUESTION);
+
+    expect(heading()).toHaveTextContent(EXISTING_QUESTION.text);
+    expect(optionItems()).toHaveLength(3);
+    expect(
+      markCorrectButtons().map((b) => b.getAttribute("aria-pressed"))
+    ).toEqual(["false", "true", "false"]);
+  });
+
+  it("marks one alternative as correct and unmarks the previous one", async () => {
+    const user = userEvent.setup();
+    renderDialog(EXISTING_QUESTION);
+
+    await user.click(markCorrectButtons()[2]);
+
+    expect(
+      markCorrectButtons().map((b) => b.getAttribute("aria-pressed"))
+    ).toEqual(["false", "false", "true"]);
+    expect(
+      within(optionItems()[2]).getByText(i18n.t("quizReviewCorrectStatusLabel"))
     ).toBeInTheDocument();
   });
 
-  it("starts a new question with at least 2 empty option rows", () => {
-    renderDialog(null);
+  it("removes an alternative", async () => {
+    const user = userEvent.setup();
+    renderDialog(EXISTING_QUESTION);
 
-    const inputs = optionTextInputs();
-    expect(inputs.length).toBeGreaterThanOrEqual(2);
-    for (const input of inputs) {
-      expect(input).toHaveValue("");
+    await user.click(
+      within(optionItems()[0]).getByRole("button", {
+        name: i18n.t("removeQuizOptionAction"),
+      })
+    );
+
+    expect(optionItems()).toHaveLength(2);
+  });
+
+  it("gives every alternative a ReUI sortable drag handle", () => {
+    renderDialog(EXISTING_QUESTION);
+
+    for (const item of optionItems()) {
+      const handle = within(item).getByRole("button", {
+        name: i18n.t("dragQuizOptionAction"),
+      });
+      expect(handle).toHaveAttribute("data-slot", "sortable-item-handle");
     }
   });
 
-  it("pre-fills the question text and options when editing an existing question", () => {
+  it("reorders the alternatives when the sortable drops one elsewhere", () => {
     renderDialog(EXISTING_QUESTION);
+    const [saoPaulo, brasilia, rio] = sortable.value;
 
-    expect(screen.getByLabelText(i18n.t("quizQuestionTextLabel"))).toHaveValue(
-      EXISTING_QUESTION.text
-    );
-
-    const inputs = optionTextInputs();
-    expect(inputs.map((input) => (input as HTMLInputElement).value)).toEqual(
-      EXISTING_QUESTION.options.map((option) => option.text)
-    );
-  });
-
-  it("checks the radio of the option that is currently marked as correct", () => {
-    renderDialog(EXISTING_QUESTION);
-
-    const radios = correctOptionRadios();
-    const checkedIndex = radios.findIndex(
-      (radio) => (radio as HTMLInputElement).checked
-    );
-
-    expect(checkedIndex).toBe(1);
-  });
-
-  it("adds a new empty option row when the add-option action is clicked", async () => {
-    const user = userEvent.setup();
-    renderDialog(null);
-    const initialCount = optionTextInputs().length;
-
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("addQuizOptionAction") })
-    );
-
-    expect(optionTextInputs().length).toBe(initialCount + 1);
-  });
-
-  it("removes an option row when its remove action is clicked, while at least 2 remain", async () => {
-    const user = userEvent.setup();
-    renderDialog(EXISTING_QUESTION);
-    const initialCount = optionTextInputs().length;
-
-    await user.click(
-      screen.getAllByRole("button", {
-        name: i18n.t("removeQuizOptionAction"),
-      })[0]
-    );
-
-    expect(optionTextInputs().length).toBe(initialCount - 1);
-  });
-
-  it("does not allow removing an option below the 2-option minimum", () => {
-    renderDialog(null);
-
-    const removeButtons = screen.getAllByRole("button", {
-      name: i18n.t("removeQuizOptionAction"),
+    act(() => {
+      sortable.onValueChange?.([rio, saoPaulo, brasilia]);
     });
 
-    for (const button of removeButtons) {
-      expect(button).toBeDisabled();
-    }
+    expect(optionTexts()[0]).toContain("Rio de Janeiro");
+    expect(optionTexts()[1]).toContain("Sao Paulo");
+    expect(optionTexts()[2]).toContain("Brasilia");
   });
 
-  it("selecting a different option as correct unchecks the previously correct one", async () => {
+  it("saves the alternatives in their reordered order", async () => {
     const user = userEvent.setup();
-    renderDialog(EXISTING_QUESTION);
-
-    const radios = correctOptionRadios();
-    await user.click(radios[0]);
-
-    const radiosAfter = correctOptionRadios();
-    expect((radiosAfter[0] as HTMLInputElement).checked).toBe(true);
-    expect((radiosAfter[1] as HTMLInputElement).checked).toBe(false);
-  });
-
-  it("does not call onSubmit when fewer than 2 options have non-empty text", async () => {
-    const { onSubmit } = renderDialog(null);
-    const user = userEvent.setup();
-    const inputs = optionTextInputs();
-
-    await user.type(
-      screen.getByLabelText(i18n.t("quizQuestionTextLabel")),
-      "Pergunta valida"
-    );
-    await user.type(inputs[0], "Unica alternativa preenchida");
-    await user.click(correctOptionRadios()[0]);
-    await clickSave();
-
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it("does not call onSubmit when no option is marked as correct", async () => {
-    const { onSubmit } = renderDialog(null);
-    const user = userEvent.setup();
-    const inputs = optionTextInputs();
-
-    await user.type(
-      screen.getByLabelText(i18n.t("quizQuestionTextLabel")),
-      "Pergunta valida"
-    );
-    await user.type(inputs[0], "Primeira alternativa");
-    await user.type(inputs[1], "Segunda alternativa");
-    await clickSave();
-
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it("calls onSubmit with the question text, null image path, and options once valid", async () => {
-    const { onSubmit } = renderDialog(null);
-    const user = userEvent.setup();
-    const inputs = optionTextInputs();
-
-    await user.type(
-      screen.getByLabelText(i18n.t("quizQuestionTextLabel")),
-      "Pergunta valida"
-    );
-    await user.type(inputs[0], "Primeira alternativa");
-    await user.type(inputs[1], "Segunda alternativa");
-    await user.click(correctOptionRadios()[1]);
-    await clickSave();
-
-    expect(onSubmit).toHaveBeenCalledTimes(1);
-    const [submittedText, submittedImagePath, submittedOptions] = onSubmit.mock
-      .calls[0] as [
-      string,
-      string | null,
-      { text: string; isCorrect: boolean; imagePath: string | null }[],
-    ];
-
-    expect(submittedText).toBe("Pergunta valida");
-    expect(submittedImagePath).toBeNull();
-    expect(submittedOptions).toHaveLength(2);
-    expect(submittedOptions.filter((option) => option.isCorrect)).toHaveLength(
-      1
-    );
-    expect(submittedOptions[1].isCorrect).toBe(true);
-    expect(submittedOptions.map((option) => option.text)).toEqual([
-      "Primeira alternativa",
-      "Segunda alternativa",
-    ]);
-    expect(submittedOptions.map((option) => option.imagePath)).toEqual([
-      null,
-      null,
-    ]);
-  });
-
-  it("submits successfully when editing an existing, already-valid question without changes, keeping image paths", async () => {
     const { onSubmit } = renderDialog(EXISTING_QUESTION);
+    const [saoPaulo, brasilia, rio] = sortable.value;
+    act(() => {
+      sortable.onValueChange?.([brasilia, rio, saoPaulo]);
+    });
 
-    await clickSave();
+    await user.click(button(i18n.t("concludeQuizEditingAction")));
 
-    expect(onSubmit).toHaveBeenCalledTimes(1);
-    const [, submittedImagePath, submittedOptions] = onSubmit.mock.calls[0] as [
-      string,
-      string | null,
-      { text: string; isCorrect: boolean; imagePath: string | null }[],
-    ];
-    expect(submittedImagePath).toBe(EXISTING_QUESTION.imagePath);
-    expect(submittedOptions.filter((option) => option.isCorrect)).toHaveLength(
-      1
-    );
-    expect(submittedOptions.map((option) => option.imagePath)).toEqual(
-      EXISTING_QUESTION.options.map((option) => option.imagePath)
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    const options = onSubmit.mock.calls[0][3] as { text: string }[];
+    expect(options.map((option) => option.text)).toEqual([
+      "Brasilia",
+      "Rio de Janeiro",
+      "Sao Paulo",
+    ]);
+  });
+
+  it("does not save without a correct alternative and says why", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog(null);
+    await send(user, "Pergunta");
+    await send(user, "A");
+    await send(user, "B");
+
+    await user.click(button(i18n.t("addQuizQuestionAction")));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(i18n.t("quizFormNoCorrectOptionError"))
+    ).toBeInTheDocument();
+  });
+
+  it("does not save with fewer than 2 alternatives", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog(null);
+    await send(user, "Pergunta");
+    await send(user, "A");
+    await user.click(markCorrectButtons()[0]);
+
+    await user.click(button(i18n.t("addQuizQuestionAction")));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(i18n.t("quizFormTooFewOptionsError"))
+    ).toBeInTheDocument();
+  });
+
+  it("saves on 'add question' and resets the form for the next one, still open", async () => {
+    const user = userEvent.setup();
+    const { onOpenChange, onSubmit } = renderDialog(null);
+    await buildValidQuestion(user);
+
+    await user.click(button(i18n.t("addQuizQuestionAction")));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(null, "Pergunta valida", null, [
+        { imagePath: null, isCorrect: false, text: "Primeira alternativa" },
+        { imagePath: null, isCorrect: true, text: "Segunda alternativa" },
+      ]);
+    });
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("region", { name: i18n.t("quizHeadingLabel") })
+      ).not.toBeInTheDocument();
+    });
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("includes what is still in the editor when saving", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog(null);
+    await send(user, "Pergunta");
+    await send(user, "A");
+    await user.click(markCorrectButtons()[0]);
+    await user.type(editor(), "B");
+
+    await user.click(button(i18n.t("concludeQuizEditingAction")));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(null, "Pergunta", null, [
+        { imagePath: null, isCorrect: true, text: "A" },
+        { imagePath: null, isCorrect: false, text: "B" },
+      ]);
+    });
+  });
+
+  it("saves an edited existing question under its id on 'done', then closes", async () => {
+    const user = userEvent.setup();
+    const { onOpenChange, onSubmit } = renderDialog(EXISTING_QUESTION);
+
+    await user.click(button(i18n.t("concludeQuizEditingAction")));
+
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      EXISTING_QUESTION.id,
+      EXISTING_QUESTION.text,
+      null,
+      EXISTING_QUESTION.options.map(({ imagePath, isCorrect, text }) => ({
+        imagePath,
+        isCorrect,
+        text,
+      }))
     );
   });
 
-  it("renders an image attachment control for the question and for each option", () => {
-    renderDialog(EXISTING_QUESTION);
+  it("creates (not updates) the questions added after an existing one", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog(EXISTING_QUESTION);
+    await user.click(button(i18n.t("addQuizQuestionAction")));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("region", { name: i18n.t("quizHeadingLabel") })
+      ).not.toBeInTheDocument();
+    });
 
-    // 1 for the question + 3 for the options = 4 total; only the option
-    // with imagePath set ("Brasilia") already has one attached.
-    expect(
-      screen.getAllByRole("button", { name: i18n.t("attachImageAction") })
-    ).toHaveLength(3);
-    expect(
-      screen.getAllByRole("button", { name: i18n.t("removeImageAction") })
-    ).toHaveLength(1);
+    await buildValidQuestion(user);
+    await user.click(button(i18n.t("concludeQuizEditingAction")));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+    expect(onSubmit.mock.calls[1][0]).toBeNull();
+  });
+
+  it("closes without saving when 'done' is clicked on an empty form", async () => {
+    const user = userEvent.setup();
+    const { onOpenChange, onSubmit } = renderDialog(null);
+
+    await user.click(button(i18n.t("concludeQuizEditingAction")));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("stays open on Escape", async () => {
+    const user = userEvent.setup();
+    const { onOpenChange } = renderDialog(null);
+
+    await user.keyboard("{Escape}");
+
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("still closes from its X button", async () => {
+    const user = userEvent.setup();
+    const { onOpenChange } = renderDialog(null);
+
+    await user.click(button("Close"));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

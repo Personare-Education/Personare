@@ -42,6 +42,7 @@ vi.mock("@/actions/attachments", () => ({
   deleteAttachmentImage: vi.fn(),
   getAttachmentImageDataUrl: vi.fn(),
   saveAttachmentImage: vi.fn(),
+  saveAttachmentImageData: vi.fn(),
 }));
 
 const {
@@ -88,7 +89,18 @@ const EXISTING_QUESTIONS = [
   },
 ];
 
-function renderManager(activity: Activity | null = QUIZ_ACTIVITY) {
+function editor() {
+  return screen.getByRole("textbox", { name: i18n.t("quizComposerLabel") });
+}
+
+async function send(user: ReturnType<typeof userEvent.setup>, text: string) {
+  await user.type(editor(), `${text}{Shift>}{Enter}{/Shift}`);
+}
+
+function renderManager(
+  activity: Activity | null = QUIZ_ACTIVITY,
+  startWithNewItem = false
+) {
   const onOpenChange = vi.fn();
 
   render(
@@ -96,6 +108,7 @@ function renderManager(activity: Activity | null = QUIZ_ACTIVITY) {
       activity={activity}
       onOpenChange={onOpenChange}
       open={activity !== null}
+      startWithNewItem={startWithNewItem}
     />
   );
 
@@ -183,9 +196,9 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
     });
     await user.click(editButtons[0]);
 
-    expect(screen.getByLabelText(i18n.t("quizQuestionTextLabel"))).toHaveValue(
-      EXISTING_QUESTIONS[0].text
-    );
+    expect(
+      screen.getByRole("region", { name: i18n.t("quizHeadingLabel") })
+    ).toHaveTextContent(EXISTING_QUESTIONS[0].text);
   });
 
   it("opens an empty question form when the add-question action is clicked", async () => {
@@ -197,12 +210,24 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
       screen.getByRole("button", { name: i18n.t("addQuizQuestionAction") })
     );
 
-    expect(screen.getByLabelText(i18n.t("quizQuestionTextLabel"))).toHaveValue(
-      ""
-    );
+    expect(editor()).toHaveValue("");
+    expect(
+      screen.queryByRole("region", { name: i18n.t("quizHeadingLabel") })
+    ).not.toBeInTheDocument();
   });
 
-  it("creates the question and its options when a new question is submitted", async () => {
+  it("opens the new-question form right away when started with a new item", async () => {
+    renderManager(QUIZ_ACTIVITY, true);
+
+    expect(
+      await screen.findByRole("textbox", { name: i18n.t("quizComposerLabel") })
+    ).toHaveValue("");
+    expect(
+      screen.queryByRole("region", { name: i18n.t("quizHeadingLabel") })
+    ).not.toBeInTheDocument();
+  });
+
+  it("creates the question and its options, one at a time and in order, when a new question is saved", async () => {
     const user = userEvent.setup();
     vi.mocked(createQuizQuestion).mockResolvedValue({
       activityId: QUIZ_ACTIVITY.id,
@@ -210,25 +235,31 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
       imagePath: null,
       text: "Nova pergunta",
     });
+    let pendingOptions = 0;
+    let maxPendingOptions = 0;
+    vi.mocked(createQuizOption).mockImplementation(() => {
+      pendingOptions += 1;
+      maxPendingOptions = Math.max(maxPendingOptions, pendingOptions);
+      return Promise.resolve().then(() => {
+        pendingOptions -= 1;
+      }) as never;
+    });
     renderManager();
     await screen.findByText(EXISTING_QUESTIONS[0].text);
 
     await user.click(
       screen.getByRole("button", { name: i18n.t("addQuizQuestionAction") })
     );
-    await user.type(
-      screen.getByLabelText(i18n.t("quizQuestionTextLabel")),
-      "Nova pergunta"
-    );
-
-    const optionInputs = screen.getAllByLabelText(
-      i18n.t("quizOptionTextLabel")
-    );
-    await user.type(optionInputs[0], "Opcao A");
-    await user.type(optionInputs[1], "Opcao B");
-    await user.click(screen.getAllByRole("radio")[1]);
+    await send(user, "Nova pergunta");
+    await send(user, "Opcao A");
+    await send(user, "Opcao B");
     await user.click(
-      screen.getByRole("button", { name: i18n.t("saveAction") })
+      screen.getAllByRole("button", {
+        name: i18n.t("markCorrectQuizOptionAction"),
+      })[1]
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
     );
 
     await waitFor(() => {
@@ -239,19 +270,12 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
       );
     });
     await waitFor(() => {
-      expect(createQuizOption).toHaveBeenCalledWith(
-        "new-q",
-        "Opcao A",
-        false,
-        null
-      );
-      expect(createQuizOption).toHaveBeenCalledWith(
-        "new-q",
-        "Opcao B",
-        true,
-        null
-      );
+      expect(vi.mocked(createQuizOption).mock.calls).toEqual([
+        ["new-q", "Opcao A", false, null],
+        ["new-q", "Opcao B", true, null],
+      ]);
     });
+    expect(maxPendingOptions).toBe(1);
   });
 
   it("updates the question and reconciles its options when an existing question is edited", async () => {
@@ -270,13 +294,13 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
     });
     await user.click(editButtons[0]);
 
-    const questionInput = screen.getByLabelText(
-      i18n.t("quizQuestionTextLabel")
-    );
-    await user.clear(questionInput);
-    await user.type(questionInput, "Pergunta editada");
     await user.click(
-      screen.getByRole("button", { name: i18n.t("saveAction") })
+      screen.getByRole("button", { name: i18n.t("editQuizHeadingAction") })
+    );
+    await user.clear(editor());
+    await send(user, "Pergunta editada");
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
     );
 
     await waitFor(() => {
