@@ -8,7 +8,7 @@ export default [
   },
   {
     key: "pt-BR",
-    nativeName: "Português (Brasil)",
+    nativeName: "Português",
     prefix: "PT-BR",
   },
 ] as const satisfies Language[];

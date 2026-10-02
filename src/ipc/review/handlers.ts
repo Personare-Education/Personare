@@ -17,6 +17,7 @@ import {
   applyRating,
   createInitialReviewItemFields,
   fromFsrsCard,
+  previewRatings as previewFsrsRatings,
   type ReviewItemRow,
 } from "@/utils/fsrs";
 import {
@@ -25,6 +26,7 @@ import {
   listActivityReviewStateInputSchema,
   listDueInputSchema,
   markActivityDifficultyInputSchema,
+  previewRatingsInputSchema,
   submitRatingInputSchema,
 } from "./schemas";
 
@@ -251,6 +253,42 @@ export const listSchedule = os.handler(() => {
 
   return unionAll(viaFlashcard, viaActivity).all();
 });
+
+/**
+ * What each rating would schedule (docs/specs/rating-clarity.md AC-1): a
+ * flashcard's review item with its short learning steps, or a whole
+ * Activity in whole days -- the same schedulers submitRating and
+ * markActivityDifficulty use. An Activity never rated previews a fresh card.
+ */
+export const previewRatings = os
+  .input(previewRatingsInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const now = new Date();
+
+    if ("reviewItemId" in input) {
+      const row = db
+        .select()
+        .from(reviewItemsTable)
+        .where(eq(reviewItemsTable.id, input.reviewItemId))
+        .get();
+      if (!row) {
+        throw new Error("Review item not found");
+      }
+      return previewFsrsRatings({ ...row, state: row.state as StateType }, now);
+    }
+
+    const row = db
+      .select()
+      .from(reviewItemsTable)
+      .where(eq(reviewItemsTable.activityId, input.activityId))
+      .get();
+    return previewFsrsRatings(
+      row ? { ...row, state: row.state as StateType } : null,
+      now,
+      { shortTermEnabled: false }
+    );
+  });
 
 export const submitRating = os
   .input(submitRatingInputSchema)

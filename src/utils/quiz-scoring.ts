@@ -17,6 +17,10 @@ export interface QuizScore {
 
 export function formatQuizDuration(milliseconds: number): string {
   const totalSeconds = Math.round(Math.max(0, milliseconds) / 1000);
+  // A real but very short time is not "0s" (docs/specs/rating-clarity.md AC-4).
+  if (totalSeconds === 0 && milliseconds > 0) {
+    return "<1s";
+  }
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 

@@ -131,6 +131,12 @@ export function CalendarPage() {
         {syncMessage ? (
           <p className="text-muted-foreground text-sm">{syncMessage}</p>
         ) : null}
+        {/* Says why the button is off (docs/specs/rating-clarity.md AC-4). */}
+        {isCalendarConnected || syncMessage ? null : (
+          <p className="text-muted-foreground text-sm">
+            {t("calendarSyncDisabledHint")}
+          </p>
+        )}
       </div>
       <EventCalendar
         className="h-full"

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ensureReviewItems, listDue, submitRating } from "@/actions/review";
+import {
+  ensureReviewItems,
+  listDue,
+  previewItemRatings,
+  submitRating,
+} from "@/actions/review";
 import FlipCard from "@/components/flip-card";
 import ImageAttachmentViewer from "@/components/image-attachment-viewer";
 import MarkdownContent from "@/components/markdown-content";
@@ -72,6 +77,19 @@ export default function FlashcardReviewPanel({
   }, [activityId]);
 
   const currentItem = queue[0] ?? null;
+  // What each rating would schedule for this card (docs/specs/rating-clarity.md AC-1).
+  const [intervals, setIntervals] = useState<
+    Partial<Record<RatingValue, Date>> | undefined
+  >();
+
+  useEffect(() => {
+    setIntervals(undefined);
+    if (currentItem && isRevealed) {
+      previewItemRatings(currentItem.id)
+        .then(setIntervals)
+        .catch(() => undefined);
+    }
+  }, [currentItem, isRevealed]);
 
   const reveal = useCallback(() => {
     setIsRevealed(true);
@@ -181,7 +199,7 @@ export default function FlashcardReviewPanel({
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             {isRevealed ? (
-              <RatingButtons onRate={handleRate} />
+              <RatingButtons intervals={intervals} onRate={handleRate} />
             ) : (
               <Button aria-keyshortcuts="Space" onClick={reveal}>
                 {t("revealAnswerAction")}

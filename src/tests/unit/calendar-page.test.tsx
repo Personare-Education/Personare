@@ -209,6 +209,15 @@ describe("CalendarPage Google Calendar sync (Issue #26)", () => {
     ).toBeDisabled();
   });
 
+  /** docs/specs/rating-clarity.md AC-4 */
+  it("says why the sync action is disabled", async () => {
+    renderCalendarPage();
+
+    expect(
+      await screen.findByText(i18n.t("calendarSyncDisabledHint"))
+    ).toBeInTheDocument();
+  });
+
   it("enables the sync action once the calendar is connected", async () => {
     vi.mocked(getCalendarConnectionStatus).mockResolvedValue(true);
     renderCalendarPage();
