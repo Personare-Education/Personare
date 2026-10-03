@@ -104,7 +104,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --heatmap-empty-cell: oklch(0.269 0 0);
+  /* ~1.5:1 on the card, like the light theme's empty cell
+     (docs/specs/audit-a11y.md AC-4). */
+  --heatmap-empty-cell: oklch(0.34 0 0);
   --heatmap-level-1: 0.25;
   --heatmap-level-2: 0.45;
   --heatmap-level-3: 0.7;
