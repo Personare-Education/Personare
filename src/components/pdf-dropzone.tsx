@@ -81,7 +81,7 @@ export default function PdfDropzone({
       {/* The whole drop area is a button: click or Enter opens the file picker. */}
       <button
         className={cn(
-          "flex flex-col items-center gap-1 rounded-lg border border-dashed p-6 text-center text-sm outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50",
+          "flex flex-col items-center gap-1 rounded-lg border border-dashed p-6 text-center text-sm outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring",
           isDragging && "border-primary bg-primary/10"
         )}
         data-dragging={isDragging || undefined}

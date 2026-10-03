@@ -122,7 +122,7 @@ export default function FlipCard({
       aria-label={t("flipFlashcardAction")}
       aria-pressed={flipped}
       className={cn(
-        "perspective-distant mx-auto w-full max-w-md cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+        "perspective-distant mx-auto w-full max-w-md cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
       onClick={onFlip}
