@@ -36,7 +36,9 @@
   --warning: oklch(0.77 0.16 70);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* The brand blue: ~4.5:1 on white, ~4.1:1 on the dark card, where the gray
+     was 2.6:1 in light (docs/specs/audit-a11y-leftovers.md AC-1). */
+  --ring: var(--brand);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -69,6 +71,16 @@
   --card-tint-strength: 38%;
   /* Personare's brand blue, the logo's accent (same as the website). */
   --brand: #3b6cf6;
+  /* Colored text on a tint of its own color: mixed with the foreground, it is
+     darker in light and lighter in dark, above 4.5:1 in both
+     (docs/specs/audit-a11y-leftovers.md AC-2). */
+  --brand-text: color-mix(in srgb, var(--brand) 70%, var(--foreground));
+  --success-text: color-mix(in srgb, var(--success) 65%, var(--foreground));
+  --destructive-text: color-mix(
+    in srgb,
+    var(--destructive) 80%,
+    var(--foreground)
+  );
   /* Rows with a review due today or in focus from the calendar pulse in it. */
   --review-highlight: var(--chart-2);
 }
@@ -93,7 +105,7 @@
   --warning: oklch(0.8 0.15 75);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--brand);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -119,6 +131,9 @@
 
 @theme inline {
   --color-brand: var(--brand);
+  --color-brand-text: var(--brand-text);
+  --color-success-text: var(--success-text);
+  --color-destructive-text: var(--destructive-text);
   --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Newsreader Variable", ui-serif, Georgia, serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;

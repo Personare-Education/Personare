@@ -98,8 +98,8 @@ export default function ActionableTableRow({
                   className={cn(
                     "mr-1 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[0.6875rem]",
                     highlight === "overdue"
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-brand/10 text-brand"
+                      ? "bg-destructive/10 text-destructive-text"
+                      : "bg-brand/10 text-brand-text"
                   )}
                 >
                   {t(HIGHLIGHT_LABEL_KEYS[highlight])}

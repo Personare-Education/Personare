@@ -205,7 +205,7 @@ function OptionRowContent({
         <Button
           aria-label={t("markCorrectQuizOptionAction")}
           aria-pressed={option.isCorrect}
-          className={cn(option.isCorrect && "text-success")}
+          className={cn(option.isCorrect && "text-success-text")}
           onClick={handleMarkCorrectClick}
           size="sm"
           type="button"
