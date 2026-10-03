@@ -330,4 +330,21 @@ describe("FlashcardManagerDialog (Issue #15)", () => {
     );
     await waitFor(() => expect(listFlashcards).toHaveBeenCalledTimes(3));
   });
+
+  /** docs/specs/clarify-editors.md AC-1 */
+  it("tells the card form how many cards the deck has", async () => {
+    const user = userEvent.setup();
+    renderManager();
+    await screen.findByText(EXISTING_FLASHCARDS[0].front);
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("addFlashcardAction") })
+    );
+
+    expect(
+      await screen.findByText(
+        i18n.t("flashcardsSavedCount", { count: EXISTING_FLASHCARDS.length })
+      )
+    ).toBeInTheDocument();
+  });
 });

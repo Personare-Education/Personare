@@ -52,6 +52,9 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   do dia, como a tela Hoje.
 - **Configurações:** o tema virou o botão **Tema escuro**, com texto e estado ligado/desligado, e o
   idioma escolhido fica destacado no azul da marca.
+- **Editores de flashcard e de pergunta dizem o que está salvo:** o rodapé mostra "3 cards salvos neste
+  baralho" ou "2 perguntas salvas neste quiz", o botão discreto passa a se chamar **Salvar e criar
+  outro/outra**, e o cartão vazio não oferece mais "Clique para virar".
 - **Botões de avaliação com tom por nível:** Errei em vermelho, Difícil em âmbar, Bom em verde e
   Fácil no azul da marca, com fundo leve e borda no tom, no lugar de quatro botões pretos iguais.
 - **"Adicionar pergunta" e "Adicionar flashcard" ficaram discretos**, e **Concluir** é o único botão

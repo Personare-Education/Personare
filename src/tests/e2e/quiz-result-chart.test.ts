@@ -90,7 +90,9 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
   }
 
   await writeQuestion("2 + 2?", "4", "5");
-  await questionForm.getByRole("button", { name: "Add question" }).click();
+  await questionForm
+    .getByRole("button", { name: "Save and add another" })
+    .click();
   // Saved and reset for the next question.
   await expect(
     questionForm.getByRole("region", { name: "Question text" })

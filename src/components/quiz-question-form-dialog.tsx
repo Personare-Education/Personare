@@ -258,6 +258,8 @@ interface QuizQuestionFormDialogProps {
   ) => Promise<void> | void;
   open: boolean;
   question: QuizQuestionFormValue | null;
+  /** How many questions the quiz already has saved, for the footer. */
+  savedCount?: number;
 }
 
 /**
@@ -271,6 +273,7 @@ export default function QuizQuestionFormDialog({
   onSubmit,
   open,
   question,
+  savedCount,
 }: QuizQuestionFormDialogProps) {
   const { t } = useTranslation();
   const { contentRef, isShaking, preventAndShake } =
@@ -592,6 +595,16 @@ export default function QuizQuestionFormDialog({
           ) : null}
         </div>
         <DialogFooter className="px-4 pb-4">
+          {/* What is already saved, so adding never feels like a guess
+              (docs/specs/clarify-editors.md AC-1). */}
+          {savedCount === undefined ? null : (
+            <p
+              aria-live="polite"
+              className="mr-auto self-center text-muted-foreground text-xs"
+            >
+              {t("quizQuestionsSavedCount", { count: savedCount })}
+            </p>
+          )}
           <Button
             disabled={isSaving}
             onClick={handleAddQuestionClick}
@@ -599,7 +612,7 @@ export default function QuizQuestionFormDialog({
             // One primary per area (docs/specs/polish.md AC-2): Done.
             variant="ghost"
           >
-            {t("addQuizQuestionAction")}
+            {t("saveAndAddAnotherQuestionAction")}
           </Button>
           <Button
             disabled={isSaving}

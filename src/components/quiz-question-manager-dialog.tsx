@@ -261,6 +261,7 @@ export default function QuizQuestionManagerDialog({
         onSubmit={handleFormSubmit}
         open={isFormOpen}
         question={formQuestion}
+        savedCount={questions.length}
       />
     </>
   );
