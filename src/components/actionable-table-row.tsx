@@ -90,12 +90,21 @@ export default function ActionableTableRow({
           {children}
           {/* The buttons run their own action, not the row's. */}
           <TableCell onClick={stopPropagation}>
-            {highlight ? (
-              <span className="sr-only">
-                {t(HIGHLIGHT_LABEL_KEYS[highlight])}
-              </span>
-            ) : null}
             <div className="flex items-center gap-1">
+              {/* Visible, not only for assistive tech
+                  (docs/specs/today-review-queue.md AC-11). */}
+              {highlight ? (
+                <span
+                  className={cn(
+                    "mr-1 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[0.6875rem]",
+                    highlight === "overdue"
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-brand/10 text-brand"
+                  )}
+                >
+                  {t(HIGHLIGHT_LABEL_KEYS[highlight])}
+                </span>
+              ) : null}
               {actions.map((action) => (
                 <ActionIconButton
                   key={action.key}

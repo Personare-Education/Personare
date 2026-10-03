@@ -40,6 +40,9 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
   const moduleName = `E2E Quiz Module ${uniqueSuffix}`;
   const quizName = `E2E Quiz ${uniqueSuffix}`;
 
+  // The app opens on Today; programs live under "Programs"
+  // (docs/specs/today-review-queue.md).
+  await page.getByRole("link", { exact: true, name: "Programs" }).click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();

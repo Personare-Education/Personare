@@ -18,6 +18,7 @@ import {
   resolveProgramColor,
   resolveProgramIcon,
 } from "@/constants/program-appearance";
+import { programTintStyle } from "@/utils/program-tint";
 
 export interface Program {
   color: string | null;
@@ -30,6 +31,8 @@ export interface Program {
 
 interface ProgramsCardGridProps {
   activityCountsByProgramId: Map<string, { count: number; date: string }[]>;
+  /** Reviews due today per program (docs/specs/today-review-queue.md AC-10). */
+  dueCountByProgramId?: Map<string, number>;
   onEdit: (program: Program) => void;
   onNavigateToModules: (program: Program) => void;
   onRequestDelete: (program: Program) => void;
@@ -38,6 +41,7 @@ interface ProgramsCardGridProps {
 
 interface ProgramCardProps {
   activityCounts: { count: number; date: string }[];
+  dueCount: number;
   onEdit: (program: Program) => void;
   onNavigateToModules: (program: Program) => void;
   onRequestDelete: (program: Program) => void;
@@ -48,6 +52,7 @@ const ACTIVATE_KEYS = new Set(["Enter", " "]);
 
 function ProgramCard({
   activityCounts,
+  dueCount,
   onEdit,
   onNavigateToModules,
   onRequestDelete,
@@ -110,10 +115,7 @@ function ProgramCard({
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           role="button"
-          style={{
-            backgroundImage: `linear-gradient(to bottom, color-mix(in srgb, ${color} var(--card-tint-strength), transparent), transparent 70%)`,
-            boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 35%, transparent), 0 0 20px 0 color-mix(in srgb, ${color} 25%, transparent)`,
-          }}
+          style={programTintStyle(color, { fadeAt: "70%" })}
           tabIndex={0}
         >
           <div className="flex items-center justify-between gap-2">
@@ -124,8 +126,15 @@ function ProgramCard({
               >
                 <Icon className="size-5 text-white" />
               </span>
-              <span className="truncate font-medium text-sm">
-                {program.name}
+              <span className="flex min-w-0 flex-col items-start gap-1">
+                <span className="max-w-full truncate font-medium text-sm">
+                  {program.name}
+                </span>
+                {dueCount > 0 ? (
+                  <span className="rounded-full bg-foreground/10 px-2 py-0.5 font-medium text-[0.6875rem] tabular-nums">
+                    {t("programDueCount", { count: dueCount })}
+                  </span>
+                ) : null}
               </span>
             </div>
             <DropdownMenu>
@@ -173,6 +182,7 @@ function ProgramCard({
 
 export default function ProgramsCardGrid({
   activityCountsByProgramId,
+  dueCountByProgramId,
   onEdit,
   onNavigateToModules,
   onRequestDelete,
@@ -189,6 +199,7 @@ export default function ProgramsCardGrid({
       {programs.map((program) => (
         <ProgramCard
           activityCounts={activityCountsByProgramId.get(program.id) ?? []}
+          dueCount={dueCountByProgramId?.get(program.id) ?? 0}
           key={program.id}
           onEdit={onEdit}
           onNavigateToModules={onNavigateToModules}

@@ -189,8 +189,11 @@ export const listSchedule = os.handler(() => {
 
   const viaFlashcard = db
     .select({
+      activityFilePath: activitiesTable.filePath,
       activityId: activitiesTable.id,
       activityTitle: activitiesTable.title,
+      activityType: activitiesTable.type,
+      activityUrl: activitiesTable.url,
       dueDate: reviewItemsTable.dueDate,
       // Widened to string | null (flashcards.front is actually never null
       // here) only so this branch's shape matches viaActivity's for
@@ -200,7 +203,11 @@ export const listSchedule = os.handler(() => {
       id: reviewItemsTable.id,
       moduleId: modulesTable.id,
       moduleName: modulesTable.name,
+      // The "Today" screen paints each item in its program's color
+      // (docs/specs/today-review-queue.md).
+      programColor: programsTable.color,
       programId: programsTable.id,
+      programName: programsTable.name,
     })
     .from(reviewItemsTable)
     .innerJoin(
@@ -217,14 +224,21 @@ export const listSchedule = os.handler(() => {
 
   const viaActivity = db
     .select({
+      activityFilePath: activitiesTable.filePath,
       activityId: activitiesTable.id,
       activityTitle: activitiesTable.title,
+      activityType: activitiesTable.type,
+      activityUrl: activitiesTable.url,
       dueDate: reviewItemsTable.dueDate,
       front: sql<string | null>`NULL`,
       id: reviewItemsTable.id,
       moduleId: modulesTable.id,
       moduleName: modulesTable.name,
+      // The "Today" screen paints each item in its program's color
+      // (docs/specs/today-review-queue.md).
+      programColor: programsTable.color,
       programId: programsTable.id,
+      programName: programsTable.name,
     })
     .from(reviewItemsTable)
     .innerJoin(
