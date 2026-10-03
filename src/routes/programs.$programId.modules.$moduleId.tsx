@@ -435,7 +435,6 @@ function ModuleActivitiesPage() {
       />
       <QuizRunnerDialog
         activity={activityTakingQuiz}
-        color={programColor}
         onFinished={handleQuizFinished}
         onOpenChange={handleQuizRunnerOpenChange}
         open={activityTakingQuiz !== null}
