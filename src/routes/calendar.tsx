@@ -30,10 +30,16 @@ const SYNC_ERROR_MESSAGE_KEYS: Record<string, string> = {
   calendar_reconnect_required: "calendarReconnectRequiredErrorMessage",
 };
 
+const CALENDAR_CLASS_NAMES = {
+  monthBarOverlay: "pt-[1.875rem]",
+  monthCell: "data-[outside]:bg-muted/40",
+  monthCellContent: "pt-1",
+  monthCellFooter: "order-first justify-start pt-1.5 pb-0",
+};
+
 export function CalendarPage() {
   const { i18n, t } = useTranslation();
   const navigate = useNavigate();
-  const [events, setEvents] = useState<CalendarEvent<CalendarEventData>[]>([]);
   const [scheduleRows, setScheduleRows] = useState<ScheduleRow[]>([]);
   const [isCalendarConnected, setIsCalendarConnected] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -48,12 +54,19 @@ export function CalendarPage() {
   useEffect(() => {
     ensureReviewItems()
       .then(() => listSchedule())
-      .then((rows) => {
-        setScheduleRows(rows);
-        setEvents(toCalendarEvents(rows));
-      });
+      .then(setScheduleRows);
     getCalendarConnectionStatus().then(setIsCalendarConnected);
   }, []);
+
+  // "Module · N activities", in the program's color, re-titled when the
+  // language changes (docs/specs/calendar-system.md AC-3).
+  const events = useMemo(
+    () =>
+      toCalendarEvents(scheduleRows, (moduleName, activityCount) =>
+        t("calendarEventTitle", { count: activityCount, moduleName })
+      ),
+    [scheduleRows, t]
+  );
 
   // Every view (month, agenda) reports clicks here: open the event's
   // program with its module and day in focus
@@ -119,34 +132,45 @@ export function CalendarPage() {
   }, [scheduleRows, t]);
 
   return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Button
-          disabled={!isCalendarConnected || isSyncing}
-          onClick={handleSyncClick}
-          variant="outline"
-        >
-          {t("syncCalendarAction")}
-        </Button>
-        {syncMessage ? (
-          <p className="text-muted-foreground text-sm">{syncMessage}</p>
-        ) : null}
-        {/* Says why the button is off (docs/specs/rating-clarity.md AC-4). */}
-        {isCalendarConnected || syncMessage ? null : (
-          <p className="text-muted-foreground text-sm">
-            {t("calendarSyncDisabledHint")}
-          </p>
-        )}
+    <div className="flex h-full flex-col gap-4 p-2">
+      {/* A title like every other page; sync only when it can run
+          (docs/specs/calendar-system.md AC-1, AC-2). */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
+          {t("calendarPageTitle")}
+        </h1>
+        <div className="flex items-center gap-3">
+          {syncMessage ? (
+            <p className="text-muted-foreground text-sm">{syncMessage}</p>
+          ) : null}
+          {isCalendarConnected ? (
+            <Button
+              disabled={isSyncing}
+              onClick={handleSyncClick}
+              variant="outline"
+            >
+              {t("syncCalendarAction")}
+            </Button>
+          ) : (
+            // Says how to get sync (docs/specs/rating-clarity.md AC-4).
+            <p className="text-muted-foreground text-sm">
+              {t("calendarSyncDisabledHint")}
+            </p>
+          )}
+        </div>
       </div>
       <EventCalendar
-        className="h-full"
+        className="min-h-0 flex-1"
+        // The day number on top, before its events, and days outside the
+        // month set apart (docs/specs/calendar-system.md AC-4); ReUI itself
+        // is untouched.
+        classNames={CALENDAR_CLASS_NAMES}
         defaultView="month"
         events={events}
         i18n={eventCalendarI18n}
         interactions={{ drag: false, resize: false, selectSlot: false }}
         locale={eventCalendarLocale}
         onEventClick={handleEventClick}
-        onEventsChange={setEvents}
         views={["month", "agenda"]}
       >
         <EventCalendarNav />
