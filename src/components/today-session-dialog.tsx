@@ -213,12 +213,16 @@ export default function TodaySessionDialog({
                 })}
               </p>
             </div>
-            <div className="min-h-0 overflow-y-auto">
+            {/* Bleeds into the dialog's padding, so the cards' ring and glow
+                are not clipped by the scroll area. */}
+            <div className="-mx-4 -my-3 min-h-0 overflow-y-auto px-4 py-3 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
               {current.activityType === "flashcard_deck" ? (
                 <div className="flex flex-col gap-3">
                   <TodayItemCard compact item={current} />
                   <FlashcardReviewPanel
                     activityId={current.activityId}
+                    // As wide as the item's card above it.
+                    cardClassName="max-w-none"
                     color={current.programColor}
                     key={current.activityId}
                     onDone={handleDeckDone}

@@ -28,6 +28,8 @@ interface DueReviewItem {
 
 interface FlashcardReviewPanelProps {
   activityId: string;
+  /** Classes for the flipping card, e.g. to span the full width. */
+  cardClassName?: string;
   /** The program's color, for the card. */
   color?: string | null;
   /** Once the deck's due cards are done (or there were none), with how many were rated. */
@@ -44,6 +46,7 @@ interface FlashcardReviewPanelProps {
  */
 export default function FlashcardReviewPanel({
   activityId,
+  cardClassName,
   color = null,
   onDone,
   showEndMessages = false,
@@ -174,6 +177,7 @@ export default function FlashcardReviewPanel({
                 ) : null
               }
               backLabel={t("flashcardBackLabel")}
+              className={cardClassName}
               color={resolveProgramColor(color)}
               flipped={isFlipped}
               front={
