@@ -234,6 +234,7 @@ export default function FlashcardManagerDialog({
         onOpenChange={handleFormOpenChange}
         onSubmit={handleFormSubmit}
         open={isFormOpen}
+        savedCount={flashcards.length}
       />
     </>
   );

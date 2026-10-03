@@ -82,7 +82,10 @@ const EXISTING_QUESTION: QuizQuestionFormValue = {
   text: "Qual e a capital do Brasil?",
 };
 
-function renderDialog(question: QuizQuestionFormValue | null = null) {
+function renderDialog(
+  question: QuizQuestionFormValue | null = null,
+  savedCount?: number
+) {
   const onOpenChange = vi.fn();
   const onSubmit = vi.fn().mockResolvedValue(undefined);
 
@@ -92,6 +95,7 @@ function renderDialog(question: QuizQuestionFormValue | null = null) {
       onSubmit={onSubmit}
       open={true}
       question={question}
+      savedCount={savedCount}
     />
   );
 
@@ -311,7 +315,7 @@ describe("QuizQuestionFormDialog -- single editor", () => {
     await send(user, "A");
     await send(user, "B");
 
-    await user.click(button(i18n.t("addQuizQuestionAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherQuestionAction")));
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
@@ -326,7 +330,7 @@ describe("QuizQuestionFormDialog -- single editor", () => {
     await send(user, "A");
     await user.click(markCorrectButtons()[0]);
 
-    await user.click(button(i18n.t("addQuizQuestionAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherQuestionAction")));
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
@@ -339,7 +343,7 @@ describe("QuizQuestionFormDialog -- single editor", () => {
     const { onOpenChange, onSubmit } = renderDialog(null);
     await buildValidQuestion(user);
 
-    await user.click(button(i18n.t("addQuizQuestionAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherQuestionAction")));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(null, "Pergunta valida", null, [
@@ -397,7 +401,7 @@ describe("QuizQuestionFormDialog -- single editor", () => {
   it("creates (not updates) the questions added after an existing one", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderDialog(EXISTING_QUESTION);
-    await user.click(button(i18n.t("addQuizQuestionAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherQuestionAction")));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     await waitFor(() => {
       expect(
@@ -445,10 +449,21 @@ describe("QuizQuestionFormDialog -- single editor", () => {
     renderDialog();
 
     expect(
-      screen.getByRole("button", { name: i18n.t("addQuizQuestionAction") })
+      screen.getByRole("button", {
+        name: i18n.t("saveAndAddAnotherQuestionAction"),
+      })
     ).toHaveAttribute("data-variant", "ghost");
     expect(
       screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
     ).toHaveAttribute("data-variant", "default");
+  });
+
+  /** docs/specs/clarify-editors.md AC-1 */
+  it("says how many questions the quiz already has saved", () => {
+    renderDialog(null, 2);
+
+    expect(
+      screen.getByText(i18n.t("quizQuestionsSavedCount", { count: 2 }))
+    ).toBeInTheDocument();
   });
 });

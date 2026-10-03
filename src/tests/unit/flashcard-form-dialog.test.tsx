@@ -36,7 +36,10 @@ const EXISTING_FLASHCARD: FlashcardFormValue = {
 
 const LATEX_PATTERN = /latex/i;
 
-function renderDialog(flashcard: FlashcardFormValue | null = null) {
+function renderDialog(
+  flashcard: FlashcardFormValue | null = null,
+  savedCount?: number
+) {
   const onOpenChange = vi.fn();
   const onSubmit = vi.fn().mockResolvedValue(undefined);
 
@@ -46,6 +49,7 @@ function renderDialog(flashcard: FlashcardFormValue | null = null) {
       onOpenChange={onOpenChange}
       onSubmit={onSubmit}
       open={true}
+      savedCount={savedCount}
     />
   );
 
@@ -165,7 +169,7 @@ describe("FlashcardFormDialog -- single editor and flipping card", () => {
     const { onSubmit } = renderDialog(null);
     await send(user, "Somente frente");
 
-    await user.click(button(i18n.t("addFlashcardAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherFlashcardAction")));
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
@@ -179,7 +183,7 @@ describe("FlashcardFormDialog -- single editor and flipping card", () => {
     await send(user, "Pergunta nova");
     await user.type(editor(), "Resposta nova");
 
-    await user.click(button(i18n.t("addFlashcardAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherFlashcardAction")));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(null, {
@@ -213,7 +217,7 @@ describe("FlashcardFormDialog -- single editor and flipping card", () => {
   it("creates (not updates) the cards added after an existing one", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderDialog(EXISTING_FLASHCARD);
-    await user.click(button(i18n.t("addFlashcardAction")));
+    await user.click(button(i18n.t("saveAndAddAnotherFlashcardAction")));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(editor()).not.toBeDisabled());
 
@@ -249,10 +253,36 @@ describe("FlashcardFormDialog -- single editor and flipping card", () => {
     renderDialog();
 
     expect(
-      screen.getByRole("button", { name: i18n.t("addFlashcardAction") })
+      screen.getByRole("button", {
+        name: i18n.t("saveAndAddAnotherFlashcardAction"),
+      })
     ).toHaveAttribute("data-variant", "ghost");
     expect(
       screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
     ).toHaveAttribute("data-variant", "default");
+  });
+
+  /** docs/specs/clarify-editors.md AC-1 */
+  it("says how many cards the deck already has saved", () => {
+    renderDialog(null, 3);
+
+    expect(
+      screen.getByText(i18n.t("flashcardsSavedCount", { count: 3 }))
+    ).toBeInTheDocument();
+  });
+
+  /** docs/specs/clarify-editors.md AC-3 */
+  it("offers to flip the card only once a face has something", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    expect(screen.queryByText(i18n.t("flashcardFlipHint"))).toBeNull();
+
+    await user.type(editor(), "Derivada de x²?");
+    await user.keyboard("{Shift>}{Enter}{/Shift}");
+
+    expect(
+      screen.getAllByText(i18n.t("flashcardFlipHint")).length
+    ).toBeGreaterThan(0);
   });
 });

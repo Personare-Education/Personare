@@ -114,6 +114,8 @@ interface FlashcardFormDialogProps {
     values: FlashcardFormSubmitValue
   ) => Promise<void> | void;
   open: boolean;
+  /** How many cards the deck already has saved, for the footer. */
+  savedCount?: number;
 }
 
 /**
@@ -128,6 +130,7 @@ export default function FlashcardFormDialog({
   onOpenChange,
   onSubmit,
   open,
+  savedCount,
 }: FlashcardFormDialogProps) {
   const { t } = useTranslation();
   const { contentRef, isShaking, preventAndShake } =
@@ -341,7 +344,10 @@ export default function FlashcardFormDialog({
             front={<FaceText content={faces.front} />}
             frontLabel={faceLabel("front")}
             highlightedFace={editing}
-            hint={t("flashcardFlipHint")}
+            // Nothing to flip to on an empty card (docs/specs/clarify-editors.md AC-3).
+            hint={
+              faces.front || faces.back ? t("flashcardFlipHint") : undefined
+            }
             onFlip={handleFlip}
           />
           <div className="flex items-center justify-center gap-2">
@@ -382,6 +388,16 @@ export default function FlashcardFormDialog({
           ) : null}
         </div>
         <DialogFooter className="px-4 pb-4">
+          {/* What is already saved, so adding never feels like a guess
+              (docs/specs/clarify-editors.md AC-1). */}
+          {savedCount === undefined ? null : (
+            <p
+              aria-live="polite"
+              className="mr-auto self-center text-muted-foreground text-xs"
+            >
+              {t("flashcardsSavedCount", { count: savedCount })}
+            </p>
+          )}
           <Button
             disabled={isSaving}
             onClick={handleAddFlashcardClick}
@@ -389,7 +405,7 @@ export default function FlashcardFormDialog({
             // One primary per area (docs/specs/polish.md AC-2): Done.
             variant="ghost"
           >
-            {t("addFlashcardAction")}
+            {t("saveAndAddAnotherFlashcardAction")}
           </Button>
           <Button
             disabled={isSaving}
