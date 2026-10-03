@@ -8,6 +8,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Rever a introdução:** Configurações → Geral → **Ver introdução** abre de novo as boas-vindas da
+  tela Hoje, com **Voltar para Hoje**.
 - **Primeira abertura:** sem nenhum programa, a tela Hoje mostra "Estude hoje o que você esqueceria
   amanhã." e o ciclo em três passos (criar um programa, adicionar o material, estudar e dizer como
   foi). **Criar primeiro programa** abre Programas com o formulário já aberto.
