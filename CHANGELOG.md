@@ -20,8 +20,7 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **O heatmap vazio diz que as revisões vão colori-lo.**
 - **Fins de sessão em cartões na cor do programa.** "Tudo revisado" aparece num cartão no azul da
   marca, com o que foi revisado em cada programa, na cor dele. O fim da revisão de um baralho mostra,
-  num cartão na cor do programa, quantos cards foram revisados. No resultado do quiz, a pontuação e os
-  tempos ficam num cartão na cor do programa.
+  num cartão na cor do programa, quantos cards foram revisados.
 - **Desfazer exclusões.** Depois de excluir um programa, módulo, atividade, pergunta ou flashcard,
   um aviso com **Desfazer** traz de volta o item e tudo o que aquela exclusão escondeu (o que já
   estava excluído antes continua excluído). Clicar em Desfazer não fecha o gerenciador aberto.
@@ -69,6 +68,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Fixed
 
+- **Resultado do quiz:** voltou ao layout anterior, sem o cartão na cor do programa, que apertava a
+  coluna e cortava o gráfico.
 - **Revisões de hoje:** o flashcard tem a mesma largura do cartão do item acima dele, o brilho dos
   cartões não é mais cortado nas bordas e a barra de rolagem segue o tema do app.
 

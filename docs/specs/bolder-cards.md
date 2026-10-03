@@ -16,12 +16,11 @@
    entram.
 3. **Fim da revisão de um baralho** (Iniciar revisão, na linha da atividade): "Sessão de revisão
    concluída" aparece num cartão na cor do programa, com quantos cards foram revisados.
-4. **Resultado do quiz:** a pontuação, a mensagem de acertos e os tempos ficam num cartão na cor do
-   programa do quiz. Os tempos deixam de ser caixas com borda dentro dele. Sem cor conhecida, o cartão
-   usa a cor padrão.
+4. ~~**Resultado do quiz** num cartão na cor do programa.~~ Revertido: o cartão apertava a coluna e
+   cortava o gráfico, e não agradou. O resultado voltou ao layout anterior
+   (`fix/quiz-result-no-card`).
 
 ## Escolhas técnicas
 
 - `SessionEndCard` (`src/components/session-end-card.tsx`): título em serifada e conteúdo livre, com
   `programTintStyle(color)`, a mesma definição dos cards de programa, dos flashcards e dos itens de Hoje.
-- `QuizRunnerDialog` ganha `color`, passado pela página do módulo e pela sessão de Hoje.

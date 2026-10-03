@@ -121,7 +121,6 @@ function ActivityStepPanel({ item, onRate }: ActivityStepProps) {
       {item.activityType === "quiz" ? (
         <QuizRunnerDialog
           activity={isQuizOpen ? toActivity(item) : null}
-          color={item.programColor}
           onFinished={handleQuizFinished}
           onOpenChange={handleQuizOpenChange}
           open={isQuizOpen}
