@@ -118,11 +118,7 @@ function ModuleActivitiesPage() {
             .filter((row) => row.activityId !== null)
             .map((row) => [
               row.activityId as string,
-              {
-                dueDate: row.dueDate,
-                lastRating: row.lastRating,
-                scale: row.scale,
-              },
+              { dueDate: row.dueDate, lastRating: row.lastRating },
             ])
         )
       );

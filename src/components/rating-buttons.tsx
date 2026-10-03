@@ -37,7 +37,7 @@ export const RATING_LABEL_KEYS: Record<
  * Each rating's tone, from "again" to "easy" (docs/specs/polish.md AC-1): a
  * light fill and border in it, the label in the foreground for contrast.
  */
-const RATING_TONES: Record<RatingValue, string> = {
+export const RATING_TONES: Record<RatingValue, string> = {
   again: "var(--destructive)",
   easy: "var(--brand)",
   good: "var(--success)",
