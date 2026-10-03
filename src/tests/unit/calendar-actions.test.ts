@@ -136,3 +136,42 @@ describe("toCalendarEvents (Issue #18)", () => {
     ]);
   });
 });
+
+/** docs/specs/calendar-system.md AC-3 */
+describe("toCalendarEvents program color and title", () => {
+  const ROWS = [
+    {
+      ...SCHEDULE_ROWS[0],
+      activityId: "a1",
+      id: "c1",
+      programColor: "#22c55e",
+    },
+    {
+      ...SCHEDULE_ROWS[0],
+      activityId: "a1",
+      id: "c2",
+      programColor: "#22c55e",
+    },
+    {
+      ...SCHEDULE_ROWS[0],
+      activityId: "a3",
+      id: "c3",
+      programColor: "#22c55e",
+    },
+  ] as ScheduleRow[];
+
+  it("paints each event in its program's color", () => {
+    const [event] = toCalendarEvents(ROWS);
+
+    expect(event.color).toBe("#22c55e");
+  });
+
+  it("titles the event with the module and how many activities come back", () => {
+    const [event] = toCalendarEvents(
+      ROWS,
+      (moduleName, activityCount) => `${moduleName} · ${activityCount}`
+    );
+
+    expect(event.title).toBe("Geografia · 2");
+  });
+});
