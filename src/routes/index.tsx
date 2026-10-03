@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -147,7 +147,7 @@ const WELCOME_STEPS = [
  * The first run, before any program exists (docs/specs/onboard-empty-states.md
  * AC-1): what the app does, the loop in three steps, and the first one.
  */
-function Welcome() {
+function Welcome({ replay = false }: { replay?: boolean }) {
   const { t } = useTranslation();
 
   return (
@@ -176,11 +176,21 @@ function Welcome() {
           </li>
         ))}
       </ol>
-      <Button asChild className="self-start" size="lg">
-        <Link search={{ new: true }} to="/programs">
-          {t("todayWelcomeAction")}
-        </Link>
-      </Button>
+      {/* Seen again from Settings (docs/specs/replay-welcome.md AC-3): the
+          way out is back to Today, not a first program. */}
+      {replay ? (
+        <Button asChild className="self-start" size="lg">
+          <Link search={{}} to="/">
+            {t("replayWelcomeBackAction")}
+          </Link>
+        </Button>
+      ) : (
+        <Button asChild className="self-start" size="lg">
+          <Link search={{ new: true }} to="/programs">
+            {t("todayWelcomeAction")}
+          </Link>
+        </Button>
+      )}
     </section>
   );
 }
@@ -240,6 +250,9 @@ export function TodayPage() {
     upcoming,
   } = useTodayQueue();
   const [sessionItems, setSessionItems] = useState<TodayItem[] | null>(null);
+  const search = useSearch({ strict: false }) as TodaySearch;
+  // Asked for again from Settings, with programs already there.
+  const isReplayingWelcome = Boolean(search.welcome) && hasPrograms === true;
   const locale = resolveEventCalendarLocale(i18n.language);
 
   const handleStartClick = useCallback(() => {
@@ -289,7 +302,9 @@ export function TodayPage() {
 
       {queue && hasPrograms === false ? <Welcome /> : null}
 
-      {queue && hasDue ? (
+      {queue && isReplayingWelcome ? <Welcome replay /> : null}
+
+      {queue && hasDue && !isReplayingWelcome ? (
         <DueToday
           onSelect={handleSelect}
           onStart={handleStartClick}
@@ -297,7 +312,7 @@ export function TodayPage() {
         />
       ) : null}
 
-      {queue && hasPrograms && !hasDue && upcoming ? (
+      {queue && hasPrograms && !hasDue && !isReplayingWelcome && upcoming ? (
         <DayClosed
           reviewedToday={reviewedToday ?? 0}
           streak={streak ?? 0}
@@ -314,6 +329,20 @@ export function TodayPage() {
   );
 }
 
+interface TodaySearch {
+  /** Show the welcome again (Settings, docs/specs/replay-welcome.md). */
+  welcome?: true;
+}
+
+export function validateTodaySearch(
+  search: Record<string, unknown>
+): TodaySearch {
+  return search.welcome === true || search.welcome === "true"
+    ? { welcome: true }
+    : {};
+}
+
 export const Route = createFileRoute("/")({
   component: TodayPage,
+  validateSearch: validateTodaySearch,
 });

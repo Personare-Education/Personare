@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Cloud, HardDrive, KeyRound, Settings2, User } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -74,6 +75,13 @@ export default function SettingsDialog({
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] =
     useState<SettingsCategory>("general");
+  const navigate = useNavigate();
+
+  // docs/specs/replay-welcome.md AC-2: back to Today's welcome.
+  const handleReplayWelcomeClick = useCallback(() => {
+    onOpenChange(false);
+    navigate({ search: { welcome: true }, to: "/" });
+  }, [navigate, onOpenChange]);
   const {
     autoStartEnabled,
     autoStartId,
@@ -162,6 +170,20 @@ export default function SettingsDialog({
                     <p className="text-muted-foreground text-sm">
                       {t("autoStartDescription")}
                     </p>
+                  </div>
+                  <div className="flex flex-col items-start gap-2">
+                    <h3 className="font-semibold text-sm">
+                      {t("replayWelcomeTitle")}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {t("replayWelcomeDescription")}
+                    </p>
+                    <Button
+                      onClick={handleReplayWelcomeClick}
+                      variant="outline"
+                    >
+                      {t("replayWelcomeAction")}
+                    </Button>
                   </div>
                 </div>
               )}

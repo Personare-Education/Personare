@@ -95,7 +95,7 @@ const DUE_ROWS = [
   }),
 ];
 
-function renderPage() {
+function renderPage(initialPath = "/") {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
     component: TodayPage,
@@ -108,7 +108,7 @@ function renderPage() {
     path: "/programs",
   });
   const router = createRouter({
-    history: createMemoryHistory({ initialEntries: ["/"] }),
+    history: createMemoryHistory({ initialEntries: [initialPath] }),
     routeTree: rootRoute.addChildren([indexRoute, programsRoute]),
   });
   render(<RouterProvider router={router} />);
@@ -284,5 +284,33 @@ describe("TodayPage", () => {
       screen.getByRole("link", { name: i18n.t("todayWelcomeAction") })
     );
     expect(await screen.findByText("programs-page")).toBeInTheDocument();
+  });
+
+  /** docs/specs/replay-welcome.md AC-2, AC-3 */
+  it("shows the welcome again on request, with a way back to Today", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listSchedule).mockResolvedValue(DUE_ROWS);
+    renderPage("/?welcome=true");
+
+    expect(
+      await screen.findByRole("heading", { name: i18n.t("todayWelcomeTitle") })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: i18n.t("todayWelcomeAction") })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("todayStartAction") })
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("link", { name: i18n.t("replayWelcomeBackAction") })
+    );
+
+    expect(
+      await screen.findByRole("button", { name: i18n.t("todayStartAction") })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: i18n.t("todayWelcomeTitle") })
+    ).not.toBeInTheDocument();
   });
 });
