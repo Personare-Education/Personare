@@ -151,7 +151,10 @@ describe("CalendarPage (Issue #18)", () => {
     renderCalendarPage();
 
     await waitFor(() => {
-      expect(toCalendarEvents).toHaveBeenCalledWith(SCHEDULE_ROWS);
+      expect(toCalendarEvents).toHaveBeenCalledWith(
+        SCHEDULE_ROWS,
+        expect.any(Function)
+      );
     });
   });
 
@@ -201,12 +204,26 @@ describe("CalendarPage (Issue #18)", () => {
 });
 
 describe("CalendarPage Google Calendar sync (Issue #26)", () => {
-  it("disables the sync action until the calendar is connected", async () => {
+  /** docs/specs/calendar-system.md AC-2 */
+  it("offers no sync action until the calendar is connected", async () => {
+    renderCalendarPage();
+
+    await screen.findByText(i18n.t("calendarSyncDisabledHint"));
+    expect(
+      screen.queryByRole("button", { name: i18n.t("syncCalendarAction") })
+    ).toBeNull();
+  });
+
+  /** docs/specs/calendar-system.md AC-1 */
+  it("has a page title like every other page", async () => {
     renderCalendarPage();
 
     expect(
-      await screen.findByRole("button", { name: i18n.t("syncCalendarAction") })
-    ).toBeDisabled();
+      await screen.findByRole("heading", {
+        level: 1,
+        name: i18n.t("calendarPageTitle"),
+      })
+    ).toBeInTheDocument();
   });
 
   /** docs/specs/rating-clarity.md AC-4 */
