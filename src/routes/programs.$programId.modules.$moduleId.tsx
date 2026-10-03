@@ -1,6 +1,6 @@
 // biome-ignore-all lint/style/useFilenamingConvention: TanStack Router file-based routing requires the "$paramName" filename convention for dynamic route segments.
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -359,16 +359,6 @@ function ModuleActivitiesPage() {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          aria-label={t("goBackAction")}
-          asChild
-          size="icon"
-          variant="outline"
-        >
-          <Link params={{ programId }} to="/programs/$programId">
-            <ArrowLeft />
-          </Link>
-        </Button>
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

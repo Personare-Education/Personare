@@ -596,7 +596,8 @@ export default function QuizQuestionFormDialog({
             disabled={isSaving}
             onClick={handleAddQuestionClick}
             type="button"
-            variant="outline"
+            // One primary per area (docs/specs/polish.md AC-2): Done.
+            variant="ghost"
           >
             {t("addQuizQuestionAction")}
           </Button>

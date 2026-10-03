@@ -45,6 +45,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Botões de avaliação com tom por nível:** Errei em vermelho, Difícil em âmbar, Bom em verde e
+  Fácil no azul da marca, com fundo leve e borda no tom, no lugar de quatro botões pretos iguais.
+- **"Adicionar pergunta" e "Adicionar flashcard" ficaram discretos**, e **Concluir** é o único botão
+  principal do rodapé.
+- **Módulos e Atividades sem a seta de voltar:** o breadcrumb e a barra lateral já levam de volta.
+- **Cartões na cor do programa com sombra para baixo** no lugar do brilho em volta (cards de
+  programa, flashcards, itens de Hoje e fins de sessão).
 - A barra lateral mostra "Sem sequência ainda" no lugar de "0 dias", e a tela Hoje sem nada agendado
   explica que as revisões aparecem depois de estudar uma atividade e dizer como foi.
 - **Acessibilidade:** o botão de tema tem nome para leitores de tela. O texto secundário sobre a cor

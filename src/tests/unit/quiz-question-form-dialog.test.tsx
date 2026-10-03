@@ -439,4 +439,16 @@ describe("QuizQuestionFormDialog -- single editor", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
+
+  /** docs/specs/polish.md AC-2 */
+  it("keeps adding another item quiet next to Done", () => {
+    renderDialog();
+
+    expect(
+      screen.getByRole("button", { name: i18n.t("addQuizQuestionAction") })
+    ).toHaveAttribute("data-variant", "ghost");
+    expect(
+      screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
+    ).toHaveAttribute("data-variant", "default");
+  });
 });

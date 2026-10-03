@@ -386,7 +386,8 @@ export default function FlashcardFormDialog({
             disabled={isSaving}
             onClick={handleAddFlashcardClick}
             type="button"
-            variant="outline"
+            // One primary per area (docs/specs/polish.md AC-2): Done.
+            variant="ghost"
           >
             {t("addFlashcardAction")}
           </Button>
