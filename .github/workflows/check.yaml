@@ -1,7 +1,7 @@
 name: Check
 on:
+  # Every PR, stacked ones included (their base is the previous branch).
   pull_request:
-    branches: [main]
 
 jobs:
   check:
