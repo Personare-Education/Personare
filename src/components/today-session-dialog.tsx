@@ -256,7 +256,9 @@ export default function TodaySessionDialog({
         {current ? (
           <>
             <div className="flex flex-col gap-2">
-              <Progress value={(index / queue.length) * 100} />
+              {/* The bar shows the same position as "1 of 2"
+                  (docs/specs/clarify-daily-count.md AC-3). */}
+              <Progress value={((index + 1) / queue.length) * 100} />
               <p className="text-muted-foreground text-xs tabular-nums">
                 {t("todaySessionProgress", {
                   current: index + 1,

@@ -124,8 +124,11 @@ describe("buildTodayQueue", () => {
       cardCount: 3,
       urgency: "overdue",
     });
-    // Every due flashcard is a review of its own.
-    expect(queue.dueCount).toBe(3);
+    // docs/specs/clarify-daily-count.md AC-1: the deck is one activity, its
+    // due cards a detail.
+    expect(queue.dueCount).toBe(1);
+    expect(queue.dueCardCount).toBe(3);
+    expect(queue.overdueCount).toBe(1);
   });
 
   it("groups by program, in the given program order", () => {
@@ -177,8 +180,16 @@ describe("buildUpcoming", () => {
     const upcoming = buildUpcoming(
       [
         row({ dueDate: new Date(2026, 9, 2, 8, 0), id: "due-today" }),
-        row({ dueDate: new Date(2026, 9, 3, 10, 0), id: "1" }),
-        row({ dueDate: new Date(2026, 9, 3, 18, 0), id: "2" }),
+        row({
+          activityId: "b1",
+          dueDate: new Date(2026, 9, 3, 10, 0),
+          id: "1",
+        }),
+        row({
+          activityId: "b2",
+          dueDate: new Date(2026, 9, 3, 18, 0),
+          id: "2",
+        }),
         row({ dueDate: new Date(2026, 9, 6, 7, 0), id: "3" }),
         row({ dueDate: new Date(2026, 9, 20, 7, 0), id: "far" }),
       ],
@@ -190,6 +201,28 @@ describe("buildUpcoming", () => {
     expect(upcoming.days[3]).toEqual({ count: 1, date: new Date(2026, 9, 6) });
     expect(upcoming.days.reduce((sum, day) => sum + day.count, 0)).toBe(3);
     expect(upcoming.nextDate).toEqual(new Date(2026, 9, 3));
+  });
+
+  /** docs/specs/clarify-daily-count.md AC-6 */
+  it("counts a deck once on a day, however many of its cards come back", () => {
+    const upcoming = buildUpcoming(
+      [
+        row({ activityId: "deck", dueDate: new Date(2026, 9, 3, 9), id: "c1" }),
+        row({
+          activityId: "deck",
+          dueDate: new Date(2026, 9, 3, 11),
+          id: "c2",
+        }),
+        row({
+          activityId: "deck",
+          dueDate: new Date(2026, 9, 3, 15),
+          id: "c3",
+        }),
+      ],
+      NOW
+    );
+
+    expect(upcoming.days[0].count).toBe(1);
   });
 
   it("finds the next date even beyond the week", () => {
@@ -207,11 +240,23 @@ describe("buildUpcoming", () => {
 });
 
 describe("countDueByProgram", () => {
-  it("counts each program's reviews due until the end of today", () => {
+  it("counts each program's activities due until the end of today", () => {
     const counts = countDueByProgram(
       [
-        row({ id: "1", programId: "p1" }),
-        row({ dueDate: new Date(2026, 8, 30), id: "2", programId: "p1" }),
+        row({ activityId: "a1", id: "1", programId: "p1" }),
+        row({
+          activityId: "a2",
+          dueDate: new Date(2026, 8, 30),
+          id: "2",
+          programId: "p1",
+        }),
+        // A second due card of the same deck is the same activity.
+        row({
+          activityId: "a2",
+          activityType: "flashcard_deck",
+          id: "2b",
+          programId: "p1",
+        }),
         row({ id: "3", programId: "p2" }),
         row({ dueDate: new Date(2026, 9, 9), id: "4", programId: "p2" }),
       ],
@@ -224,14 +269,15 @@ describe("countDueByProgram", () => {
 });
 
 describe("countReviewedOn", () => {
-  it("sums the reviews done on the given local day across programs", () => {
-    // The IPC rows also carry the program, which countReviewedOn ignores.
+  it("sums the activities reviewed on the given local day across programs", () => {
+    // docs/specs/clarify-daily-count.md AC-4: `count` is every rating (the
+    // heatmap's), `activities` each activity once.
     const counts = [
-      { count: 3, date: "2026-10-02", programId: "p1" },
-      { count: 2, date: "2026-10-02", programId: "p2" },
-      { count: 9, date: "2026-10-01", programId: "p1" },
+      { activities: 1, count: 3, date: "2026-10-02", programId: "p1" },
+      { activities: 2, count: 2, date: "2026-10-02", programId: "p2" },
+      { activities: 4, count: 9, date: "2026-10-01", programId: "p1" },
     ];
 
-    expect(countReviewedOn(counts, NOW)).toBe(5);
+    expect(countReviewedOn(counts, NOW)).toBe(3);
   });
 });

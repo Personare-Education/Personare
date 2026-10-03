@@ -1,4 +1,4 @@
-import { and, eq, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, isNull, lt } from "drizzle-orm";
 import type { DatabaseClient } from "@/database/client";
 import {
   activities as activitiesTable,
@@ -7,35 +7,46 @@ import {
 } from "@/database/schema";
 
 /**
- * Sums the two review_items origins (Issue #77): Flashcard-scoped (the
- * original, via an inner join that by construction excludes any row whose
- * flashcardId is null) and Activity-scoped (quiz/pdf/link, via activityId
- * directly) -- mirrors the same two branches review.listSchedule unions.
+ * Activities with a review due until the end of `now`'s local day, a deck
+ * counting once -- the same unit and cut-off as the Today screen
+ * (docs/specs/clarify-daily-count.md AC-5). Walks the two review_items
+ * origins (Issue #77): Flashcard-scoped (via the flashcard's deck) and
+ * Activity-scoped (quiz/pdf/link), mirroring review.listSchedule's union.
  */
 export function countDueReviews(db: DatabaseClient, now: Date): number {
+  const endOfToday = new Date(now);
+  endOfToday.setHours(24, 0, 0, 0);
+
   const viaFlashcard = db
-    .select({ count: sql<number>`count(*)` })
+    .selectDistinct({ activityId: flashcardsTable.activityId })
     .from(reviewItemsTable)
     .innerJoin(
       flashcardsTable,
       eq(reviewItemsTable.flashcardId, flashcardsTable.id)
     )
     .where(
-      and(isNull(flashcardsTable.deletedAt), lte(reviewItemsTable.dueDate, now))
+      and(
+        isNull(flashcardsTable.deletedAt),
+        lt(reviewItemsTable.dueDate, endOfToday)
+      )
     )
-    .get();
+    .all();
 
   const viaActivity = db
-    .select({ count: sql<number>`count(*)` })
+    .selectDistinct({ activityId: activitiesTable.id })
     .from(reviewItemsTable)
     .innerJoin(
       activitiesTable,
       eq(reviewItemsTable.activityId, activitiesTable.id)
     )
     .where(
-      and(isNull(activitiesTable.deletedAt), lte(reviewItemsTable.dueDate, now))
+      and(
+        isNull(activitiesTable.deletedAt),
+        lt(reviewItemsTable.dueDate, endOfToday)
+      )
     )
-    .get();
+    .all();
 
-  return (viaFlashcard?.count ?? 0) + (viaActivity?.count ?? 0);
+  return new Set([...viaFlashcard, ...viaActivity].map((row) => row.activityId))
+    .size;
 }

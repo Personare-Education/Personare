@@ -123,6 +123,16 @@ beforeEach(() => {
 });
 
 describe("TodaySessionDialog", () => {
+  /** docs/specs/clarify-daily-count.md AC-3 */
+  it("moves the progress bar with the position it shows", () => {
+    renderSession([PDF, LINK]);
+
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "50"
+    );
+  });
+
   it("shows the progress and the current item", () => {
     renderSession([PDF, LINK]);
 

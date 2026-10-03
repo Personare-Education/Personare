@@ -153,6 +153,23 @@ describe("TodayPage", () => {
     ).toBeInTheDocument();
   });
 
+  /** docs/specs/clarify-daily-count.md AC-1 */
+  it("counts a deck once, with its due cards as a detail", async () => {
+    vi.mocked(listSchedule).mockResolvedValue([
+      row({ activityId: "deck", activityType: "flashcard_deck", id: "c1" }),
+      row({ activityId: "deck", activityType: "flashcard_deck", id: "c2" }),
+      row({ activityId: "pdf", id: "p1" }),
+    ]);
+    renderPage();
+
+    expect(
+      await screen.findByText(i18n.t("todayDueSummary", { count: 2 }))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("todayDueCardsDetail", { count: 2 }))
+    ).toBeInTheDocument();
+  });
+
   it("lists the due items grouped by program, overdue first", async () => {
     vi.mocked(listSchedule).mockResolvedValue(DUE_ROWS);
     renderPage();
@@ -226,7 +243,8 @@ describe("TodayPage", () => {
       String(NOW.getDate()).padStart(2, "0"),
     ].join("-");
     vi.mocked(listActivityCounts).mockResolvedValue([
-      { count: 4, date: todayKey, programId: "p1" },
+      // Four ratings on two activities (docs/specs/clarify-daily-count.md AC-4).
+      { activities: 2, count: 4, date: todayKey, programId: "p1" },
     ]);
     renderPage();
 
@@ -234,7 +252,7 @@ describe("TodayPage", () => {
       await screen.findByText(i18n.t("todayDayDoneTitle"))
     ).toBeInTheDocument();
     expect(
-      screen.getByText(i18n.t("todayReviewedToday", { count: 4 }))
+      screen.getByText(i18n.t("todayReviewedToday", { count: 2 }))
     ).toBeInTheDocument();
     expect(
       screen.getByText(i18n.t("todayStreak", { count: 1 }))
