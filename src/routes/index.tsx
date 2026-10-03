@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { useCallback, useState } from "react";
+import { Flame } from "lucide-react";
+import { type CSSProperties, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TodayItemCard from "@/components/today-item-card";
 import TodaySessionDialog from "@/components/today-session-dialog";
@@ -11,6 +12,7 @@ import { useTodayQueue } from "@/hooks/use-today-queue";
 import { resolveEventCalendarLocale } from "@/utils/event-calendar-i18n";
 import { cn } from "@/utils/tailwind";
 import type {
+  ProgramReviewedToday,
   TodayGroup,
   TodayItem,
   TodayQueue,
@@ -51,43 +53,50 @@ function UpcomingWeek({ upcoming }: { upcoming: Upcoming }) {
   const { i18n, t } = useTranslation();
   const locale = resolveEventCalendarLocale(i18n.language);
   const peak = Math.max(1, ...upcoming.days.map((day) => day.count));
+  const hasWeek = upcoming.days.some((day) => day.count > 0);
 
   return (
     <section
       aria-label={t("todayUpcomingTitle")}
       className="flex flex-col gap-3"
     >
-      <h2 className="font-medium text-sm">{t("todayUpcomingTitle")}</h2>
-      <ol className="grid grid-cols-7 gap-2">
-        {upcoming.days.map((day) => (
-          <li
-            className="flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2"
-            key={day.date.toISOString()}
-          >
-            <span className="text-muted-foreground text-xs capitalize">
-              {format(day.date, "EEE", { locale })}
-            </span>
-            {/* The day's load, as a bar: how the week is spread at a glance. */}
-            <span className="flex h-8 w-2 items-end overflow-hidden rounded-full bg-foreground/5">
-              <span
-                className="w-full rounded-full bg-brand"
-                style={{ height: `${(day.count / peak) * 100}%` }}
-              />
-            </span>
-            <span
-              className={cn(
-                "font-medium text-sm tabular-nums",
-                day.count === 0 && "text-muted-foreground"
-              )}
-            >
-              {day.count}
-            </span>
-          </li>
-        ))}
-      </ol>
+      {/* A week of zeros says nothing (docs/specs/delight-day-done.md AC-4). */}
+      {hasWeek ? (
+        <>
+          <h2 className="font-medium text-sm">{t("todayUpcomingTitle")}</h2>
+          <ol className="grid grid-cols-7 gap-2">
+            {upcoming.days.map((day) => (
+              <li
+                className="flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2"
+                key={day.date.toISOString()}
+              >
+                <span className="text-muted-foreground text-xs capitalize">
+                  {format(day.date, "EEE", { locale })}
+                </span>
+                {/* The day's load, as a bar: how the week is spread at a glance. */}
+                <span className="flex h-8 w-2 items-end overflow-hidden rounded-full bg-foreground/5">
+                  <span
+                    className="w-full rounded-full bg-brand"
+                    style={{ height: `${(day.count / peak) * 100}%` }}
+                  />
+                </span>
+                <span
+                  className={cn(
+                    "font-medium text-sm tabular-nums",
+                    day.count === 0 && "text-muted-foreground"
+                  )}
+                >
+                  {day.count}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : null}
       <p className="text-muted-foreground text-sm">
         {upcoming.nextDate
-          ? t("todayNextReview", {
+          ? t("todayNextReviewWithCount", {
+              count: upcoming.nextCount,
               date: format(upcoming.nextDate, "PPPP", { locale }),
             })
           : t("todayNothingScheduled")}
@@ -203,12 +212,73 @@ function Welcome({ replay = false }: { replay?: boolean }) {
   );
 }
 
+/** Most cells a program shows for the day; the count says the rest. */
+const MAX_DAY_CELLS = 24;
+
+/**
+ * Today's work per program, in the heatmap's language: one cell per
+ * activity reviewed, in the program's color (docs/specs/delight-day-done.md
+ * AC-2).
+ */
+function ReviewedToday({ programs }: { programs: ProgramReviewedToday[] }) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="font-medium text-sm">{t("todayDoneByProgramLabel")}</h2>
+      <ul
+        aria-label={t("todayDoneByProgramLabel")}
+        className="flex flex-col gap-2"
+      >
+        {programs.map((program) => {
+          const color = resolveProgramColor(program.color);
+          return (
+            <li
+              className="grid grid-cols-[minmax(0,10rem)_1fr] items-center gap-3 text-sm"
+              key={program.programId}
+            >
+              <span className="truncate">{program.programName}</span>
+              <span className="flex flex-wrap items-center gap-[3px]">
+                {Array.from(
+                  { length: Math.min(program.activities, MAX_DAY_CELLS) },
+                  (_, index) => (
+                    <span
+                      aria-hidden="true"
+                      className="heatmap-cell size-3 rounded-xs"
+                      // biome-ignore lint/suspicious/noArrayIndexKey: identical cells, never reordered.
+                      key={index}
+                      style={
+                        {
+                          "--col": 0,
+                          "--row": index,
+                          backgroundColor: color,
+                        } as CSSProperties
+                      }
+                    />
+                  )
+                )}
+                <span className="ml-1.5 text-muted-foreground tabular-nums">
+                  {t("todaySessionProgramCount", {
+                    count: program.activities,
+                  })}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 /** Nothing left for today: how the day went and when to come back (AC-8). */
 function DayClosed({
+  reviewedByProgram,
   reviewedToday,
   streak,
   upcoming,
 }: {
+  reviewedByProgram: ProgramReviewedToday[];
   reviewedToday: number;
   streak: number;
   upcoming: Upcoming;
@@ -218,18 +288,26 @@ function DayClosed({
   return (
     <div className="flex max-w-2xl flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <p className="font-medium font-serif text-2xl">
+        <h2 className="font-medium font-serif text-2xl">
           {reviewedToday ? t("todayDayDoneTitle") : t("todayFreeDayTitle")}
-        </p>
-        {reviewedToday || streak ? (
-          <p className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
-            {reviewedToday ? (
-              <span>{t("todayReviewedToday", { count: reviewedToday })}</span>
-            ) : null}
-            {streak ? <span>{t("todayStreak", { count: streak })}</span> : null}
+        </h2>
+        {/* The streak up front: the habit is the point
+            (docs/specs/delight-day-done.md AC-1). */}
+        {streak ? (
+          <p className="flex items-center gap-2 font-medium text-lg">
+            <Flame aria-hidden="true" className="size-5 text-orange-500" />
+            {t("todayStreak", { count: streak })}
+          </p>
+        ) : null}
+        {reviewedToday ? (
+          <p className="text-muted-foreground text-sm">
+            {t("todayReviewedToday", { count: reviewedToday })}
           </p>
         ) : null}
       </div>
+      {reviewedByProgram.length > 0 ? (
+        <ReviewedToday programs={reviewedByProgram} />
+      ) : null}
       <UpcomingWeek upcoming={upcoming} />
       {upcoming.nextDate ? null : (
         <Button asChild className="self-start" variant="outline">
@@ -252,6 +330,7 @@ export function TodayPage() {
     now,
     queue,
     retry,
+    reviewedByProgram,
     reviewedToday,
     status,
     streak,
@@ -322,6 +401,7 @@ export function TodayPage() {
 
       {queue && hasPrograms && !hasDue && !isReplayingWelcome && upcoming ? (
         <DayClosed
+          reviewedByProgram={reviewedByProgram ?? []}
           reviewedToday={reviewedToday ?? 0}
           streak={streak ?? 0}
           upcoming={upcoming}

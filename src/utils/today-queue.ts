@@ -150,6 +150,8 @@ export interface UpcomingDay {
 export interface Upcoming {
   /** The next 7 days, starting tomorrow. */
   days: UpcomingDay[];
+  /** Activities coming back on `nextDate` (docs/specs/delight-day-done.md AC-3). */
+  nextCount: number;
   /** The first day after today with a review, however far; null if none. */
   nextDate: Date | null;
 }
@@ -182,7 +184,20 @@ export function buildUpcoming(rows: TodayRow[], now: Date): Upcoming {
     }
   }
 
-  return { days, nextDate };
+  const nextActivities = new Set<string>();
+  if (nextDate) {
+    const nextKey = nextDate.getTime();
+    for (const row of rows) {
+      if (
+        row.dueDate >= tomorrow &&
+        startOfDay(row.dueDate).getTime() === nextKey
+      ) {
+        nextActivities.add(row.activityId);
+      }
+    }
+  }
+
+  return { days, nextCount: nextActivities.size, nextDate };
 }
 
 /**
@@ -220,4 +235,41 @@ export function countReviewedOn(
     (sum, entry) => (entry.date === key ? sum + entry.activities : sum),
     0
   );
+}
+
+export interface ProgramReviewedToday {
+  activities: number;
+  color: string | null;
+  programId: string;
+  programName: string;
+}
+
+/**
+ * Each program's activities reviewed on `day`, in the programs' order, for
+ * the end of the day (docs/specs/delight-day-done.md AC-2). Programs with
+ * nothing that day are left out.
+ */
+export function reviewedByProgramOn(
+  counts: { activities: number; date: string; programId: string }[],
+  programs: { color: string | null; id: string; name: string }[],
+  day: Date
+): ProgramReviewedToday[] {
+  const key = toLocalDayKey(day);
+  const activitiesByProgram = new Map<string, number>();
+  for (const entry of counts) {
+    if (entry.date === key && entry.activities > 0) {
+      activitiesByProgram.set(
+        entry.programId,
+        (activitiesByProgram.get(entry.programId) ?? 0) + entry.activities
+      );
+    }
+  }
+  return programs
+    .filter((program) => activitiesByProgram.has(program.id))
+    .map((program) => ({
+      activities: activitiesByProgram.get(program.id) ?? 0,
+      color: program.color,
+      programId: program.id,
+      programName: program.name,
+    }));
 }

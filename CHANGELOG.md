@@ -50,6 +50,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   diz "Ainda não avaliada", o selo de revisão fica na coluna "Próxima revisão" (ou ao lado do nome do
   módulo), Editar e Excluir vão para o menu **Mais ações** e a linha pendente pulsa três vezes e para,
   sem a faixa lateral.
+- **Fim do dia como recompensa:** "Dia concluído" traz a sequência em destaque, com a chama, o que
+  cada programa recebeu hoje (uma célula por atividade, na cor do programa, na linguagem do heatmap) e
+  a próxima revisão com quantas atividades voltam. A faixa dos próximos 7 dias só aparece quando há
+  revisão na semana.
 - **Uma unidade só para a contagem do dia: atividades.** Hoje diz "2 atividades para hoje · 3 cards",
   e a barra lateral, os cards de programa, a sessão ("1 de 2", com a barra na mesma posição), o fim da
   sessão, o fim do dia, os próximos 7 dias e a notificação da bandeja contam do mesmo jeito: um baralho

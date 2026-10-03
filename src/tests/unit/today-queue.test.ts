@@ -4,6 +4,7 @@ import {
   buildUpcoming,
   countDueByProgram,
   countReviewedOn,
+  reviewedByProgramOn,
   type TodayRow,
 } from "@/utils/today-queue";
 
@@ -279,5 +280,49 @@ describe("countReviewedOn", () => {
     ];
 
     expect(countReviewedOn(counts, NOW)).toBe(3);
+  });
+});
+
+/** docs/specs/delight-day-done.md AC-3 */
+describe("buildUpcoming nextCount", () => {
+  it("counts the activities that come back on the next date", () => {
+    const upcoming = buildUpcoming(
+      [
+        row({ activityId: "a", dueDate: new Date(2026, 9, 11, 9), id: "1" }),
+        row({ activityId: "a", dueDate: new Date(2026, 9, 11, 10), id: "2" }),
+        row({ activityId: "b", dueDate: new Date(2026, 9, 11, 18), id: "3" }),
+        row({ activityId: "c", dueDate: new Date(2026, 9, 12, 9), id: "4" }),
+      ],
+      NOW
+    );
+
+    expect(upcoming.nextDate).toEqual(new Date(2026, 9, 11));
+    expect(upcoming.nextCount).toBe(2);
+  });
+});
+
+/** docs/specs/delight-day-done.md AC-2 */
+describe("reviewedByProgramOn", () => {
+  it("lists the programs reviewed on the day, in program order, with their colors", () => {
+    const programs = [
+      { color: "#22c55e", id: "p2", name: "Anatomia" },
+      { color: null, id: "p1", name: "Cálculo I" },
+      { color: "#ec4899", id: "p3", name: "Química" },
+    ];
+    const counts = [
+      { activities: 2, count: 5, date: "2026-10-02", programId: "p1" },
+      { activities: 1, count: 1, date: "2026-10-02", programId: "p2" },
+      { activities: 4, count: 4, date: "2026-10-01", programId: "p3" },
+    ];
+
+    expect(reviewedByProgramOn(counts, programs, NOW)).toEqual([
+      {
+        activities: 1,
+        color: "#22c55e",
+        programId: "p2",
+        programName: "Anatomia",
+      },
+      { activities: 2, color: null, programId: "p1", programName: "Cálculo I" },
+    ]);
   });
 });

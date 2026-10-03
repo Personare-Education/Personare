@@ -16,13 +16,19 @@ import {
   buildTodayQueue,
   buildUpcoming,
   countReviewedOn,
+  reviewedByProgramOn,
 } from "@/utils/today-queue";
 
 type Status = "error" | "loading" | "ready";
 
 interface TodayData {
-  counts: { activities: number; count: number; date: string }[];
-  programOrder: string[];
+  counts: {
+    activities: number;
+    count: number;
+    date: string;
+    programId: string;
+  }[];
+  programs: { color: string | null; id: string; name: string }[];
   rows: ScheduleRow[];
 }
 
@@ -45,7 +51,11 @@ export function useTodayQueue() {
         .then(([rows, counts, programs]) => {
           setData({
             counts,
-            programOrder: programs.map((program) => program.id),
+            programs: programs.map((program) => ({
+              color: program.color,
+              id: program.id,
+              name: program.name,
+            })),
             rows,
           });
           setNow(new Date());
@@ -83,8 +93,13 @@ export function useTodayQueue() {
     }
     return {
       // No program at all: the first run (docs/specs/onboard-empty-states.md AC-1).
-      hasPrograms: data.programOrder.length > 0,
-      queue: buildTodayQueue(data.rows, now, data.programOrder),
+      hasPrograms: data.programs.length > 0,
+      queue: buildTodayQueue(
+        data.rows,
+        now,
+        data.programs.map((program) => program.id)
+      ),
+      reviewedByProgram: reviewedByProgramOn(data.counts, data.programs, now),
       reviewedToday: countReviewedOn(data.counts, now),
       streak: computeCurrentStreak(toActiveDateSet(data.counts), now),
       upcoming: buildUpcoming(data.rows, now),
