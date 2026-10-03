@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import {
   createActivity,
   listActivities,
+  restoreActivity,
   softDeleteActivity,
   updateActivity,
 } from "@/actions/activities";
@@ -56,6 +57,7 @@ import {
   summarizeReviewUrgency,
   toReviewHighlight,
 } from "@/utils/review-highlight";
+import { showUndoToast } from "@/utils/undo-toast";
 
 function ModuleActivitiesPage() {
   const { t } = useTranslation();
@@ -233,12 +235,18 @@ function ModuleActivitiesPage() {
     }
   }, []);
 
-  const handleFlashcardManagerOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setActivityBeingManagedFlashcards(null);
-      setStartingFollowUp(null);
-    }
-  }, []);
+  // New flashcards are due at once: the rows' review chips must know
+  // (docs/specs/today-review-queue.md AC-11).
+  const handleFlashcardManagerOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setActivityBeingManagedFlashcards(null);
+        setStartingFollowUp(null);
+        refreshSchedule();
+      }
+    },
+    [refreshSchedule]
+  );
 
   const handleReviewSessionOpenChange = useCallback(
     (open: boolean) => {
@@ -285,16 +293,31 @@ function ModuleActivitiesPage() {
     }
   }, []);
 
+  // Brings back what was just deleted (docs/specs/safety-net.md AC-2).
+  const undoDelete = useCallback(
+    (id: string) => {
+      restoreActivity(id).then(refreshActivities);
+    },
+    [refreshActivities]
+  );
+
   const handleConfirmDelete = useCallback(() => {
     if (!activityPendingDelete) {
       return;
     }
 
-    softDeleteActivity(activityPendingDelete.id).then(() => {
+    const deleted = activityPendingDelete;
+    softDeleteActivity(deleted.id).then(() => {
       setActivityPendingDelete(null);
       refreshActivities();
+      // docs/specs/safety-net.md AC-1
+      showUndoToast({
+        message: t("activityDeletedMessage", { title: deleted.title }),
+        onUndo: () => undoDelete(deleted.id),
+        undoLabel: t("undoAction"),
+      });
     });
-  }, [activityPendingDelete, refreshActivities]);
+  }, [activityPendingDelete, refreshActivities, t, undoDelete]);
 
   const handleSearchTermChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

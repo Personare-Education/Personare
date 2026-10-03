@@ -557,3 +557,107 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     });
   });
 });
+
+/**
+ * RED phase (docs/specs/safety-net.md AC-5..7): going back a question,
+ * flagging an unanswered one, and confirming before abandoning answers.
+ */
+describe("QuizRunnerDialog safety net", () => {
+  function setupUser() {
+    return userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+  }
+
+  function radios() {
+    return screen.getAllByRole("radio") as HTMLInputElement[];
+  }
+
+  it("goes back to the previous question, keeping its answer", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    expect(
+      screen.queryByRole("button", {
+        name: i18n.t("quizPreviousQuestionAction"),
+      })
+    ).not.toBeInTheDocument();
+
+    await user.click(radios()[1]);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("quizPreviousQuestionAction") })
+    );
+
+    expect(screen.getByText(RUNNER_QUESTIONS[0].text)).toBeInTheDocument();
+    expect(radios()[1].checked).toBe(true);
+  });
+
+  it("flags a question that has no answer yet, until one is chosen", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    expect(screen.getByText(i18n.t("quizUnansweredHint"))).toBeInTheDocument();
+
+    await user.click(radios()[0]);
+
+    expect(
+      screen.queryByText(i18n.t("quizUnansweredHint"))
+    ).not.toBeInTheDocument();
+  });
+
+  it("asks before abandoning a quiz with answers, and stays when told to", async () => {
+    const user = setupUser();
+    const { onOpenChange } = renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    await user.click(radios()[0]);
+
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    const confirm = await screen.findByRole("alertdialog", {
+      name: i18n.t("quizLeaveTitle"),
+    });
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+
+    await user.click(
+      within(confirm).getByRole("button", {
+        name: i18n.t("quizLeaveStayAction"),
+      })
+    );
+
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(screen.getByText(RUNNER_QUESTIONS[0].text)).toBeInTheDocument();
+  });
+
+  it("leaves when confirmed", async () => {
+    const user = setupUser();
+    const { onOpenChange } = renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    await user.click(radios()[0]);
+    await user.keyboard("{Escape}");
+
+    await user.click(
+      within(
+        await screen.findByRole("alertdialog", {
+          name: i18n.t("quizLeaveTitle"),
+        })
+      ).getByRole("button", { name: i18n.t("quizLeaveConfirmAction") })
+    );
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("closes right away when nothing was answered yet", async () => {
+    const user = setupUser();
+    const { onOpenChange } = renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+});

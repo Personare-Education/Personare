@@ -54,8 +54,11 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   const moduleName = `E2E Module ${uniqueSuffix}`;
   const activityName = `E2E Activity ${uniqueSuffix}`;
 
+  // The app opens on Today; programs live under "Programs"
+  // (docs/specs/today-review-queue.md).
+  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  await page.getByRole("link", { exact: true, name: "Programs" }).click();
   await expect(page.getByRole("heading", { name: "Programs" })).toBeVisible();
-
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();

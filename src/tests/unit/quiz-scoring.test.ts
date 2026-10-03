@@ -107,6 +107,11 @@ describe("formatQuizDuration (Issue #93)", () => {
     expect(formatQuizDuration(-1000)).toBe("0s");
   });
 
+  /** docs/specs/rating-clarity.md AC-4: a real but very short time is not "0s". */
+  it("formats a positive duration under half a second as <1s", () => {
+    expect(formatQuizDuration(300)).toBe("<1s");
+  });
+
   it("formats exactly zero as 0s", () => {
     expect(formatQuizDuration(0)).toBe("0s");
   });

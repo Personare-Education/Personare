@@ -9,7 +9,9 @@ import { getStackTransitionTypes } from "@/utils/stack-transition";
  * a pop, anything else does not animate.
  */
 
-const PROGRAMS = "/";
+// Programs moved to /programs when Today became the opening screen
+// (docs/specs/today-review-queue.md AC-1).
+const PROGRAMS = "/programs";
 const PROGRAM = "/programs/p1";
 const MODULE = "/programs/p1/modules/m1";
 
@@ -25,6 +27,14 @@ describe("getStackTransitionTypes", () => {
   it("pops when going back up", () => {
     expect(getStackTransitionTypes(MODULE, PROGRAM)).toEqual(["stack-pop"]);
     expect(getStackTransitionTypes(PROGRAM, PROGRAMS)).toEqual(["stack-pop"]);
+  });
+
+  it("does not animate jumps between Today and the programs stack", () => {
+    expect(getStackTransitionTypes("/", PROGRAMS)).toBe(false);
+    expect(getStackTransitionTypes(PROGRAMS, "/")).toBe(false);
+    expect(getStackTransitionTypes(`${PROGRAMS}/`, PROGRAM)).toEqual([
+      "stack-push",
+    ]);
   });
 
   it("pushes from the calendar into a program", () => {

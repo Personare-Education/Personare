@@ -17,6 +17,7 @@ import {
   applyRating,
   createInitialReviewItemFields,
   fromFsrsCard,
+  previewRatings as previewFsrsRatings,
   type ReviewItemRow,
 } from "@/utils/fsrs";
 import {
@@ -25,6 +26,7 @@ import {
   listActivityReviewStateInputSchema,
   listDueInputSchema,
   markActivityDifficultyInputSchema,
+  previewRatingsInputSchema,
   submitRatingInputSchema,
 } from "./schemas";
 
@@ -189,8 +191,11 @@ export const listSchedule = os.handler(() => {
 
   const viaFlashcard = db
     .select({
+      activityFilePath: activitiesTable.filePath,
       activityId: activitiesTable.id,
       activityTitle: activitiesTable.title,
+      activityType: activitiesTable.type,
+      activityUrl: activitiesTable.url,
       dueDate: reviewItemsTable.dueDate,
       // Widened to string | null (flashcards.front is actually never null
       // here) only so this branch's shape matches viaActivity's for
@@ -200,7 +205,11 @@ export const listSchedule = os.handler(() => {
       id: reviewItemsTable.id,
       moduleId: modulesTable.id,
       moduleName: modulesTable.name,
+      // The "Today" screen paints each item in its program's color
+      // (docs/specs/today-review-queue.md).
+      programColor: programsTable.color,
       programId: programsTable.id,
+      programName: programsTable.name,
     })
     .from(reviewItemsTable)
     .innerJoin(
@@ -217,14 +226,21 @@ export const listSchedule = os.handler(() => {
 
   const viaActivity = db
     .select({
+      activityFilePath: activitiesTable.filePath,
       activityId: activitiesTable.id,
       activityTitle: activitiesTable.title,
+      activityType: activitiesTable.type,
+      activityUrl: activitiesTable.url,
       dueDate: reviewItemsTable.dueDate,
       front: sql<string | null>`NULL`,
       id: reviewItemsTable.id,
       moduleId: modulesTable.id,
       moduleName: modulesTable.name,
+      // The "Today" screen paints each item in its program's color
+      // (docs/specs/today-review-queue.md).
+      programColor: programsTable.color,
       programId: programsTable.id,
+      programName: programsTable.name,
     })
     .from(reviewItemsTable)
     .innerJoin(
@@ -237,6 +253,42 @@ export const listSchedule = os.handler(() => {
 
   return unionAll(viaFlashcard, viaActivity).all();
 });
+
+/**
+ * What each rating would schedule (docs/specs/rating-clarity.md AC-1): a
+ * flashcard's review item with its short learning steps, or a whole
+ * Activity in whole days -- the same schedulers submitRating and
+ * markActivityDifficulty use. An Activity never rated previews a fresh card.
+ */
+export const previewRatings = os
+  .input(previewRatingsInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const now = new Date();
+
+    if ("reviewItemId" in input) {
+      const row = db
+        .select()
+        .from(reviewItemsTable)
+        .where(eq(reviewItemsTable.id, input.reviewItemId))
+        .get();
+      if (!row) {
+        throw new Error("Review item not found");
+      }
+      return previewFsrsRatings({ ...row, state: row.state as StateType }, now);
+    }
+
+    const row = db
+      .select()
+      .from(reviewItemsTable)
+      .where(eq(reviewItemsTable.activityId, input.activityId))
+      .get();
+    return previewFsrsRatings(
+      row ? { ...row, state: row.state as StateType } : null,
+      now,
+      { shortTermEnabled: false }
+    );
+  });
 
 export const submitRating = os
   .input(submitRatingInputSchema)

@@ -6,8 +6,38 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Desfazer exclusões.** Depois de excluir um programa, módulo, atividade, pergunta ou flashcard,
+  um aviso com **Desfazer** traz de volta o item e tudo o que aquela exclusão escondeu (o que já
+  estava excluído antes continua excluído). Clicar em Desfazer não fecha o gerenciador aberto.
+- **Quiz mais seguro:** "Pergunta anterior" para voltar uma pergunta mantendo a resposta, um aviso
+  na pergunta ainda sem resposta (ela conta como errada) e uma confirmação antes de sair do quiz com
+  respostas marcadas.
+- **Tela "Hoje", a nova tela de abertura.** Diz quantas revisões vencem hoje (e quantas estão
+  atrasadas), lista o que vence agrupado por programa, cada item num cartão na cor do seu programa, e
+  tem um único **Começar** que percorre o dia inteiro: baralhos com o cartão que gira, PDFs e links
+  abertos e avaliados ali mesmo, quizzes respondidos e avaliados. Dá para pular itens e fechar no
+  meio sem perder nada. Sem nada pendente, mostra o fechamento do dia (revisões feitas, sequência de
+  dias) e os próximos 7 dias. Programas passa para o item **Programas** da barra lateral, e **Hoje**
+  mostra o número de revisões pendentes.
+- **Atalhos na revisão:** Espaço revela a resposta, e as teclas 1 a 4 avaliam (Errei, Difícil, Bom,
+  Fácil).
+- **Cada botão de avaliação mostra quando seria a próxima revisão** ("Bom · 4 dias", "Errei · 1
+  minuto"), calculado pelo próprio FSRS para aquele item.
+- **Atividades têm uma escala própria:** "Não entendi / Com esforço / Entendi / Fácil demais" no
+  lugar de "Errei / Difícil / Bom / Fácil", que fica para os flashcards.
+- **"N para revisar" nos cards de programa**, e um selo visível de "Revisão para hoje" / "Revisão
+  atrasada" na linha da tabela (antes, só leitores de tela recebiam esse texto).
+
 ### Changed
 
+- **Tabela de atividades:** a coluna "Progresso" passa a se chamar "Última avaliação", e a próxima
+  revisão aparece como "hoje", "amanhã", "em 4 dias" ou "atrasada há 2 dias", com a data completa ao
+  passar o mouse.
+- O seletor de idioma mostra "English" e "Português"; um tempo de quiz abaixo de um segundo aparece
+  como "<1s"; a lista do resultado do quiz se chama "Respostas"; e "Sincronizar agora" explica por que
+  está desabilitado.
 - **Tipografia nova, no espírito da do Claude.** Newsreader (serifada de texto, com itálico de verdade)
   nos títulos e no conteúdo de estudo (perguntas, alternativas, flashcards), e Instrument Sans em toda
   a interface. As duas são gratuitas e vêm dentro do app. Isso também corrige um bug antigo: o app pedia

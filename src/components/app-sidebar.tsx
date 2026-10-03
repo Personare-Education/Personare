@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, CalendarDays } from "lucide-react";
+import { BookOpen, CalendarDays, Sunrise } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AccountMenu from "@/components/account-menu";
 import PersonareLogo from "@/components/personare-logo";
@@ -18,15 +18,19 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useDueCount } from "@/hooks/use-due-count";
 
+// Today first: the app opens on it (docs/specs/today-review-queue.md AC-1).
 const NAV_ITEMS = [
-  { icon: BookOpen, labelKey: "navPrograms", to: "/" },
+  { icon: Sunrise, labelKey: "navToday", to: "/" },
+  { icon: BookOpen, labelKey: "navPrograms", to: "/programs" },
   { icon: CalendarDays, labelKey: "navCalendar", to: "/calendar" },
 ] as const;
 
 export default function AppSidebar() {
   const { t } = useTranslation();
   const { toggleSidebar } = useSidebar();
+  const dueCount = useDueCount();
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -62,6 +66,11 @@ export default function AppSidebar() {
                       <Link to={item.to}>
                         <item.icon />
                         <span>{t(item.labelKey)}</span>
+                        {item.to === "/" && dueCount > 0 ? (
+                          <span className="ml-auto rounded-full bg-brand px-1.5 font-medium text-[0.6875rem] text-white tabular-nums leading-5">
+                            {dueCount}
+                          </span>
+                        ) : null}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

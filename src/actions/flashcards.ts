@@ -22,6 +22,11 @@ export function updateFlashcard(id: string, values: FlashcardContentValues) {
   return ipc.client.flashcards.update({ id, ...values });
 }
 
+/** Undoes the soft delete (docs/specs/safety-net.md). */
+export function restoreFlashcard(id: string) {
+  return ipc.client.flashcards.restore({ id });
+}
+
 export function softDeleteFlashcard(id: string) {
   return ipc.client.flashcards.softDelete({ id });
 }

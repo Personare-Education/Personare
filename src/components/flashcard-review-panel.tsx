@@ -1,0 +1,213 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ensureReviewItems,
+  listDue,
+  previewItemRatings,
+  submitRating,
+} from "@/actions/review";
+import FlipCard from "@/components/flip-card";
+import ImageAttachmentViewer from "@/components/image-attachment-viewer";
+import MarkdownContent from "@/components/markdown-content";
+import {
+  isTypingTarget,
+  RatingButtons,
+  type RatingValue,
+} from "@/components/rating-buttons";
+import { Button } from "@/components/ui/button";
+import { resolveProgramColor } from "@/constants/program-appearance";
+
+interface DueReviewItem {
+  back: string;
+  backImagePath: string | null;
+  dueDate: Date;
+  front: string;
+  frontImagePath: string | null;
+  id: string;
+}
+
+interface FlashcardReviewPanelProps {
+  activityId: string;
+  /** The program's color, for the card. */
+  color?: string | null;
+  /** Once the deck's due cards are done (or there were none), with how many were rated. */
+  onDone?: (ratedCount: number) => void;
+  /** Show "session complete" / "nothing due" instead of handing back. */
+  showEndMessages?: boolean;
+}
+
+/**
+ * One deck's review (docs/specs/today-review-queue.md AC-5): its due cards
+ * one by one on the flipping card, revealed with the button, a click on the
+ * card or Space, and rated with the buttons or the keys 1-4. Used by the
+ * deck's own review dialog and by the "Today" session.
+ */
+export default function FlashcardReviewPanel({
+  activityId,
+  color = null,
+  onDone,
+  showEndMessages = false,
+}: FlashcardReviewPanelProps) {
+  const { t } = useTranslation();
+  const [queue, setQueue] = useState<DueReviewItem[]>([]);
+  const [initialCount, setInitialCount] = useState<number | null>(null);
+  const [isRevealed, setIsRevealed] = useState(false);
+  // Which face the card shows: the back once revealed, but the user can flip
+  // back to the front to read the question again.
+  const [isFlipped, setIsFlipped] = useState(false);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+  const ratedCountRef = useRef(0);
+
+  useEffect(() => {
+    setQueue([]);
+    setInitialCount(null);
+    setIsRevealed(false);
+    setIsFlipped(false);
+    ratedCountRef.current = 0;
+    ensureReviewItems(activityId)
+      .then(() => listDue(activityId))
+      .then((items) => {
+        setQueue(items);
+        setInitialCount(items.length);
+        if (items.length === 0) {
+          onDoneRef.current?.(0);
+        }
+      });
+  }, [activityId]);
+
+  const currentItem = queue[0] ?? null;
+  // What each rating would schedule for this card (docs/specs/rating-clarity.md AC-1).
+  const [intervals, setIntervals] = useState<
+    Partial<Record<RatingValue, Date>> | undefined
+  >();
+
+  useEffect(() => {
+    setIntervals(undefined);
+    if (currentItem && isRevealed) {
+      previewItemRatings(currentItem.id)
+        .then(setIntervals)
+        .catch(() => undefined);
+    }
+  }, [currentItem, isRevealed]);
+
+  const reveal = useCallback(() => {
+    setIsRevealed(true);
+    setIsFlipped(true);
+  }, []);
+
+  // Clicking the card reveals the answer, then flips between its faces.
+  const handleCardFlip = useCallback(() => {
+    if (isRevealed) {
+      setIsFlipped((prev) => !prev);
+    } else {
+      reveal();
+    }
+  }, [isRevealed, reveal]);
+
+  // Space reveals (AC-7), unless something focused already handled it.
+  useEffect(() => {
+    if (!currentItem || isRevealed) {
+      return;
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        event.key !== " " ||
+        event.defaultPrevented ||
+        isTypingTarget(event.target)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      reveal();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentItem, isRevealed, reveal]);
+
+  const handleRate = useCallback(
+    (rating: RatingValue) => {
+      if (!currentItem) {
+        return;
+      }
+
+      Promise.resolve(submitRating(currentItem.id, rating)).then(() => {
+        ratedCountRef.current += 1;
+        setIsRevealed(false);
+        setIsFlipped(false);
+        setQueue((prev) => {
+          const next = prev.slice(1);
+          if (next.length === 0) {
+            onDoneRef.current?.(ratedCountRef.current);
+          }
+          return next;
+        });
+      });
+    },
+    [currentItem]
+  );
+
+  const nothingDue = initialCount === 0;
+  const sessionComplete =
+    initialCount !== null && initialCount > 0 && queue.length === 0;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {showEndMessages && nothingDue ? (
+        <p>{t("reviewNothingDueMessage")}</p>
+      ) : null}
+      {showEndMessages && sessionComplete ? (
+        <p>{t("reviewSessionCompleteMessage")}</p>
+      ) : null}
+      {currentItem ? (
+        <>
+          <div className="flex flex-col gap-3 py-2">
+            {/* Keyed by item: the next card shows up on its front, instead of
+                flipping back through its own back. */}
+            <FlipCard
+              back={
+                isRevealed ? (
+                  <MarkdownContent
+                    className="text-base"
+                    content={currentItem.back}
+                  />
+                ) : null
+              }
+              backLabel={t("flashcardBackLabel")}
+              color={resolveProgramColor(color)}
+              flipped={isFlipped}
+              front={
+                <MarkdownContent
+                  className="text-base"
+                  content={currentItem.front}
+                />
+              }
+              frontLabel={t("flashcardFrontLabel")}
+              hint={t("flashcardFlipHint")}
+              key={currentItem.id}
+              onFlip={handleCardFlip}
+            />
+            <div className="flex min-h-7 items-center justify-center gap-2">
+              <ImageAttachmentViewer
+                fileName={
+                  isFlipped
+                    ? currentItem.backImagePath
+                    : currentItem.frontImagePath
+                }
+              />
+            </div>
+          </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            {isRevealed ? (
+              <RatingButtons intervals={intervals} onRate={handleRate} />
+            ) : (
+              <Button aria-keyshortcuts="Space" onClick={reveal}>
+                {t("revealAnswerAction")}
+              </Button>
+            )}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}

@@ -103,3 +103,90 @@ export function cascadeSoftDeleteModule(
     cascadeSoftDeleteActivity(db, activityId, now);
   }
 }
+
+/*
+ * Undoing a deletion (docs/specs/safety-net.md): every row a cascade above
+ * hid carries the exact deletedAt of that one deletion, so restoring clears
+ * only rows with that same value. A child deleted on its own before (with
+ * its own, earlier timestamp) stays deleted.
+ */
+
+export function cascadeRestoreQuizQuestion(
+  db: DatabaseClient,
+  questionId: string,
+  deletedAt: Date
+) {
+  db.update(quizOptionsTable)
+    .set({ deletedAt: null })
+    .where(
+      and(
+        eq(quizOptionsTable.questionId, questionId),
+        eq(quizOptionsTable.deletedAt, deletedAt)
+      )
+    )
+    .run();
+}
+
+export function cascadeRestoreActivity(
+  db: DatabaseClient,
+  activityId: string,
+  deletedAt: Date
+) {
+  db.update(flashcardsTable)
+    .set({ deletedAt: null })
+    .where(
+      and(
+        eq(flashcardsTable.activityId, activityId),
+        eq(flashcardsTable.deletedAt, deletedAt)
+      )
+    )
+    .run();
+
+  const questionIds = db
+    .select({ id: quizQuestionsTable.id })
+    .from(quizQuestionsTable)
+    .where(eq(quizQuestionsTable.activityId, activityId))
+    .all()
+    .map((row) => row.id);
+
+  db.update(quizQuestionsTable)
+    .set({ deletedAt: null })
+    .where(
+      and(
+        eq(quizQuestionsTable.activityId, activityId),
+        eq(quizQuestionsTable.deletedAt, deletedAt)
+      )
+    )
+    .run();
+
+  for (const questionId of questionIds) {
+    cascadeRestoreQuizQuestion(db, questionId, deletedAt);
+  }
+}
+
+export function cascadeRestoreModule(
+  db: DatabaseClient,
+  moduleId: string,
+  deletedAt: Date
+) {
+  const activityIds = db
+    .select({ id: activitiesTable.id })
+    .from(activitiesTable)
+    .where(eq(activitiesTable.moduleId, moduleId))
+    .all()
+    .map((row) => row.id);
+
+  db.update(activitiesTable)
+    .set({ deletedAt: null })
+    .where(
+      and(
+        eq(activitiesTable.moduleId, moduleId),
+        eq(activitiesTable.deletedAt, deletedAt)
+      )
+    )
+    .run();
+
+  for (const activityId of activityIds) {
+    cascadeRestoreActivity(db, activityId, deletedAt);
+  }
+}

@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import {
   createModule,
   listModules,
+  restoreModule,
   softDeleteModule,
   updateModule,
 } from "@/actions/modules";
@@ -33,6 +34,7 @@ import {
   summarizeReviewUrgency,
   toReviewHighlight,
 } from "@/utils/review-highlight";
+import { showUndoToast } from "@/utils/undo-toast";
 
 function ProgramModulesPage() {
   const { t } = useTranslation();
@@ -126,16 +128,31 @@ function ProgramModulesPage() {
     }
   }, []);
 
+  // Brings back what was just deleted (docs/specs/safety-net.md AC-2).
+  const undoDelete = useCallback(
+    (id: string) => {
+      restoreModule(id).then(refreshModules);
+    },
+    [refreshModules]
+  );
+
   const handleConfirmDelete = useCallback(() => {
     if (!modulePendingDelete) {
       return;
     }
 
-    softDeleteModule(modulePendingDelete.id).then(() => {
+    const deleted = modulePendingDelete;
+    softDeleteModule(deleted.id).then(() => {
       setModulePendingDelete(null);
       refreshModules();
+      // docs/specs/safety-net.md AC-1
+      showUndoToast({
+        message: t("moduleDeletedMessage", { name: deleted.name }),
+        onUndo: () => undoDelete(deleted.id),
+        undoLabel: t("undoAction"),
+      });
     });
-  }, [modulePendingDelete, refreshModules]);
+  }, [modulePendingDelete, refreshModules, t, undoDelete]);
 
   return (
     <div className="flex h-full flex-col gap-4 p-2">
@@ -152,7 +169,7 @@ function ProgramModulesPage() {
           size="icon"
           variant="outline"
         >
-          <Link to="/">
+          <Link to="/programs">
             <ArrowLeft />
           </Link>
         </Button>

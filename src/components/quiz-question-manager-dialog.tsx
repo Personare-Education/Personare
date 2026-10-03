@@ -5,6 +5,7 @@ import {
   createQuizOption,
   createQuizQuestion,
   listQuizQuestionsWithOptions,
+  restoreQuizQuestion,
   softDeleteQuizOption,
   softDeleteQuizQuestion,
   updateQuizQuestion,
@@ -23,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { showUndoToast } from "@/utils/undo-toast";
 
 interface QuizQuestionWithOptions {
   id: string;
@@ -145,13 +147,27 @@ export default function QuizQuestionManagerDialog({
     setIsFormOpen(true);
   }, []);
 
+  // Brings back what was just deleted (docs/specs/safety-net.md AC-2).
+  const undoDelete = useCallback(
+    (id: string) => {
+      restoreQuizQuestion(id).then(refreshQuestions);
+    },
+    [refreshQuestions]
+  );
+
   const handleDeleteClick = useCallback(
     (question: QuizQuestionWithOptions) => {
       Promise.resolve(softDeleteQuizQuestion(question.id)).then(() => {
         refreshQuestions();
+        // docs/specs/safety-net.md AC-1
+        showUndoToast({
+          message: t("quizQuestionDeletedMessage"),
+          onUndo: () => undoDelete(question.id),
+          undoLabel: t("undoAction"),
+        });
       });
     },
-    [refreshQuestions]
+    [refreshQuestions, t, undoDelete]
   );
 
   const handleFormOpenChange = useCallback((nextOpen: boolean) => {

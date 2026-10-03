@@ -29,9 +29,14 @@ import type { Activity } from "@/components/activities-data-table";
 vi.mock("@/actions/flashcards", () => ({
   createFlashcard: vi.fn(),
   listFlashcards: vi.fn(),
+  restoreFlashcard: vi.fn().mockResolvedValue(undefined),
   softDeleteFlashcard: vi.fn(),
   updateFlashcard: vi.fn(),
 }));
+vi.mock("@/utils/undo-toast", () => ({
+  showUndoToast: vi.fn(),
+}));
+
 vi.mock("@/actions/dialog", () => ({
   selectImageFile: vi.fn(),
 }));
@@ -45,9 +50,11 @@ vi.mock("@/actions/attachments", () => ({
 const {
   createFlashcard,
   listFlashcards,
+  restoreFlashcard,
   softDeleteFlashcard,
   updateFlashcard,
 } = await import("@/actions/flashcards");
+const { showUndoToast } = await import("@/utils/undo-toast");
 const { default: FlashcardManagerDialog } = await import(
   "@/components/flashcard-manager-dialog"
 );
@@ -297,5 +304,30 @@ describe("FlashcardManagerDialog (Issue #15)", () => {
         frontImagePath: EXISTING_FLASHCARDS[0].frontImagePath,
       });
     });
+  });
+
+  /** docs/specs/safety-net.md AC-1, AC-2 */
+  it("offers to undo a deleted flashcard, bringing it back", async () => {
+    const user = userEvent.setup();
+    vi.mocked(softDeleteFlashcard).mockResolvedValue(undefined);
+    renderManager();
+    await screen.findByText(EXISTING_FLASHCARDS[0].front);
+
+    await user.click(
+      screen.getAllByRole("button", {
+        name: i18n.t("deleteFlashcardAction"),
+      })[0]
+    );
+
+    await waitFor(() => expect(showUndoToast).toHaveBeenCalledTimes(1));
+    const [{ message, onUndo }] = vi.mocked(showUndoToast).mock.calls[0];
+    expect(message).toBe(i18n.t("flashcardDeletedMessage"));
+
+    onUndo();
+
+    await waitFor(() =>
+      expect(restoreFlashcard).toHaveBeenCalledWith(EXISTING_FLASHCARDS[0].id)
+    );
+    await waitFor(() => expect(listFlashcards).toHaveBeenCalledTimes(3));
   });
 });

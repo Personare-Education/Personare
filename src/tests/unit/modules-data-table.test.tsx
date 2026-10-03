@@ -260,6 +260,21 @@ describe("ModulesDataTable review highlight", () => {
     expect(row).toHaveTextContent(i18n.t("reviewDueTodayLabel"));
   });
 
+  /**
+   * docs/specs/today-review-queue.md AC-11: the label is a visible chip, not
+   * only text for assistive tech.
+   */
+  it("shows the review label as a visible chip", () => {
+    renderHighlighted();
+    const row = screen.getByRole("row", { name: MODULE_2_ROW_NAME });
+
+    const label = Array.from(row.querySelectorAll("span")).find(
+      (span) => span.textContent === i18n.t("reviewDueTodayLabel")
+    );
+    expect(label).toBeDefined();
+    expect(label).not.toHaveClass("sr-only");
+  });
+
   it("marks an overdue row and puts one clock beside the table, not inside it", () => {
     renderHighlighted();
     const row = screen.getByRole("row", { name: MODULE_1_ROW_NAME });

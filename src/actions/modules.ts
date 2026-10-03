@@ -12,6 +12,11 @@ export function updateModule(id: string, name: string) {
   return ipc.client.modules.update({ id, name });
 }
 
+/** Undoes the soft delete (docs/specs/safety-net.md). */
+export function restoreModule(id: string) {
+  return ipc.client.modules.restore({ id });
+}
+
 export function softDeleteModule(id: string) {
   return ipc.client.modules.softDelete({ id });
 }

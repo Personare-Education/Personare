@@ -75,6 +75,18 @@ export const update = os
       .get();
   });
 
+/** Undoes softDelete: the row and what its deletion hid (docs/specs/safety-net.md). */
+export const restore = os
+  .input(softDeleteFlashcardInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+
+    db.update(flashcardsTable)
+      .set({ deletedAt: null })
+      .where(eq(flashcardsTable.id, input.id))
+      .run();
+  });
+
 export const softDelete = os
   .input(softDeleteFlashcardInputSchema)
   .handler(({ input }) => {

@@ -41,6 +41,9 @@ test("data table header ignores hover and rows stay inside the rounded border", 
   const programName = `E2E Table Program ${uniqueSuffix}`;
   const moduleName = `E2E Table Module ${uniqueSuffix}`;
 
+  // The app opens on Today; programs live under "Programs"
+  // (docs/specs/today-review-queue.md).
+  await page.getByRole("link", { exact: true, name: "Programs" }).click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();

@@ -45,6 +45,11 @@ export function updateProgram(
   return ipc.client.programs.update({ ...appearance, id, name });
 }
 
+/** Undoes the soft delete (docs/specs/safety-net.md). */
+export function restoreProgram(id: string) {
+  return ipc.client.programs.restore({ id });
+}
+
 export function softDeleteProgram(id: string) {
   return ipc.client.programs.softDelete({ id });
 }
