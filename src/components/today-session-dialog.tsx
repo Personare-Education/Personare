@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { markActivityDifficulty } from "@/actions/review";
+import {
+  markActivityDifficulty,
+  previewActivityRatings,
+} from "@/actions/review";
 import { openActivityFile, openExternalLink } from "@/actions/shell";
 import type { Activity } from "@/components/activities-data-table";
 import FlashcardReviewPanel from "@/components/flashcard-review-panel";
@@ -48,6 +51,18 @@ function ActivityStepPanel({ item, onRate }: ActivityStepProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<ActivityStep>("open");
   const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [intervals, setIntervals] = useState<
+    Partial<Record<RatingValue, Date>> | undefined
+  >();
+
+  // What each rating would schedule (docs/specs/rating-clarity.md AC-1).
+  useEffect(() => {
+    if (step === "rate") {
+      previewActivityRatings(item.activityId)
+        .then(setIntervals)
+        .catch(() => undefined);
+    }
+  }, [item.activityId, step]);
 
   const handleOpenClick = useCallback(() => {
     if (item.activityType === "quiz") {
@@ -89,7 +104,11 @@ function ActivityStepPanel({ item, onRate }: ActivityStepProps) {
             {t("todayRatePrompt")}
           </p>
           <div className="flex flex-wrap justify-end gap-2">
-            <RatingButtons onRate={onRate} />
+            <RatingButtons
+              intervals={intervals}
+              onRate={onRate}
+              scale="activity"
+            />
           </div>
         </div>
       ) : (

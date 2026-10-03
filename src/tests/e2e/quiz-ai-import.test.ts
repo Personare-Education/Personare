@@ -250,7 +250,7 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   }
   await answerRemaining(10);
 
-  const review = runner.getByRole("region", { name: "Review" });
+  const review = runner.getByRole("region", { name: "Answers" });
   const chart = runner.locator('[data-slot="chart"]');
   await expect(chart).toBeInViewport();
   await expect(
@@ -326,6 +326,7 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
   await completeButton.click();
   await expect(completeButton).toBeHidden();
   // Rate it, or the pending rating reopens on the next launch.
-  await page.getByRole("button", { name: "Again" }).click();
+  // An activity is rated on its own scale (docs/specs/rating-clarity.md).
+  await page.getByRole("button", { name: "Didn't get it" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

@@ -131,10 +131,18 @@ test("walks from a calendar event to the pulsing module and activity", async () 
   await runner.getByRole("radio").nth(1).click();
   await runner.getByRole("button", { name: "Finish quiz" }).click();
   await runner.getByRole("button", { name: "Close" }).click();
-  await page.getByRole("button", { name: "Again" }).click();
+  // An activity is rated on its own scale (docs/specs/rating-clarity.md).
+  await page.getByRole("button", { name: "Didn't get it" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
-  const dueDay = (await quizRow.getByRole("cell").nth(3).textContent()) ?? "";
+  // The cell reads "In N days"; its <time> carries the exact day
+  // (docs/specs/rating-clarity.md AC-3).
+  const dueDay =
+    (await quizRow
+      .getByRole("cell")
+      .nth(3)
+      .locator("time")
+      .getAttribute("datetime")) ?? "";
   expect(dueDay).toMatch(DAY_KEY);
   const dueNoon = new Date(`${dueDay}T12:00:00`);
 

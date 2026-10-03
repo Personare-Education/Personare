@@ -417,27 +417,50 @@ describe("ActivitiesDataTable", () => {
     renderTable();
 
     const ratingLabels = [
-      i18n.t("ratingAgainAction"),
-      i18n.t("ratingHardAction"),
-      i18n.t("ratingGoodAction"),
-      i18n.t("ratingEasyAction"),
+      i18n.t("activityRatingAgainAction"),
+      i18n.t("activityRatingHardAction"),
+      i18n.t("activityRatingGoodAction"),
+      i18n.t("activityRatingEasyAction"),
     ];
     for (const label of ratingLabels) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
   });
 
+  /**
+   * docs/specs/rating-clarity.md AC-2, AC-3: the last rating in the
+   * activity's own words, and the next review as a relative day with the
+   * full date on hover.
+   */
   it("shows the last rating and the next review date in separate cells for an activity with review state", () => {
     const [, quiz] = ACTIVITIES;
+    const inFourDays = new Date();
+    inFourDays.setDate(inFourDays.getDate() + 4);
     renderTable(ACTIVITIES, {
       [quiz.id]: {
-        dueDate: new Date("2026-03-15T12:00:00Z"),
+        dueDate: inFourDays,
         lastRating: "good",
       },
     });
 
-    expect(screen.getByText(i18n.t("ratingGoodAction"))).toBeInTheDocument();
-    expect(screen.getByText("2026-03-15")).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("activityRatingGoodAction"))
+    ).toBeInTheDocument();
+    const nextReview = screen.getByText(
+      i18n.t("reviewDueInDays", { count: 4 })
+    );
+    expect(nextReview).toHaveAttribute("title");
+  });
+
+  it("names the rating column for what it holds", () => {
+    renderTable();
+
+    expect(
+      screen.getByRole("columnheader", {
+        name: i18n.t("activityReviewStateColumnLabel"),
+      })
+    ).toHaveTextContent(i18n.t("activityReviewStateColumnLabel"));
+    expect(i18n.t("activityReviewStateColumnLabel")).not.toBe("Progress");
   });
 });
 

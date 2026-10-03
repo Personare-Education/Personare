@@ -1,11 +1,12 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   clearPendingActivityRating,
   markActivityDifficulty,
+  previewActivityRatings,
   type RatingValue,
 } from "@/actions/review";
-import { Button } from "@/components/ui/button";
+import { RatingButtons } from "@/components/rating-buttons";
 import {
   Dialog,
   DialogContent,
@@ -14,29 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const RATINGS: RatingValue[] = ["again", "hard", "good", "easy"];
-
-const RATING_TRANSLATION_KEYS: Record<RatingValue, string> = {
-  again: "ratingAgainAction",
-  easy: "ratingEasyAction",
-  good: "ratingGoodAction",
-  hard: "ratingHardAction",
-};
-
-interface RatingButtonProps {
-  label: string;
-  onClick: (rating: RatingValue) => void;
-  rating: RatingValue;
-}
-
-function RatingButton({ label, onClick, rating }: RatingButtonProps) {
-  const handleClick = useCallback(() => {
-    onClick(rating);
-  }, [onClick, rating]);
-
-  return <Button onClick={handleClick}>{label}</Button>;
-}
 
 interface ActivityDifficultyDialogProps {
   activityId: string | null;
@@ -70,6 +48,19 @@ export default function ActivityDifficultyDialog({
   programName,
 }: ActivityDifficultyDialogProps) {
   const { t } = useTranslation();
+  // What each rating would schedule (docs/specs/rating-clarity.md AC-1).
+  const [intervals, setIntervals] = useState<
+    Partial<Record<RatingValue, Date>> | undefined
+  >();
+
+  useEffect(() => {
+    setIntervals(undefined);
+    if (open && activityId) {
+      previewActivityRatings(activityId)
+        .then(setIntervals)
+        .catch(() => undefined);
+    }
+  }, [activityId, open]);
 
   const handleRatingClick = useCallback(
     (rating: RatingValue) => {
@@ -99,14 +90,13 @@ export default function ActivityDifficultyDialog({
           {t("activityDifficultyPromptMessage")}
         </p>
         <DialogFooter>
-          {RATINGS.map((rating) => (
-            <RatingButton
-              key={rating}
-              label={t(RATING_TRANSLATION_KEYS[rating])}
-              onClick={handleRatingClick}
-              rating={rating}
+          {open ? (
+            <RatingButtons
+              intervals={intervals}
+              onRate={handleRatingClick}
+              scale="activity"
             />
-          ))}
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -32,6 +32,16 @@ export function markActivityDifficulty(
     });
 }
 
+/** What each rating would schedule for a flashcard's review item. */
+export function previewItemRatings(reviewItemId: string) {
+  return ipc.client.review.previewRatings({ reviewItemId });
+}
+
+/** What each rating would schedule for a whole Activity. */
+export function previewActivityRatings(activityId: string) {
+  return ipc.client.review.previewRatings({ activityId });
+}
+
 export function listActivityReviewState(moduleId: string) {
   return ipc.client.review.listActivityReviewState({ moduleId });
 }

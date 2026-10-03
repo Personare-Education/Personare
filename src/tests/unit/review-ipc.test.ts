@@ -526,6 +526,40 @@ describe("review IPC namespace (Issue #16)", () => {
    * only way this review_item is ever created is the user marking the
    * Activity done with a rating.
    */
+  /**
+   * docs/specs/rating-clarity.md AC-1: what each rating would schedule,
+   * computed with the same scheduler the save uses.
+   */
+  describe("previewRatings", () => {
+    it("previews an activity never rated, in whole days", async () => {
+      const preview = await reviewClient.previewRatings({ activityId });
+
+      expect(Object.keys(preview).sort()).toEqual([
+        "again",
+        "easy",
+        "good",
+        "hard",
+      ]);
+      expect(preview.good.getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it("previews an existing flashcard review item", async () => {
+      await flashcardsClient.create({
+        activityId,
+        back: "Verso",
+        front: "Frente",
+      });
+      await reviewClient.ensureReviewItems({ activityId });
+      const [item] = await reviewClient.listDue({ activityId });
+
+      const preview = await reviewClient.previewRatings({
+        reviewItemId: item.id,
+      });
+
+      expect(preview.easy.getTime()).toBeGreaterThan(preview.again.getTime());
+    });
+  });
+
   describe("markActivityDifficulty", () => {
     async function createQuizActivity() {
       const created = await activitiesClient.create({

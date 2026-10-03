@@ -22,6 +22,12 @@ export const listActivityReviewStateInputSchema = z.object({
   moduleId: z.string(),
 });
 
+/** One or the other: a flashcard's review item, or a whole Activity. */
+export const previewRatingsInputSchema = z.union([
+  z.object({ reviewItemId: z.string() }),
+  z.object({ activityId: z.string() }),
+]);
+
 export const activityIdInputSchema = z.object({
   activityId: z.string(),
 });

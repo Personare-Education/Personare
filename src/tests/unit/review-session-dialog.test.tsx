@@ -30,15 +30,15 @@ import type { Activity } from "@/components/activities-data-table";
 vi.mock("@/actions/review", () => ({
   ensureReviewItems: vi.fn(),
   listDue: vi.fn(),
+  previewItemRatings: vi.fn(),
   submitRating: vi.fn(),
 }));
 vi.mock("@/actions/attachments", () => ({
   getAttachmentImageDataUrl: vi.fn(),
 }));
 
-const { ensureReviewItems, listDue, submitRating } = await import(
-  "@/actions/review"
-);
+const { ensureReviewItems, listDue, previewItemRatings, submitRating } =
+  await import("@/actions/review");
 const { default: ReviewSessionDialog } = await import(
   "@/components/review-session-dialog"
 );
@@ -98,8 +98,16 @@ function renderSession(activity: Activity | null = REVIEW_ACTIVITY) {
   return { onOpenChange };
 }
 
+const DAY = 24 * 60 * 60 * 1000;
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(previewItemRatings).mockResolvedValue({
+    again: new Date(Date.now() + 10 * 60 * 1000),
+    easy: new Date(Date.now() + 8 * DAY),
+    good: new Date(Date.now() + 2 * DAY),
+    hard: new Date(Date.now() + DAY),
+  });
   vi.mocked(ensureReviewItems).mockResolvedValue(undefined);
   vi.mocked(listDue).mockResolvedValue(DUE_ITEMS);
 });
@@ -310,5 +318,24 @@ describe("ReviewSessionDialog (Issue #16)", () => {
     expect(
       await screen.findByText(i18n.t("reviewSessionCompleteMessage"))
     ).toBeInTheDocument();
+  });
+
+  /** docs/specs/rating-clarity.md AC-1 */
+  it("shows what each rating would schedule once the answer is revealed", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("revealAnswerAction") })
+    );
+
+    const again = screen.getByRole("button", {
+      name: i18n.t("ratingAgainAction"),
+    });
+    await waitFor(() =>
+      expect(again).toHaveAccessibleDescription("10 minutes")
+    );
+    expect(previewItemRatings).toHaveBeenCalledWith(DUE_ITEMS[0].id);
   });
 });

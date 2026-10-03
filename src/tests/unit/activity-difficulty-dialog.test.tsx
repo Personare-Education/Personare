@@ -15,11 +15,16 @@ import "@/localization/i18n";
 vi.mock("@/actions/review", () => ({
   clearPendingActivityRating: vi.fn(),
   markActivityDifficulty: vi.fn(),
+  previewActivityRatings: vi.fn(),
 }));
 
-const { clearPendingActivityRating, markActivityDifficulty } = await import(
-  "@/actions/review"
-);
+const {
+  clearPendingActivityRating,
+  markActivityDifficulty,
+  previewActivityRatings,
+} = await import("@/actions/review");
+const DAY = 24 * 60 * 60 * 1000;
+
 const { default: ActivityDifficultyDialog } = await import(
   "@/components/activity-difficulty-dialog"
 );
@@ -47,6 +52,12 @@ function renderDialog(activityId: string | null = ACTIVITY_ID) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(previewActivityRatings).mockResolvedValue({
+    again: new Date(Date.now() + DAY),
+    easy: new Date(Date.now() + 15 * DAY),
+    good: new Date(Date.now() + 4 * DAY),
+    hard: new Date(Date.now() + 2 * DAY),
+  });
   vi.mocked(markActivityDifficulty).mockResolvedValue({
     id: "r1",
   } as Awaited<ReturnType<typeof markActivityDifficulty>>);
@@ -64,16 +75,16 @@ describe("ActivityDifficultyDialog (Issue #103)", () => {
       screen.getByText("Historia do Brasil", { exact: false })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: i18n.t("ratingAgainAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingAgainAction") })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: i18n.t("ratingHardAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingHardAction") })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingGoodAction") })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: i18n.t("ratingEasyAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingEasyAction") })
     ).toBeInTheDocument();
   });
 
@@ -82,7 +93,7 @@ describe("ActivityDifficultyDialog (Issue #103)", () => {
     renderDialog();
 
     await user.click(
-      screen.getByRole("button", { name: i18n.t("ratingHardAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingHardAction") })
     );
 
     expect(markActivityDifficulty).toHaveBeenCalledWith(ACTIVITY_ID, "hard");
@@ -93,7 +104,7 @@ describe("ActivityDifficultyDialog (Issue #103)", () => {
     renderDialog();
 
     await user.click(
-      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingGoodAction") })
     );
 
     expect(clearPendingActivityRating).toHaveBeenCalledWith(ACTIVITY_ID);
@@ -104,10 +115,20 @@ describe("ActivityDifficultyDialog (Issue #103)", () => {
     const { onOpenChange, onRated } = renderDialog();
 
     await user.click(
-      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+      screen.getByRole("button", { name: i18n.t("activityRatingGoodAction") })
     );
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onRated).toHaveBeenCalled();
+  });
+
+  /** docs/specs/rating-clarity.md AC-1 */
+  it("shows what each rating would schedule", async () => {
+    renderDialog();
+
+    const good = await screen.findByRole("button", {
+      name: i18n.t("activityRatingGoodAction"),
+    });
+    await vi.waitFor(() => expect(good).toHaveAccessibleDescription("4 days"));
   });
 });
