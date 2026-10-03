@@ -14,6 +14,7 @@ import {
   RatingButtons,
   type RatingValue,
 } from "@/components/rating-buttons";
+import SessionEndCard from "@/components/session-end-card";
 import { Button } from "@/components/ui/button";
 import { resolveProgramColor } from "@/constants/program-appearance";
 
@@ -160,7 +161,16 @@ export default function FlashcardReviewPanel({
         <p>{t("reviewNothingDueMessage")}</p>
       ) : null}
       {showEndMessages && sessionComplete ? (
-        <p>{t("reviewSessionCompleteMessage")}</p>
+        // Every due card has to be rated to get here, so all of them were
+        // (docs/specs/bolder-cards.md AC-3).
+        <SessionEndCard
+          color={resolveProgramColor(color)}
+          title={t("reviewSessionCompleteMessage")}
+        >
+          <p className="text-foreground/75 text-sm">
+            {t("reviewSessionCompleteCount", { count: initialCount })}
+          </p>
+        </SessionEndCard>
       ) : null}
       {currentItem ? (
         <>

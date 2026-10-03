@@ -75,7 +75,10 @@ const PROGRAM_ICON_MAP: Record<string, LucideIcon> = Object.fromEntries(
 
 export const DEFAULT_PROGRAM_ICON_NAME = "BookOpen";
 
-/** Tailwind's 500-shade palette, same spread (warm to cool, plus neutrals) as the reference habit-tracker's color picker. */
+/** The brand blue (PRODUCT.md), shared with the website: a new program starts in it (docs/specs/bolder-cards.md AC-1). */
+export const BRAND_PROGRAM_COLOR = "#3b6cf6";
+
+/** Tailwind's 500-shade palette, same spread (warm to cool, plus neutrals) as the reference habit-tracker's color picker, with the brand blue in place of Tailwind's. */
 export const PROGRAM_COLORS: string[] = [
   "#ef4444",
   "#f97316",
@@ -87,7 +90,7 @@ export const PROGRAM_COLORS: string[] = [
   "#14b8a6",
   "#06b6d4",
   "#0ea5e9",
-  "#3b82f6",
+  BRAND_PROGRAM_COLOR,
   "#6366f1",
   "#8b5cf6",
   "#a855f7",
@@ -98,7 +101,7 @@ export const PROGRAM_COLORS: string[] = [
   "#9ca3af",
 ];
 
-export const [DEFAULT_PROGRAM_COLOR] = PROGRAM_COLORS;
+export const DEFAULT_PROGRAM_COLOR = BRAND_PROGRAM_COLOR;
 
 export function resolveProgramIcon(name: string | null): LucideIcon {
   const icon = name ? PROGRAM_ICON_MAP[name] : null;

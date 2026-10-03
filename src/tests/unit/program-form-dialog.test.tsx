@@ -17,7 +17,7 @@ import "@/localization/i18n";
  */
 
 const EXISTING_PROGRAM: Program = {
-  color: "#3b82f6",
+  color: "#6366f1",
   createdAt: new Date("2026-01-01"),
   icon: "Rocket",
   id: "11111111-1111-1111-1111-111111111111",
@@ -60,7 +60,7 @@ describe("ProgramFormDialog icon/color picker (Issue #99 revision)", () => {
       "aria-pressed",
       "true"
     );
-    expect(screen.getByRole("button", { name: "#3b82f6" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "#6366f1" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
@@ -85,9 +85,9 @@ describe("ProgramFormDialog icon/color picker (Issue #99 revision)", () => {
     const user = userEvent.setup();
     renderDialog();
 
-    await user.click(screen.getByRole("button", { name: "#3b82f6" }));
+    await user.click(screen.getByRole("button", { name: "#6366f1" }));
 
-    expect(screen.getByRole("button", { name: "#3b82f6" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "#6366f1" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
@@ -99,11 +99,11 @@ describe("ProgramFormDialog icon/color picker (Issue #99 revision)", () => {
 
     await user.type(screen.getByLabelText("Name"), "Novo Programa");
     await user.click(screen.getByRole("button", { name: "Brain" }));
-    await user.click(screen.getByRole("button", { name: "#3b82f6" }));
+    await user.click(screen.getByRole("button", { name: "#6366f1" }));
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(onSubmit).toHaveBeenCalledWith({
-      color: "#3b82f6",
+      color: "#6366f1",
       icon: "Brain",
       name: "Novo Programa",
     });

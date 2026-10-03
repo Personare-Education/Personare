@@ -9,6 +9,7 @@ import type { Activity } from "@/components/activities-data-table";
 import FlashcardReviewPanel from "@/components/flashcard-review-panel";
 import QuizRunnerDialog from "@/components/quiz-runner-dialog";
 import { RatingButtons, type RatingValue } from "@/components/rating-buttons";
+import SessionEndCard from "@/components/session-end-card";
 import TodayItemCard from "@/components/today-item-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { resolveProgramColor } from "@/constants/program-appearance";
 import type { TodayItem } from "@/utils/today-queue";
 
 /** Where an opened activity is: about to be opened, or waiting for its rating. */
@@ -119,12 +121,62 @@ function ActivityStepPanel({ item, onRate }: ActivityStepProps) {
       {item.activityType === "quiz" ? (
         <QuizRunnerDialog
           activity={isQuizOpen ? toActivity(item) : null}
+          color={item.programColor}
           onFinished={handleQuizFinished}
           onOpenChange={handleQuizOpenChange}
           open={isQuizOpen}
         />
       ) : null}
     </div>
+  );
+}
+
+interface ProgramTally {
+  color: string | null;
+  count: number;
+  name: string;
+}
+
+/**
+ * What a finished session reviewed, one row per program in its color
+ * (docs/specs/bolder-cards.md AC-2). Skipped items are not in `items`.
+ */
+function ReviewedByProgram({ items }: { items: TodayItem[] }) {
+  const { t } = useTranslation();
+  if (items.length === 0) {
+    return null;
+  }
+
+  const tallies = new Map<string, ProgramTally>();
+  for (const item of items) {
+    const tally = tallies.get(item.programId) ?? {
+      color: item.programColor,
+      count: 0,
+      name: item.programName,
+    };
+    tally.count += 1;
+    tallies.set(item.programId, tally);
+  }
+
+  return (
+    <ul
+      aria-label={t("todaySessionByProgramLabel")}
+      className="flex flex-col gap-1.5 border-foreground/10 border-t pt-3"
+    >
+      {Array.from(tallies, ([programId, tally]) => (
+        <li className="flex items-center gap-2 text-sm" key={programId}>
+          <span
+            aria-hidden="true"
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: resolveProgramColor(tally.color) }}
+          />
+          <span className="min-w-0 flex-1 truncate">{tally.name}</span>
+          <span className="text-foreground/70 tabular-nums">
+            {t("todaySessionProgramCount", { count: tally.count })}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -149,7 +201,7 @@ export default function TodaySessionDialog({
   // refreshing as reviews are done, and must not reshuffle the session.
   const [queue, setQueue] = useState<TodayItem[]>(items);
   const [index, setIndex] = useState(0);
-  const [reviewedCount, setReviewedCount] = useState(0);
+  const [reviewed, setReviewed] = useState<TodayItem[]>([]);
 
   // Only when the session (re)opens: later updates of `items` are the
   // screen refreshing behind it.
@@ -158,7 +210,7 @@ export default function TodaySessionDialog({
     if (open) {
       setQueue(items);
       setIndex(0);
-      setReviewedCount(0);
+      setReviewed([]);
     }
   }, [open]);
 
@@ -175,7 +227,7 @@ export default function TodaySessionDialog({
         return;
       }
       markActivityDifficulty(current.activityId, rating).then(() => {
-        setReviewedCount((prev) => prev + 1);
+        setReviewed((prev) => [...prev, current]);
         advance();
       });
     },
@@ -184,12 +236,12 @@ export default function TodaySessionDialog({
 
   const handleDeckDone = useCallback(
     (ratedCount: number) => {
-      if (ratedCount > 0) {
-        setReviewedCount((prev) => prev + 1);
+      if (ratedCount > 0 && current) {
+        setReviewed((prev) => [...prev, current]);
       }
       advance();
     },
-    [advance]
+    [advance, current]
   );
 
   const handleCloseClick = useCallback(() => {
@@ -244,14 +296,17 @@ export default function TodaySessionDialog({
           </>
         ) : null}
         {isDone ? (
-          <div className="flex flex-col items-start gap-2 py-2">
-            <p className="font-medium font-serif text-2xl">
-              {t("todaySessionDoneTitle")}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {t("todaySessionDoneMessage", { count: reviewedCount })}
-            </p>
-            <DialogFooter className="w-full">
+          <div className="flex flex-col gap-4">
+            <SessionEndCard
+              color="var(--brand)"
+              title={t("todaySessionDoneTitle")}
+            >
+              <p className="text-foreground/75 text-sm">
+                {t("todaySessionDoneMessage", { count: reviewed.length })}
+              </p>
+              <ReviewedByProgram items={reviewed} />
+            </SessionEndCard>
+            <DialogFooter>
               <Button onClick={handleCloseClick}>
                 {t("concludeQuizEditingAction")}
               </Button>

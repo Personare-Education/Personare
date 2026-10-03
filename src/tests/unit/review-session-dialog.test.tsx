@@ -318,6 +318,15 @@ describe("ReviewSessionDialog (Issue #16)", () => {
     expect(
       await screen.findByText(i18n.t("reviewSessionCompleteMessage"))
     ).toBeInTheDocument();
+    // docs/specs/bolder-cards.md AC-3: on a card, with how many were rated.
+    expect(
+      screen.getByText(i18n.t("reviewSessionCompleteCount", { count: 1 }))
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getByText(i18n.t("reviewSessionCompleteMessage"))
+        .closest("[data-slot='session-end-card']")
+    ).not.toBeNull();
   });
 
   /** docs/specs/rating-clarity.md AC-1 */

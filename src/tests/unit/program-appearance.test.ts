@@ -39,4 +39,10 @@ describe("program-appearance (Issue #99 revision)", () => {
   it("has a default color that is part of the palette", () => {
     expect(PROGRAM_COLORS).toContain(DEFAULT_PROGRAM_COLOR);
   });
+
+  /** docs/specs/bolder-cards.md AC-1 */
+  it("starts programs in the brand blue, not red", () => {
+    expect(DEFAULT_PROGRAM_COLOR).toBe("#3b6cf6");
+    expect(resolveProgramColor(null)).toBe("#3b6cf6");
+  });
 });
