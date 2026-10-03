@@ -193,7 +193,7 @@ function OptionRowContent({
       <SortableItemHandle asChild>
         <button
           aria-label={t("dragQuizOptionAction")}
-          className="flex w-6 shrink-0 items-center justify-center self-stretch rounded-md border border-muted-foreground/40 border-dashed text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="flex w-6 shrink-0 items-center justify-center self-stretch rounded-md border border-muted-foreground/40 border-dashed text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           title={t("dragQuizOptionAction")}
           type="button"
         >
