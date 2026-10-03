@@ -50,6 +50,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   sessão, o fim do dia, os próximos 7 dias e a notificação da bandeja contam do mesmo jeito: um baralho
   é uma atividade, e os cards dele são o detalhe. A notificação passa a contar o que vence até o fim
   do dia, como a tela Hoje.
+- **Configurações:** o tema virou o botão **Tema escuro**, com texto e estado ligado/desligado, e o
+  idioma escolhido fica destacado no azul da marca.
 - **Botões de avaliação com tom por nível:** Errei em vermelho, Difícil em âmbar, Bom em verde e
   Fácil no azul da marca, com fundo leve e borda no tom, no lugar de quatro botões pretos iguais.
 - **"Adicionar pergunta" e "Adicionar flashcard" ficaram discretos**, e **Concluir** é o único botão
@@ -82,6 +84,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 - **Barras de progresso** passam a informar a porcentagem a leitores de tela (o valor não chegava ao
   componente do Radix).
+- **Tema seguindo o sistema:** sem tema salvo, o app abre escuro quando o sistema está escuro. Antes
+  ele abria claro, e o primeiro clique no botão de tema não fazia nada.
+- **Contraste:** anel de foco no azul da marca (antes ~2,6:1 no claro), e o selo "Revisão hoje", os
+  números das boas-vindas, o ícone dos estados vazios e o "Correta" do editor acima de 4,5:1.
 - **Resultado do quiz:** voltou ao layout anterior, sem o cartão na cor do programa, que apertava a
   coluna e cortava o gráfico.
 - **Revisões de hoje:** o flashcard tem a mesma largura do cartão do item acima dele, o brilho dos

@@ -27,7 +27,7 @@ export default function EmptyState({
     <section
       className={cn("flex max-w-lg flex-col items-start gap-3 py-6", className)}
     >
-      <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+      <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand-text">
         <Icon aria-hidden="true" className="size-5" />
       </span>
       <h2 className="font-medium font-serif text-2xl leading-tight">{title}</h2>

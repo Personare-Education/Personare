@@ -20,8 +20,10 @@ export async function getCurrentTheme(): Promise<ThemePreferences> {
 }
 
 export async function setTheme(newTheme: ThemeMode) {
-  const isDarkMode = newTheme === "dark";
-  await ipc.client.theme.setThemeMode(newTheme);
+  // The page follows what Electron ends up using: with "system", a page left
+  // light on a dark system made the first toggle do nothing
+  // (docs/specs/audit-a11y-leftovers.md AC-4b).
+  const isDarkMode = await ipc.client.theme.setThemeMode(newTheme);
   localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, newTheme);
   updateDocumentTheme(isDarkMode);
 }

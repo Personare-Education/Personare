@@ -32,5 +32,7 @@ export const setThemeMode = os
         break;
     }
 
-    return nativeTheme.themeSource;
+    // Whether the app is dark now: with "system" only the main process
+    // knows (docs/specs/audit-a11y-leftovers.md AC-4b).
+    return nativeTheme.shouldUseDarkColors;
   });

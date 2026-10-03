@@ -19,6 +19,8 @@ export default function LangToggle() {
     >
       {langs.map((lang) => (
         <ToggleGroupItem
+          // The chosen language must stand out (docs/specs/audit-a11y-leftovers.md AC-3).
+          className="data-[state=on]:border-brand/40 data-[state=on]:bg-brand/10 data-[state=on]:text-brand-text"
           key={lang.key}
           size="lg"
           value={lang.key}

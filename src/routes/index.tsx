@@ -176,7 +176,7 @@ function Welcome({ replay = false }: { replay?: boolean }) {
           <li className="flex items-start gap-3 text-sm" key={key}>
             <span
               aria-hidden="true"
-              className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/10 font-medium text-brand text-xs tabular-nums"
+              className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/10 font-medium text-brand-text text-xs tabular-nums"
             >
               {index + 1}
             </span>

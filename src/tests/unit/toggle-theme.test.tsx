@@ -1,37 +1,59 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
-import { expect, test } from "vitest";
-import ToggleTheme from "@/components/toggle-theme";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import "@/localization/i18n";
 
-test("renders ToggleTheme", () => {
-  const { getByRole } = render(<ToggleTheme />);
-  const isButton = getByRole("button");
+vi.mock("@/actions/theme", () => ({
+  toggleTheme: vi.fn(() => {
+    document.documentElement.classList.toggle("dark");
+    return Promise.resolve();
+  }),
+}));
 
-  expect(isButton).toBeInTheDocument();
+const { default: ToggleTheme } = await import("@/components/toggle-theme");
+
+afterEach(() => {
+  document.documentElement.classList.remove("dark");
 });
 
-test("has icon", () => {
-  const { getByRole } = render(<ToggleTheme />);
-  const button = getByRole("button");
-  const icon = button.querySelector("svg");
+describe("ToggleTheme", () => {
+  it("is a button with the moon icon", () => {
+    render(<ToggleTheme />);
 
-  expect(icon).toBeInTheDocument();
-});
+    const svg = screen.getByRole("button").querySelector("svg");
+    expect(svg?.classList).toContain("lucide-moon");
+  });
 
-test("is moon icon", () => {
-  const svgIconClassName: string = "lucide-moon";
-  const { getByRole } = render(<ToggleTheme />);
-  const svg = getByRole("button").querySelector("svg");
+  /** docs/specs/audit-a11y.md AC-1 */
+  it("has an accessible name", () => {
+    render(<ToggleTheme />);
 
-  expect(svg?.classList).toContain(svgIconClassName);
-});
+    expect(
+      screen.getByRole("button", { name: i18n.t("toggleThemeAction") })
+    ).toBeInTheDocument();
+  });
 
-/** docs/specs/audit-a11y.md AC-1 */
-test("has an accessible name", () => {
-  const { getByRole } = render(<ToggleTheme />);
+  /** docs/specs/audit-a11y-leftovers.md AC-4 */
+  it("says in words, and as its pressed state, whether the dark theme is on", async () => {
+    const user = userEvent.setup();
+    render(<ToggleTheme />);
 
-  expect(
-    getByRole("button", { name: i18n.t("toggleThemeAction") })
-  ).toBeInTheDocument();
+    const button = screen.getByRole("button", {
+      name: i18n.t("toggleThemeAction"),
+    });
+    expect(button).toHaveTextContent(i18n.t("toggleThemeAction"));
+    expect(button).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(button);
+
+    expect(button).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("starts pressed when the dark theme is already on", () => {
+    document.documentElement.classList.add("dark");
+    render(<ToggleTheme />);
+
+    expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "true");
+  });
 });
