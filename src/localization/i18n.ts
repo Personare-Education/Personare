@@ -389,6 +389,7 @@ i18n.use(initReactI18next).init({
         todayCardCount_one: "{{count}} card",
         todayCardCount_other: "{{count}} cards",
         todayDayDoneTitle: "Day done",
+        todayDoneByProgramLabel: "Reviewed today",
         todayDueCardsDetail_one: "{{count}} card",
         todayDueCardsDetail_other: "{{count}} cards",
         todayDueSummary_one: "{{count}} activity for today",
@@ -397,6 +398,10 @@ i18n.use(initReactI18next).init({
         todayGoToProgramsAction: "Go to Programs",
         todayLoadError: "Couldn't load today's reviews.",
         todayNextReview: "Next review: {{date}}",
+        todayNextReviewWithCount_one:
+          "Next review: {{date}} · {{count}} activity",
+        todayNextReviewWithCount_other:
+          "Next review: {{date}} · {{count}} activities",
         todayNothingScheduled:
           "Reviews show up here once you study an activity and say how it went.",
         todayOpenLinkAction: "Open link",
@@ -839,6 +844,7 @@ i18n.use(initReactI18next).init({
         todayCardCount_one: "{{count}} card",
         todayCardCount_other: "{{count}} cards",
         todayDayDoneTitle: "Dia concluído",
+        todayDoneByProgramLabel: "Revisado hoje",
         todayDueCardsDetail_one: "{{count}} card",
         todayDueCardsDetail_other: "{{count}} cards",
         todayDueSummary_one: "{{count}} atividade para hoje",
@@ -847,6 +853,10 @@ i18n.use(initReactI18next).init({
         todayGoToProgramsAction: "Ir para Programas",
         todayLoadError: "Não foi possível carregar as revisões de hoje.",
         todayNextReview: "Próxima revisão: {{date}}",
+        todayNextReviewWithCount_one:
+          "Próxima revisão: {{date}} · {{count}} atividade",
+        todayNextReviewWithCount_other:
+          "Próxima revisão: {{date}} · {{count}} atividades",
         todayNothingScheduled:
           "As revisões aparecem aqui depois que você estuda uma atividade e diz como foi.",
         todayOpenLinkAction: "Abrir link",

@@ -331,4 +331,37 @@ describe("TodayPage", () => {
       screen.queryByRole("heading", { name: i18n.t("todayWelcomeTitle") })
     ).not.toBeInTheDocument();
   });
+
+  /** docs/specs/delight-day-done.md AC-1, AC-2, AC-4 */
+  it("closes the day with the streak up front and what each program got", async () => {
+    vi.mocked(listSchedule).mockResolvedValue([
+      row({
+        dueDate: new Date(NOW.getTime() + 20 * 24 * 60 * 60 * 1000),
+        id: "far",
+      }),
+    ]);
+    const todayKey = [
+      NOW.getFullYear(),
+      String(NOW.getMonth() + 1).padStart(2, "0"),
+      String(NOW.getDate()).padStart(2, "0"),
+    ].join("-");
+    vi.mocked(listActivityCounts).mockResolvedValue([
+      { activities: 2, count: 3, date: todayKey, programId: "p1" },
+    ]);
+    renderPage();
+
+    expect(
+      await screen.findByText(i18n.t("todayStreak", { count: 1 }))
+    ).toBeInTheDocument();
+    const byProgram = screen.getByRole("list", {
+      name: i18n.t("todayDoneByProgramLabel"),
+    });
+    const rows = within(byProgram).getAllByRole("listitem");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent("Cálculo I");
+    // Nothing in the next 7 days: no strip of zeros.
+    expect(
+      screen.queryByText(i18n.t("todayUpcomingTitle"))
+    ).not.toBeInTheDocument();
+  });
 });
