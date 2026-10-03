@@ -41,7 +41,9 @@ import {
   QuestionnaireItem,
   QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
+import { resolveProgramColor } from "@/constants/program-appearance";
 import { useDialogShake } from "@/hooks/use-dialog-shake";
+import { programTintStyle } from "@/utils/program-tint";
 import {
   calculateQuizScore,
   formatQuizDuration,
@@ -66,6 +68,8 @@ interface QuizRunnerQuestion {
 
 interface QuizRunnerDialogProps {
   activity: Activity | null;
+  /** The program's color, for the result card (docs/specs/bolder-cards.md AC-4). */
+  color?: string | null;
   onFinished: (activity: Activity) => void;
   onOpenChange: (open: boolean) => void;
   open: boolean;
@@ -154,6 +158,7 @@ function QuizRunnerReviewRow({ answers, question }: QuizRunnerReviewRowProps) {
 interface QuizRunnerResultProps {
   answers: QuizAnswers;
   averageTimeMs: number;
+  color: string;
   questions: QuizRunnerQuestion[];
   result: QuizScore;
   totalTimeMs: number;
@@ -229,7 +234,7 @@ function QuizRunnerTimeCard({
       aria-hidden={!shown}
       aria-labelledby={labelId}
       className={cn(
-        "flex flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center",
+        "flex flex-col items-center gap-1 text-center",
         shown ? "fade-in-0 animate-in duration-500" : "invisible"
       )}
     >
@@ -240,7 +245,7 @@ function QuizRunnerTimeCard({
         startWhen={shown}
         to={Math.round(durationMs / 1000)}
       />
-      <figcaption className="text-muted-foreground text-xs" id={labelId}>
+      <figcaption className="text-foreground/70 text-xs" id={labelId}>
         {label}
       </figcaption>
     </figure>
@@ -250,6 +255,7 @@ function QuizRunnerTimeCard({
 function QuizRunnerResult({
   answers,
   averageTimeMs,
+  color,
   questions,
   result,
   totalTimeMs,
@@ -270,7 +276,12 @@ function QuizRunnerResult({
 
   return (
     <div className="grid min-h-0 gap-6 py-4 sm:grid-cols-[minmax(0,1fr)_15rem]">
-      <div className="flex flex-col items-center gap-4 sm:order-last">
+      {/* The score on a card in the program's color (docs/specs/bolder-cards.md AC-4). */}
+      <div
+        className="flex flex-col items-center gap-4 self-start rounded-xl bg-card p-4 sm:order-last"
+        data-slot="quiz-score-card"
+        style={programTintStyle(color)}
+      >
         <RadialChartStacked
           animationDuration={QUIZ_COUNT_UP_SECONDS * 1000}
           centerLabel={
@@ -296,13 +307,13 @@ function QuizRunnerResult({
             },
           ]}
         />
-        <p className="text-muted-foreground text-sm">
+        <p className="text-foreground/75 text-sm">
           {t("quizResultMessage", {
             correct: result.correct,
             total: result.total,
           })}
         </p>
-        <div className="grid w-full grid-cols-2 gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 border-foreground/10 border-t pt-3">
           <QuizRunnerTimeCard
             durationMs={averageTimeMs}
             label={t("quizAverageTimeLabel")}
@@ -342,6 +353,7 @@ function QuizRunnerResult({
 
 export default function QuizRunnerDialog({
   activity,
+  color = null,
   onFinished,
   onOpenChange,
   open,
@@ -496,6 +508,7 @@ export default function QuizRunnerDialog({
             <QuizRunnerResult
               answers={answers}
               averageTimeMs={averageTimeMs}
+              color={resolveProgramColor(color)}
               questions={questions}
               result={result}
               totalTimeMs={totalTimeMs}

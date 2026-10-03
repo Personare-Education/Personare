@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -212,5 +212,36 @@ describe("TodaySessionDialog", () => {
         screen.getByText(i18n.t("todaySessionDoneMessage", { count: 1 }))
       ).toBeInTheDocument();
     });
+  });
+
+  /** docs/specs/bolder-cards.md AC-2 */
+  it("ends on a brand card that lists what was reviewed by program", async () => {
+    const user = userEvent.setup();
+    const otherProgramLink = {
+      ...LINK,
+      programId: "q",
+      programName: "Anatomia",
+    };
+    renderSession([PDF, otherProgramLink]);
+    await user.click(button(i18n.t("todayOpenPdfAction")));
+    await user.click(button(i18n.t("activityRatingGoodAction")));
+    await screen.findByText(LINK.activityTitle);
+    await user.click(button(i18n.t("todaySkipAction")));
+
+    const title = await screen.findByRole("heading", {
+      name: i18n.t("todaySessionDoneTitle"),
+    });
+    const card = title.closest<HTMLElement>("[data-slot='session-end-card']");
+    expect(card?.style.backgroundImage).toContain("var(--brand)");
+
+    const summary = screen.getByRole("list", {
+      name: i18n.t("todaySessionByProgramLabel"),
+    });
+    const rows = within(summary).getAllByRole("listitem");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent(PDF.programName);
+    expect(rows[0]).toHaveTextContent(
+      i18n.t("todaySessionProgramCount", { count: 1 })
+    );
   });
 });

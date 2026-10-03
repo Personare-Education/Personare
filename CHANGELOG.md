@@ -8,6 +8,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Fins de sessão em cartões na cor do programa.** "Tudo revisado" aparece num cartão no azul da
+  marca, com o que foi revisado em cada programa, na cor dele. O fim da revisão de um baralho mostra,
+  num cartão na cor do programa, quantos cards foram revisados. No resultado do quiz, a pontuação e os
+  tempos ficam num cartão na cor do programa.
 - **Desfazer exclusões.** Depois de excluir um programa, módulo, atividade, pergunta ou flashcard,
   um aviso com **Desfazer** traz de volta o item e tudo o que aquela exclusão escondeu (o que já
   estava excluído antes continua excluído). Clicar em Desfazer não fecha o gerenciador aberto.
@@ -32,6 +36,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Programas novos nascem no azul da marca**, e não mais em vermelho. Na paleta, o azul da marca
+  substitui o azul anterior, que era quase igual. Programas que já existem continuam com a cor deles.
 - **Tabela de atividades:** a coluna "Progresso" passa a se chamar "Última avaliação", e a próxima
   revisão aparece como "hoje", "amanhã", "em 4 dias" ou "atrasada há 2 dias", com a data completa ao
   passar o mouse.

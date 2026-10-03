@@ -117,13 +117,17 @@ async function waitForCountUps() {
   await act(() => vi.advanceTimersByTimeAsync(QUIZ_COUNT_UP_MS * 2));
 }
 
-function renderRunner(activity: Activity | null = QUIZ_ACTIVITY) {
+function renderRunner(
+  activity: Activity | null = QUIZ_ACTIVITY,
+  color: string | null = null
+) {
   const onFinished = vi.fn();
   const onOpenChange = vi.fn();
 
   render(
     <QuizRunnerDialog
       activity={activity}
+      color={color}
       onFinished={onFinished}
       onOpenChange={onOpenChange}
       open={activity !== null}
@@ -311,6 +315,29 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     expect(within(averageTimeCard).getByText("10s")).toBeInTheDocument();
     expect(within(totalTimeCard).getByText("20s")).toBeInTheDocument();
     expect(screen.queryAllByRole("radio")).toHaveLength(0);
+  });
+
+  /** docs/specs/bolder-cards.md AC-4 */
+  it("shows the score on a card in the quiz's program color", async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+    renderRunner(QUIZ_ACTIVITY, "#22c55e");
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    await user.click(screen.getAllByRole("radio")[1]);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await screen.findByText(RUNNER_QUESTIONS[1].text);
+    await user.click(screen.getAllByRole("radio")[1]);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
+    );
+
+    const card = screen
+      .getByText(i18n.t("quizResultMessage", { correct: 2, total: 2 }))
+      .closest<HTMLElement>("[data-slot='quiz-score-card']");
+    expect(card?.style.backgroundImage).toContain("#22c55e");
   });
 
   /**
