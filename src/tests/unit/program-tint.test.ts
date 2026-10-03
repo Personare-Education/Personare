@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { programTintStyle } from "@/utils/program-tint";
 
+const DOWNWARD_SHADOW = /0 \d+px \d+px -\d+px color-mix\(in srgb, #22c55e/;
+
 /** docs/specs/polish.md AC-4: depth with an offset, not a zero-offset halo. */
 describe("programTintStyle", () => {
   it("keeps the 1px ring in the program's color", () => {
@@ -13,8 +15,6 @@ describe("programTintStyle", () => {
     const { boxShadow } = programTintStyle("#22c55e");
 
     expect(boxShadow).not.toContain("0 0 20px");
-    expect(boxShadow).toMatch(
-      /0 \d+px \d+px -\d+px color-mix\(in srgb, #22c55e/
-    );
+    expect(boxShadow).toMatch(DOWNWARD_SHADOW);
   });
 });
