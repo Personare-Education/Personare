@@ -45,6 +45,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Calendário no sistema do app:** título como as outras páginas, eventos na cor do programa com
+  "Módulo · N atividades", número do dia no topo da célula e dias de fora do mês apagados. Sem o
+  Google Agenda conectado, o botão de sincronizar não aparece, só a frase que explica como conectar.
+- **"Última avaliação" com uma escala só:** a tabela usa sempre as palavras das atividades, também para
+  baralhos, e cada selo leva o tom da sua avaliação, como os botões.
 - **Atividades e Módulos menos "painel de administração":** os baralhos mostram a última avaliação e a
   próxima revisão (do card avaliado por último e do que vence primeiro), uma atividade nunca avaliada
   diz "Ainda não avaliada", o selo de revisão fica na coluna "Próxima revisão" (ou ao lado do nome do
@@ -94,6 +99,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Fixed
 
+- **Foco sempre visível:** nenhum anel de foco translúcido (eram ~1,4:1 a ~2:1); o que não tem estilo
+  próprio ganha um contorno sólido no azul da marca.
 - **Barras de progresso** passam a informar a porcentagem a leitores de tela (o valor não chegava ao
   componente do Radix).
 - **Tema seguindo o sistema:** sem tema salvo, o app abre escuro quando o sistema está escuro. Antes
