@@ -50,7 +50,7 @@ const ACTIVITY_TYPE_ICONS: Record<
 };
 
 const CARD_CLASS_NAME =
-  "flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-sm outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/10";
+  "flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-sm outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring data-[state=checked]:border-primary data-[state=checked]:bg-primary/10";
 
 /**
  * Creating a Quiz: Details -> Source -> Import (docs/specs/quiz-ai-import.md).

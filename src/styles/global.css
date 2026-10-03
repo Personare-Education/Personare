@@ -181,7 +181,14 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
+  }
+  /* What gets keyboard focus without a style of its own still shows it: a
+     solid ring in --ring, ~4.5:1 (docs/specs/focus-rings.md AC-3). Components
+     with their own focus style win, since utilities come after base. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground overflow-hidden font-sans antialiased;

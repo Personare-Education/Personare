@@ -106,7 +106,7 @@ export default function TodayItemCard({
       <button
         className={cn(
           className,
-          "cursor-pointer outline-none transition-transform hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ring/40 motion-reduce:transition-none"
+          "cursor-pointer outline-none transition-transform hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
         )}
         onClick={handleClick}
         style={style}
