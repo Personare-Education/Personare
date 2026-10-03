@@ -51,10 +51,34 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  // A notice's Undo is not "outside": clicking it must not close the dialog
+  // (docs/specs/safety-net.md AC-3a).
+  const handleInteractOutside = React.useCallback(
+    (
+      event: Parameters<
+        NonNullable<
+          React.ComponentProps<typeof DialogPrimitive.Content>["onInteractOutside"]
+        >
+      >[0]
+    ) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("[data-sonner-toaster]")
+      ) {
+        event.preventDefault()
+        return
+      }
+      onInteractOutside?.(event)
+    },
+    [onInteractOutside]
+  )
+
+
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -65,6 +89,7 @@ function DialogContent({
           className
         )}
         {...props}
+        onInteractOutside={handleInteractOutside}
       >
         {children}
         {showCloseButton && (

@@ -16,6 +16,8 @@
    de uma pergunta. A lista se atualiza.
 3. O que tinha sido excluído **antes, por conta própria**, continua excluído. A cascata só reverte as
    linhas com o mesmo `deletedAt` da exclusão desfeita.
+3a. Clicar em **Desfazer** com um diálogo aberto (o gerenciador de perguntas ou de flashcards) não
+   fecha o diálogo: o aviso não conta como "clicar fora".
 4. A confirmação de excluir programa, módulo ou atividade avisa que dá para desfazer logo em seguida,
    no lugar de "nada é removido permanentemente" (que não tinha como ser usado).
 

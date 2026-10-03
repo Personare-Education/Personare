@@ -8,6 +8,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Desfazer exclusões.** Depois de excluir um programa, módulo, atividade, pergunta ou flashcard,
+  um aviso com **Desfazer** traz de volta o item e tudo o que aquela exclusão escondeu (o que já
+  estava excluído antes continua excluído). Clicar em Desfazer não fecha o gerenciador aberto.
+- **Quiz mais seguro:** "Pergunta anterior" para voltar uma pergunta mantendo a resposta, um aviso
+  na pergunta ainda sem resposta (ela conta como errada) e uma confirmação antes de sair do quiz com
+  respostas marcadas.
 - **Tela "Hoje", a nova tela de abertura.** Diz quantas revisões vencem hoje (e quantas estão
   atrasadas), lista o que vence agrupado por programa, cada item num cartão na cor do seu programa, e
   tem um único **Começar** que percorre o dia inteiro: baralhos com o cartão que gira, PDFs e links
