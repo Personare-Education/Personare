@@ -722,6 +722,55 @@ describe("review IPC namespace (Issue #16)", () => {
       expect(state[0].dueDate).toBeInstanceOf(Date);
     });
 
+    /** docs/specs/layout-tables.md AC-1 */
+    it("rolls a deck's cards up into one row: the earliest due date and the last rating", async () => {
+      const program = await programsClient.create({ name: "Programa D" });
+      const module_ = await modulesClient.create({
+        name: "Modulo D",
+        programId: program.id,
+      });
+      const deck = await activitiesClient.create({
+        moduleId: module_.id,
+        title: "Baralho D",
+        type: "flashcard_deck",
+      });
+      await flashcardsClient.create({
+        activityId: deck.id,
+        back: "V1",
+        front: "F1",
+      });
+      await flashcardsClient.create({
+        activityId: deck.id,
+        back: "V2",
+        front: "F2",
+      });
+      await reviewClient.ensureReviewItems({ activityId: deck.id });
+
+      const before = await reviewClient.listActivityReviewState({
+        moduleId: module_.id,
+      });
+      expect(before).toHaveLength(1);
+      expect(before[0]).toMatchObject({
+        activityId: deck.id,
+        lastRating: "",
+        scale: "flashcard",
+      });
+
+      const due = await reviewClient.listDue({ activityId: deck.id });
+      await reviewClient.submitRating({
+        rating: "hard",
+        reviewItemId: due[0].id,
+      });
+
+      const after = await reviewClient.listActivityReviewState({
+        moduleId: module_.id,
+      });
+      expect(after).toHaveLength(1);
+      expect(after[0].lastRating).toBe("hard");
+      // The other card, never rated, is still due now: the earliest date.
+      expect(after[0].dueDate.getTime()).toBeLessThanOrEqual(Date.now());
+    });
+
     it("does not return review state for Activities in a different module", async () => {
       const program = await programsClient.create({ name: "Programa Y" });
       const moduleA = await modulesClient.create({

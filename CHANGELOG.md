@@ -45,6 +45,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Atividades e Módulos menos "painel de administração":** os baralhos mostram a última avaliação e a
+  próxima revisão (do card avaliado por último e do que vence primeiro), uma atividade nunca avaliada
+  diz "Ainda não avaliada", o selo de revisão fica na coluna "Próxima revisão" (ou ao lado do nome do
+  módulo), Editar e Excluir vão para o menu **Mais ações** e a linha pendente pulsa três vezes e para,
+  sem a faixa lateral.
 - **Uma unidade só para a contagem do dia: atividades.** Hoje diz "2 atividades para hoje · 3 cards",
   e a barra lateral, os cards de programa, a sessão ("1 de 2", com a barra na mesma posição), o fim da
   sessão, o fim do dia, os próximos 7 dias e a notificação da bandeja contam do mesmo jeito: um baralho

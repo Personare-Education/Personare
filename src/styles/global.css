@@ -273,8 +273,8 @@
 @layer components {
   .review-pulse {
     --review-pulse-color: var(--review-highlight);
-    box-shadow: inset 3px 0 0 var(--review-pulse-color);
-    animation: review-pulse 1.6s ease-in-out infinite;
+    /* Three pulses, then still; no side stripe (docs/specs/layout-tables.md AC-5). */
+    animation: review-pulse 1.6s ease-in-out 3;
   }
 
   .review-pulse-overdue {

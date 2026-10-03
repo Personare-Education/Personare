@@ -90,7 +90,8 @@ function renderTable(
   activities: Activity[] = ACTIVITIES,
   reviewStateByActivityId: Record<
     string,
-    { dueDate: Date; lastRating: string } | undefined
+    | { dueDate: Date; lastRating: string; scale?: "activity" | "flashcard" }
+    | undefined
   > = {}
 ) {
   const onEdit = vi.fn();
@@ -166,25 +167,33 @@ describe("ActivitiesDataTable", () => {
     }
   );
 
-  it("renders an edit and a delete action for every activity", () => {
+  /** docs/specs/layout-tables.md AC-4 */
+  it("keeps edit and delete in a 'More actions' menu on every row", () => {
     renderTable();
 
     expect(
-      screen.getAllByRole("button", { name: i18n.t("editActivityAction") })
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })
     ).toHaveLength(ACTIVITIES.length);
     expect(
-      screen.getAllByRole("button", { name: i18n.t("deleteActivityAction") })
-    ).toHaveLength(ACTIVITIES.length);
+      screen.queryByRole("button", { name: i18n.t("editActivityAction") })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("deleteActivityAction") })
+    ).toBeNull();
   });
 
   it("calls onEdit with the corresponding activity when its edit action is triggered", async () => {
     const user = userEvent.setup();
     const { onEdit } = renderTable();
 
-    const editButtons = screen.getAllByRole("button", {
-      name: i18n.t("editActivityAction"),
-    });
-    await user.click(editButtons[1]);
+    await user.click(
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })[1]
+    );
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("editActivityAction"),
+      })
+    );
 
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(ACTIVITIES[1]);
@@ -194,13 +203,62 @@ describe("ActivitiesDataTable", () => {
     const user = userEvent.setup();
     const { onRequestDelete } = renderTable();
 
-    const deleteButtons = screen.getAllByRole("button", {
-      name: i18n.t("deleteActivityAction"),
-    });
-    await user.click(deleteButtons[0]);
+    await user.click(
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })[0]
+    );
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("deleteActivityAction"),
+      })
+    );
 
     expect(onRequestDelete).toHaveBeenCalledTimes(1);
     expect(onRequestDelete).toHaveBeenCalledWith(ACTIVITIES[0]);
+  });
+
+  /** docs/specs/layout-tables.md AC-1 */
+  it("shows a deck's last rating in flashcard words", () => {
+    renderTable([ACTIVITIES[3]], {
+      [ACTIVITIES[3].id]: {
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        lastRating: "again",
+        scale: "flashcard",
+      },
+    });
+
+    expect(screen.getByText(i18n.t("ratingAgainAction"))).toBeInTheDocument();
+  });
+
+  /** docs/specs/layout-tables.md AC-2 */
+  it("says an activity was not rated yet instead of leaving the cell blank", () => {
+    renderTable([ACTIVITIES[1]]);
+
+    expect(
+      screen.getByText(i18n.t("activityNotRatedYetLabel"))
+    ).toBeInTheDocument();
+  });
+
+  /** docs/specs/layout-tables.md AC-3 */
+  it("puts the review chip in the next-review cell, not among the actions", () => {
+    render(
+      <ActivitiesDataTable
+        activities={[ACTIVITIES[1]]}
+        highlightByActivityId={{ [ACTIVITIES[1].id]: "today" }}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onViewPdf={vi.fn()}
+        reviewStateByActivityId={{}}
+      />
+    );
+
+    const chip = screen.getByText(i18n.t("reviewDueTodayLabel"));
+    const cells = Array.from(chip.closest("tr")?.querySelectorAll("td") ?? []);
+    expect(cells.indexOf(chip.closest("td") as HTMLTableCellElement)).toBe(3);
   });
 
   /**

@@ -16,7 +16,12 @@ import { openExternalLink } from "@/actions/shell";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
-import { RATING_LABEL_KEYS } from "@/components/rating-buttons";
+import {
+  RATING_LABEL_KEYS,
+  type RatingScale,
+  type RatingValue,
+} from "@/components/rating-buttons";
+import ReviewHighlightChip from "@/components/review-highlight-chip";
 import ReviewHighlightTableFrame from "@/components/review-highlight-table-frame";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import {
@@ -45,7 +50,10 @@ export interface Activity {
 
 export interface ActivityReviewState {
   dueDate: Date;
+  /** Empty until the activity (or, for a deck, any card) is rated. */
   lastRating: string;
+  /** Whose words the rating takes: a deck's are the flashcards'. */
+  scale?: RatingScale;
 }
 
 const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<string, string> = {
@@ -54,10 +62,6 @@ const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<string, string> = {
   pdf: "activityTypePdf",
   quiz: "activityTypeQuiz",
 };
-
-// A whole activity's rating, in its own words (docs/specs/rating-clarity.md AC-2).
-const RATING_TRANSLATION_KEYS: Record<string, string> =
-  RATING_LABEL_KEYS.activity;
 
 type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
@@ -171,6 +175,7 @@ function ActivityRow({
       ...(typeActions[activity.type] ?? []),
       {
         icon: <Pencil />,
+        inMenu: true,
         key: "edit",
         label: t("editActivityAction"),
         onSelect: () => onEdit(activity),
@@ -178,6 +183,7 @@ function ActivityRow({
       {
         destructive: true,
         icon: <Trash2 />,
+        inMenu: true,
         key: "delete",
         label: t("deleteActivityAction"),
         onSelect: () => onRequestDelete(activity),
@@ -211,21 +217,31 @@ function ActivityRow({
         <Badge variant="outline">{t(typeTranslationKey)}</Badge>
       </TableCell>
       <TableCell>
-        {reviewState ? (
+        {reviewState?.lastRating ? (
           <Badge
             variant={
               RATING_BADGE_VARIANTS[reviewState.lastRating] ?? "secondary"
             }
           >
+            {/* A whole activity's words, or a deck's flashcard words
+                (docs/specs/rating-clarity.md AC-2, layout-tables.md AC-1). */}
             {t(
-              RATING_TRANSLATION_KEYS[reviewState.lastRating] ??
-                reviewState.lastRating
+              RATING_LABEL_KEYS[reviewState.scale ?? "activity"][
+                reviewState.lastRating as RatingValue
+              ] ?? reviewState.lastRating
             )}
           </Badge>
-        ) : null}
+        ) : (
+          // Never blank (docs/specs/layout-tables.md AC-2).
+          <span className="text-muted-foreground text-xs">
+            {t("activityNotRatedYetLabel")}
+          </span>
+        )}
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {reviewState ? (
+        {/* The review chip goes where the date would (AC-3). */}
+        {highlight ? <ReviewHighlightChip highlight={highlight} /> : null}
+        {!highlight && reviewState ? (
           <time
             dateTime={format(reviewState.dueDate, "yyyy-MM-dd")}
             title={format(reviewState.dueDate, "PPPP", { locale })}

@@ -464,7 +464,7 @@ export const listActivityReviewState = os
   .handler(({ input }) => {
     const db = requireDatabaseClient();
 
-    return db
+    const activityRows = db
       .select({
         activityId: reviewItemsTable.activityId,
         dueDate: reviewItemsTable.dueDate,
@@ -481,7 +481,69 @@ export const listActivityReviewState = os
           isNull(activitiesTable.deletedAt)
         )
       )
+      .all()
+      .map((row) => ({ ...row, scale: "activity" as const }));
+
+    // A deck is rated card by card: one row per deck, from its cards -- the
+    // earliest due date and the rating of the card rated last
+    // (docs/specs/layout-tables.md AC-1).
+    const cardRows = db
+      .select({
+        activityId: flashcardsTable.activityId,
+        dueDate: reviewItemsTable.dueDate,
+        lastRating: reviewItemsTable.lastRating,
+        lastReviewedAt: reviewItemsTable.lastReviewedAt,
+      })
+      .from(reviewItemsTable)
+      .innerJoin(
+        flashcardsTable,
+        eq(reviewItemsTable.flashcardId, flashcardsTable.id)
+      )
+      .innerJoin(
+        activitiesTable,
+        eq(flashcardsTable.activityId, activitiesTable.id)
+      )
+      .where(
+        and(
+          eq(activitiesTable.moduleId, input.moduleId),
+          isNull(activitiesTable.deletedAt),
+          isNull(flashcardsTable.deletedAt)
+        )
+      )
       .all();
+
+    const decks = new Map<
+      string,
+      { dueDate: Date; lastRating: string; lastReviewedAt: number }
+    >();
+    for (const card of cardRows) {
+      const reviewedAt = card.lastReviewedAt?.getTime() ?? -1;
+      const deck = decks.get(card.activityId);
+      if (!deck) {
+        decks.set(card.activityId, {
+          dueDate: card.dueDate,
+          lastRating: reviewedAt >= 0 ? card.lastRating : "",
+          lastReviewedAt: reviewedAt,
+        });
+        continue;
+      }
+      if (card.dueDate < deck.dueDate) {
+        deck.dueDate = card.dueDate;
+      }
+      if (reviewedAt > deck.lastReviewedAt) {
+        deck.lastReviewedAt = reviewedAt;
+        deck.lastRating = card.lastRating;
+      }
+    }
+
+    const deckRows = Array.from(decks, ([activityId, deck]) => ({
+      activityId,
+      dueDate: deck.dueDate,
+      lastRating: deck.lastRating,
+      scale: "flashcard" as const,
+    }));
+
+    return [...activityRows, ...deckRows];
   });
 
 /**
