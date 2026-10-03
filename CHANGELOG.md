@@ -45,6 +45,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Uma unidade só para a contagem do dia: atividades.** Hoje diz "2 atividades para hoje · 3 cards",
+  e a barra lateral, os cards de programa, a sessão ("1 de 2", com a barra na mesma posição), o fim da
+  sessão, o fim do dia, os próximos 7 dias e a notificação da bandeja contam do mesmo jeito: um baralho
+  é uma atividade, e os cards dele são o detalhe. A notificação passa a contar o que vence até o fim
+  do dia, como a tela Hoje.
 - **Botões de avaliação com tom por nível:** Errei em vermelho, Difícil em âmbar, Bom em verde e
   Fácil no azul da marca, com fundo leve e borda no tom, no lugar de quatro botões pretos iguais.
 - **"Adicionar pergunta" e "Adicionar flashcard" ficaram discretos**, e **Concluir** é o único botão
@@ -75,6 +80,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Fixed
 
+- **Barras de progresso** passam a informar a porcentagem a leitores de tela (o valor não chegava ao
+  componente do Radix).
 - **Resultado do quiz:** voltou ao layout anterior, sem o cartão na cor do programa, que apertava a
   coluna e cortava o gráfico.
 - **Revisões de hoje:** o flashcard tem a mesma largura do cartão do item acima dele, o brilho dos

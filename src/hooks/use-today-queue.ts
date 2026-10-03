@@ -21,7 +21,7 @@ import {
 type Status = "error" | "loading" | "ready";
 
 interface TodayData {
-  counts: { count: number; date: string }[];
+  counts: { activities: number; count: number; date: string }[];
   programOrder: string[];
   rows: ScheduleRow[];
 }

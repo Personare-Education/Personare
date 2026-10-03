@@ -37,9 +37,9 @@ describe("StreakWidget", () => {
 
   it("shows the current streak count on the sidebar trigger", async () => {
     vi.mocked(listActivityCounts).mockResolvedValue([
-      { count: 1, date: "2026-03-13", programId: "p1" },
-      { count: 1, date: "2026-03-14", programId: "p1" },
-      { count: 1, date: "2026-03-15", programId: "p2" },
+      { activities: 1, count: 1, date: "2026-03-13", programId: "p1" },
+      { activities: 1, count: 1, date: "2026-03-14", programId: "p1" },
+      { activities: 1, count: 1, date: "2026-03-15", programId: "p2" },
     ]);
 
     renderWidget();
@@ -73,8 +73,8 @@ describe("StreakWidget", () => {
   it("opens a popover with today's day-of-month, streak stats and the hint message", async () => {
     const user = userEvent.setup();
     vi.mocked(listActivityCounts).mockResolvedValue([
-      { count: 1, date: "2026-03-14", programId: "p1" },
-      { count: 1, date: "2026-03-15", programId: "p1" },
+      { activities: 1, count: 1, date: "2026-03-14", programId: "p1" },
+      { activities: 1, count: 1, date: "2026-03-15", programId: "p1" },
     ]);
     renderWidget();
     await screen.findByText(i18n.t("streakDaysLabel", { count: 2 }));
@@ -107,7 +107,7 @@ describe("StreakWidget", () => {
     await screen.findByText(i18n.t("streakDaysLabel", { count: 0 }));
 
     vi.mocked(listActivityCounts).mockResolvedValue([
-      { count: 1, date: "2026-03-15", programId: "p1" },
+      { activities: 1, count: 1, date: "2026-03-15", programId: "p1" },
     ]);
     notifyReviewCompleted();
 

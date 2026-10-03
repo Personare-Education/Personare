@@ -158,7 +158,11 @@ function notifyDueReviewsIfAny() {
 
   if (count > 0) {
     new Notification({
-      body: `Você tem ${count} revisões pendentes hoje`,
+      // The Today screen's unit (docs/specs/clarify-daily-count.md AC-5).
+      body:
+        count === 1
+          ? "Você tem 1 atividade para revisar hoje"
+          : `Você tem ${count} atividades para revisar hoje`,
       title: "Personare",
     }).show();
   }

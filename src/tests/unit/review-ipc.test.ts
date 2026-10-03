@@ -1007,7 +1007,12 @@ describe("review IPC namespace (Issue #16)", () => {
         const counts = await reviewClient.listActivityCounts();
 
         expect(counts).toEqual([
-          { count: 1, date: todayDateKey(), programId: program.id },
+          {
+            activities: 1,
+            count: 1,
+            date: todayDateKey(),
+            programId: program.id,
+          },
         ]);
       });
 
@@ -1030,11 +1035,16 @@ describe("review IPC namespace (Issue #16)", () => {
         const counts = await reviewClient.listActivityCounts();
 
         expect(counts).toEqual([
-          { count: 1, date: todayDateKey(), programId: program.id },
+          {
+            activities: 1,
+            count: 1,
+            date: todayDateKey(),
+            programId: program.id,
+          },
         ]);
       });
 
-      it("aggregates multiple ratings on the same day under one program into a single count", async () => {
+      it("aggregates multiple ratings on the same day under one program into a single count, the deck once in activities (docs/specs/clarify-daily-count.md AC-4)", async () => {
         const program = await programsClient.create({ name: "Programa H3" });
         const moduleRow = await modulesClient.create({
           name: "Modulo H3",
@@ -1069,7 +1079,12 @@ describe("review IPC namespace (Issue #16)", () => {
         const counts = await reviewClient.listActivityCounts();
 
         expect(counts).toEqual([
-          { count: 2, date: todayDateKey(), programId: program.id },
+          {
+            activities: 1,
+            count: 2,
+            date: todayDateKey(),
+            programId: program.id,
+          },
         ]);
       });
 
@@ -1112,8 +1127,18 @@ describe("review IPC namespace (Issue #16)", () => {
 
         expect(counts).toEqual(
           expect.arrayContaining([
-            { count: 1, date: todayDateKey(), programId: firstProgram.id },
-            { count: 1, date: todayDateKey(), programId: secondProgram.id },
+            {
+              activities: 1,
+              count: 1,
+              date: todayDateKey(),
+              programId: firstProgram.id,
+            },
+            {
+              activities: 1,
+              count: 1,
+              date: todayDateKey(),
+              programId: secondProgram.id,
+            },
           ])
         );
         expect(counts).toHaveLength(2);

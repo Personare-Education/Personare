@@ -378,6 +378,7 @@ export const listActivityCounts = os.handler(() => {
 
   const viaFlashcard = db
     .select({
+      activityId: activitiesTable.id,
       programId: programsTable.id,
       ratingHistory: reviewItemsTable.ratingHistory,
     })
@@ -396,6 +397,7 @@ export const listActivityCounts = os.handler(() => {
 
   const viaActivity = db
     .select({
+      activityId: activitiesTable.id,
       programId: programsTable.id,
       ratingHistory: reviewItemsTable.ratingHistory,
     })
@@ -410,7 +412,12 @@ export const listActivityCounts = os.handler(() => {
 
   const rows = unionAll(viaFlashcard, viaActivity).all();
 
-  const countsByProgramAndDate = new Map<string, Map<string, number>>();
+  // `count` is every rating (the heatmap's); `activities` each activity once
+  // (docs/specs/clarify-daily-count.md AC-4).
+  const byProgramAndDate = new Map<
+    string,
+    Map<string, { activities: Set<string>; count: number }>
+  >();
 
   for (const row of rows) {
     const history = JSON.parse(row.ratingHistory) as { reviewedAt: number }[];
@@ -418,17 +425,34 @@ export const listActivityCounts = os.handler(() => {
     for (const entry of history) {
       const dateKey = toLocalDateKey(new Date(entry.reviewedAt));
       const byDate =
-        countsByProgramAndDate.get(row.programId) ?? new Map<string, number>();
-      byDate.set(dateKey, (byDate.get(dateKey) ?? 0) + 1);
-      countsByProgramAndDate.set(row.programId, byDate);
+        byProgramAndDate.get(row.programId) ??
+        new Map<string, { activities: Set<string>; count: number }>();
+      const day = byDate.get(dateKey) ?? {
+        activities: new Set<string>(),
+        count: 0,
+      };
+      day.count += 1;
+      day.activities.add(row.activityId);
+      byDate.set(dateKey, day);
+      byProgramAndDate.set(row.programId, byDate);
     }
   }
 
-  const result: { count: number; date: string; programId: string }[] = [];
+  const result: {
+    activities: number;
+    count: number;
+    date: string;
+    programId: string;
+  }[] = [];
 
-  for (const [programId, byDate] of countsByProgramAndDate) {
-    for (const [date, count] of byDate) {
-      result.push({ count, date, programId });
+  for (const [programId, byDate] of byProgramAndDate) {
+    for (const [date, day] of byDate) {
+      result.push({
+        activities: day.activities.size,
+        count: day.count,
+        date,
+        programId,
+      });
     }
   }
 

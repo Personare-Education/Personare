@@ -189,6 +189,30 @@ describe("countDueReviews (Issue #20)", () => {
     expect(countDueReviews(db, new Date())).toBe(0);
   });
 
+  /** docs/specs/clarify-daily-count.md AC-5 */
+  it("counts a deck with several due cards as one activity", async () => {
+    const deck = await createDeck();
+    await createFlashcardWithReviewItem(deck.id);
+    await createFlashcardWithReviewItem(deck.id);
+
+    expect(countDueReviews(db, new Date())).toBe(1);
+  });
+
+  it("counts what is due later today, like the Today screen", async () => {
+    const deck = await createDeck();
+    const flashcard = await createFlashcardWithReviewItem(deck.id);
+    const morning = new Date();
+    morning.setHours(8, 0, 0, 0);
+    const evening = new Date(morning);
+    evening.setHours(22, 0, 0, 0);
+    db.update(reviewItemsTable)
+      .set({ dueDate: evening })
+      .where(eq(reviewItemsTable.flashcardId, flashcard.id))
+      .run();
+
+    expect(countDueReviews(db, morning)).toBe(1);
+  });
+
   it("uses the given 'now' for the comparison, not the real current time", async () => {
     const deck = await createDeck();
     const flashcard = await createFlashcardWithReviewItem(deck.id);

@@ -38,11 +38,17 @@ export interface TodayGroup {
 }
 
 export interface TodayQueue {
-  /** Review items due, flashcards counted one by one (like the tray count). */
+  /** Due flashcards across every deck: the detail after the activities. */
+  dueCardCount: number;
+  /**
+   * Activities due, a deck counting once: the one unit every screen uses
+   * (docs/specs/clarify-daily-count.md).
+   */
   dueCount: number;
   groups: TodayGroup[];
   /** Every item, in display order: program by program, overdue first. */
   items: TodayItem[];
+  /** Activities with at least one overdue review. */
   overdueCount: number;
 }
 
@@ -63,21 +69,15 @@ export function buildTodayQueue(
   const today = startOfDay(now);
   const tomorrow = addDays(today, 1);
   const itemsByActivity = new Map<string, TodayItem>();
-  let dueCount = 0;
-  let overdueCount = 0;
 
   for (const row of rows) {
     if (row.dueDate >= tomorrow) {
       continue;
     }
-    dueCount += 1;
     const overdueDays = Math.max(
       0,
       differenceInCalendarDays(today, startOfDay(row.dueDate))
     );
-    if (overdueDays > 0) {
-      overdueCount += 1;
-    }
 
     const existing = itemsByActivity.get(row.activityId);
     if (existing) {
@@ -130,11 +130,14 @@ export function buildTodayQueue(
     group.items.sort(compareItems);
   }
 
+  const items = groups.flatMap((group) => group.items);
+
   return {
-    dueCount,
+    dueCardCount: items.reduce((sum, item) => sum + item.cardCount, 0),
+    dueCount: items.length,
     groups,
-    items: groups.flatMap((group) => group.items),
-    overdueCount,
+    items,
+    overdueCount: items.filter((item) => item.urgency === "overdue").length,
   };
 }
 
@@ -160,6 +163,9 @@ export function buildUpcoming(rows: TodayRow[], now: Date): Upcoming {
     date: addDays(tomorrow, i),
   }));
   let nextDate: Date | null = null;
+  // Each day counts an activity once, a deck's cards included
+  // (docs/specs/clarify-daily-count.md AC-6).
+  const seen = days.map(() => new Set<string>());
 
   for (const row of rows) {
     if (row.dueDate < tomorrow) {
@@ -167,7 +173,8 @@ export function buildUpcoming(rows: TodayRow[], now: Date): Upcoming {
     }
     const day = startOfDay(row.dueDate);
     const index = differenceInCalendarDays(day, tomorrow);
-    if (index < UPCOMING_DAYS) {
+    if (index < UPCOMING_DAYS && !seen[index].has(row.activityId)) {
+      seen[index].add(row.activityId);
       days[index].count += 1;
     }
     if (!nextDate || day < nextDate) {
@@ -178,29 +185,39 @@ export function buildUpcoming(rows: TodayRow[], now: Date): Upcoming {
   return { days, nextDate };
 }
 
-/** Each program's reviews due until the end of today (its card's badge, AC-10). */
+/**
+ * Each program's activities due until the end of today (its card's badge,
+ * AC-10), a deck counting once (docs/specs/clarify-daily-count.md AC-2).
+ */
 export function countDueByProgram(
   rows: TodayRow[],
   now: Date
 ): Map<string, number> {
   const tomorrow = addDays(startOfDay(now), 1);
-  const counts = new Map<string, number>();
+  const activities = new Map<string, Set<string>>();
   for (const row of rows) {
     if (row.dueDate < tomorrow) {
-      counts.set(row.programId, (counts.get(row.programId) ?? 0) + 1);
+      const set = activities.get(row.programId) ?? new Set<string>();
+      set.add(row.activityId);
+      activities.set(row.programId, set);
     }
   }
-  return counts;
+  return new Map(
+    Array.from(activities, ([programId, set]) => [programId, set.size])
+  );
 }
 
-/** Reviews done on `day`'s local date, summed across programs. */
+/**
+ * Activities reviewed on `day`'s local date, summed across programs, each
+ * activity once (docs/specs/clarify-daily-count.md AC-4).
+ */
 export function countReviewedOn(
-  counts: { count: number; date: string }[],
+  counts: { activities: number; date: string }[],
   day: Date
 ): number {
   const key = toLocalDayKey(day);
   return counts.reduce(
-    (sum, entry) => (entry.date === key ? sum + entry.count : sum),
+    (sum, entry) => (entry.date === key ? sum + entry.activities : sum),
     0
   );
 }

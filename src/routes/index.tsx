@@ -114,6 +114,14 @@ function DueToday({
           <span className="font-serif text-2xl">
             {t("todayDueSummary", { count: queue.dueCount })}
           </span>
+          {/* A deck counts once; its due cards are the detail
+              (docs/specs/clarify-daily-count.md AC-1). */}
+          {queue.dueCardCount > 0 ? (
+            <span className="text-muted-foreground text-sm">
+              <span aria-hidden="true">· </span>
+              {t("todayDueCardsDetail", { count: queue.dueCardCount })}
+            </span>
+          ) : null}
           {queue.overdueCount > 0 ? (
             <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive text-xs">
               {t("todayOverdueSummary", { count: queue.overdueCount })}

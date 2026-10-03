@@ -16,6 +16,8 @@ function Progress({
         "relative flex h-1 w-full items-center overflow-x-hidden rounded-md bg-muted",
         className
       )}
+      // Without it Radix reports the bar as indeterminate to screen readers.
+      value={value}
       {...props}
     >
       <ProgressPrimitive.Indicator
