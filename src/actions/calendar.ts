@@ -1,5 +1,6 @@
 import { addDays, startOfDay } from "date-fns";
 import type { CalendarEvent } from "@/components/reui/event-calendar";
+import { resolveProgramColor } from "@/constants/program-appearance";
 import { ipc } from "@/ipc/manager";
 import { toLocalDayKey } from "@/utils/review-highlight";
 
@@ -38,13 +39,19 @@ export function listSchedule() {
 
 /**
  * One event per module per local day (docs/specs/calendar-module-review-highlight.md
- * AC-1), titled with the module's name: a module with several reviews that
- * day (different activities, or flashcards of one deck) shows up once.
+ * AC-1), in its program's color (docs/specs/calendar-system.md AC-3): a
+ * module with several reviews that day (different activities, or
+ * flashcards of one deck) shows up once. `formatTitle` names it from the
+ * module and how many activities come back; without it, the module's name.
  */
 export function toCalendarEvents(
-  rows: ScheduleRow[]
+  rows: ScheduleRow[],
+  formatTitle: (moduleName: string, activityCount: number) => string = (
+    moduleName
+  ) => moduleName
 ): CalendarEvent<CalendarEventData>[] {
   const eventsById = new Map<string, CalendarEvent<CalendarEventData>>();
+  const activitiesById = new Map<string, Set<string>>();
 
   for (const row of rows) {
     // allDay bounds must already be display-zone midnights, or the
@@ -57,9 +64,14 @@ export function toCalendarEvents(
     const date = toLocalDayKey(day);
     const id = `${row.moduleId}:${date}`;
 
+    const activities = activitiesById.get(id) ?? new Set<string>();
+    activities.add(row.activityId);
+    activitiesById.set(id, activities);
+
     if (!eventsById.has(id)) {
       eventsById.set(id, {
         allDay: true,
+        color: resolveProgramColor(row.programColor),
         data: { date, moduleId: row.moduleId, programId: row.programId },
         end: addDays(day, 1),
         id,
@@ -68,6 +80,11 @@ export function toCalendarEvents(
         title: row.moduleName,
       });
     }
+  }
+
+  for (const [id, event] of eventsById) {
+    const moduleName = event.title ?? "";
+    event.title = formatTitle(moduleName, activitiesById.get(id)?.size ?? 0);
   }
 
   return [...eventsById.values()];

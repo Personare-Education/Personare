@@ -102,6 +102,8 @@ i18n.use(initReactI18next).init({
         calendarDropNotAllowedLabel: "Can't place here",
         calendarEventLabel: "event",
         calendarEventsCountLabel: "{{count}} events",
+        calendarEventTitle_one: "{{moduleName}} · {{count}} activity",
+        calendarEventTitle_other: "{{moduleName}} · {{count}} activities",
         calendarGoToDateLabel: "Go to date",
         calendarLoadingMessage: "Loading events",
         calendarMoreCompactLabel: "+{{count}}",
@@ -112,6 +114,7 @@ i18n.use(initReactI18next).init({
           "Connect Google Calendar in Settings first.",
         calendarOneDayLabel: "1 day",
         calendarOneEventLabel: "1 event",
+        calendarPageTitle: "Calendar",
         calendarPreviousAction: "Previous",
         calendarReconnectRequiredErrorMessage:
           "Your Google Calendar connection needs to be renewed. Reconnect it in Settings.",
@@ -553,6 +556,8 @@ i18n.use(initReactI18next).init({
         calendarDropNotAllowedLabel: "Não é possível soltar aqui",
         calendarEventLabel: "evento",
         calendarEventsCountLabel: "{{count}} eventos",
+        calendarEventTitle_one: "{{moduleName}} · {{count}} atividade",
+        calendarEventTitle_other: "{{moduleName}} · {{count}} atividades",
         calendarGoToDateLabel: "Ir para data",
         calendarLoadingMessage: "Carregando eventos",
         calendarMoreCompactLabel: "+{{count}}",
@@ -563,6 +568,7 @@ i18n.use(initReactI18next).init({
           "Conecte o Google Calendar em Configurações primeiro.",
         calendarOneDayLabel: "1 dia",
         calendarOneEventLabel: "1 evento",
+        calendarPageTitle: "Calendário",
         calendarPreviousAction: "Anterior",
         calendarReconnectRequiredErrorMessage:
           "Sua conexão com o Google Calendar precisa ser renovada. Reconecte em Configurações.",
