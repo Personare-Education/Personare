@@ -481,8 +481,7 @@ export const listActivityReviewState = os
           isNull(activitiesTable.deletedAt)
         )
       )
-      .all()
-      .map((row) => ({ ...row, scale: "activity" as const }));
+      .all();
 
     // A deck is rated card by card: one row per deck, from its cards -- the
     // earliest due date and the rating of the card rated last
@@ -540,7 +539,6 @@ export const listActivityReviewState = os
       activityId,
       dueDate: deck.dueDate,
       lastRating: deck.lastRating,
-      scale: "flashcard" as const,
     }));
 
     return [...activityRows, ...deckRows];

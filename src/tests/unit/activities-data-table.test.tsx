@@ -90,8 +90,7 @@ function renderTable(
   activities: Activity[] = ACTIVITIES,
   reviewStateByActivityId: Record<
     string,
-    | { dueDate: Date; lastRating: string; scale?: "activity" | "flashcard" }
-    | undefined
+    { dueDate: Date; lastRating: string } | undefined
   > = {}
 ) {
   const onEdit = vi.fn();
@@ -216,17 +215,40 @@ describe("ActivitiesDataTable", () => {
     expect(onRequestDelete).toHaveBeenCalledWith(ACTIVITIES[0]);
   });
 
-  /** docs/specs/layout-tables.md AC-1 */
-  it("shows a deck's last rating in flashcard words", () => {
-    renderTable([ACTIVITIES[3]], {
+  /** docs/specs/table-rating-scale.md AC-1 */
+  it("shows every last rating in the activity words, a deck's too", () => {
+    renderTable([ACTIVITIES[1], ACTIVITIES[3]], {
+      [ACTIVITIES[1].id]: {
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        lastRating: "good",
+      },
       [ACTIVITIES[3].id]: {
         dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        lastRating: "again",
-        scale: "flashcard",
+        lastRating: "easy",
       },
     });
 
-    expect(screen.getByText(i18n.t("ratingAgainAction"))).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("activityRatingGoodAction"))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("activityRatingEasyAction"))
+    ).toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("ratingEasyAction"))).toBeNull();
+  });
+
+  /** docs/specs/table-rating-scale.md AC-2 */
+  it("tints each rating chip in its own tone, never as a primary badge", () => {
+    renderTable([ACTIVITIES[1]], {
+      [ACTIVITIES[1].id]: {
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        lastRating: "easy",
+      },
+    });
+
+    const chip = screen.getByText(i18n.t("activityRatingEasyAction"));
+    expect(chip.style.getPropertyValue("--tone")).toBe("var(--brand)");
+    expect(chip).not.toHaveAttribute("data-variant", "default");
   });
 
   /** docs/specs/layout-tables.md AC-2 */

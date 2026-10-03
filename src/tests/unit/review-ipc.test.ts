@@ -753,7 +753,6 @@ describe("review IPC namespace (Issue #16)", () => {
       expect(before[0]).toMatchObject({
         activityId: deck.id,
         lastRating: "",
-        scale: "flashcard",
       });
 
       const due = await reviewClient.listDue({ activityId: deck.id });

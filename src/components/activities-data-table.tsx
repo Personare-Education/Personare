@@ -1,4 +1,3 @@
-import type { VariantProps } from "class-variance-authority";
 import { format } from "date-fns";
 import {
   ExternalLink,
@@ -10,7 +9,7 @@ import {
   Repeat,
   Trash2,
 } from "lucide-react";
-import { useMemo } from "react";
+import { type CSSProperties, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { openExternalLink } from "@/actions/shell";
 import ActionableTableRow, {
@@ -18,12 +17,12 @@ import ActionableTableRow, {
 } from "@/components/actionable-table-row";
 import {
   RATING_LABEL_KEYS,
-  type RatingScale,
+  RATING_TONES,
   type RatingValue,
 } from "@/components/rating-buttons";
 import ReviewHighlightChip from "@/components/review-highlight-chip";
 import ReviewHighlightTableFrame from "@/components/review-highlight-table-frame";
-import { Badge, type badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -52,8 +51,6 @@ export interface ActivityReviewState {
   dueDate: Date;
   /** Empty until the activity (or, for a deck, any card) is rated. */
   lastRating: string;
-  /** Whose words the rating takes: a deck's are the flashcards'. */
-  scale?: RatingScale;
 }
 
 const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<string, string> = {
@@ -63,14 +60,23 @@ const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<string, string> = {
   quiz: "activityTypeQuiz",
 };
 
-type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
+/**
+ * The last rating, in the activity's words for every row -- a deck's too
+ * -- and tinted in the rating's tone like the rating buttons, never as a
+ * primary badge (docs/specs/table-rating-scale.md).
+ */
+function RatingChip({ rating }: { rating: RatingValue }) {
+  const { t } = useTranslation();
 
-const RATING_BADGE_VARIANTS: Record<string, BadgeVariant> = {
-  again: "destructive",
-  easy: "default",
-  good: "secondary",
-  hard: "outline",
-};
+  return (
+    <span
+      className="inline-flex items-center whitespace-nowrap rounded-full border border-[color-mix(in_srgb,var(--tone)_45%,transparent)] bg-[color-mix(in_srgb,var(--tone)_12%,transparent)] px-2 py-0.5 font-medium text-[0.6875rem] text-foreground"
+      style={{ "--tone": RATING_TONES[rating] } as CSSProperties}
+    >
+      {t(RATING_LABEL_KEYS.activity[rating])}
+    </span>
+  );
+}
 
 interface ActivitiesDataTableProps {
   activities: Activity[];
@@ -217,20 +223,8 @@ function ActivityRow({
         <Badge variant="outline">{t(typeTranslationKey)}</Badge>
       </TableCell>
       <TableCell>
-        {reviewState?.lastRating ? (
-          <Badge
-            variant={
-              RATING_BADGE_VARIANTS[reviewState.lastRating] ?? "secondary"
-            }
-          >
-            {/* A whole activity's words, or a deck's flashcard words
-                (docs/specs/rating-clarity.md AC-2, layout-tables.md AC-1). */}
-            {t(
-              RATING_LABEL_KEYS[reviewState.scale ?? "activity"][
-                reviewState.lastRating as RatingValue
-              ] ?? reviewState.lastRating
-            )}
-          </Badge>
+        {reviewState?.lastRating && reviewState.lastRating in RATING_TONES ? (
+          <RatingChip rating={reviewState.lastRating as RatingValue} />
         ) : (
           // Never blank (docs/specs/layout-tables.md AC-2).
           <span className="text-muted-foreground text-xs">
