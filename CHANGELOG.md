@@ -46,6 +46,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 - A barra lateral mostra "Sem sequência ainda" no lugar de "0 dias", e a tela Hoje sem nada agendado
   explica que as revisões aparecem depois de estudar uma atividade e dizer como foi.
+- **Acessibilidade:** o botão de tema tem nome para leitores de tela. O texto secundário sobre a cor
+  do programa (Frente/Verso, "Clique para virar", tipo e módulo nos itens de Hoje) usa o texto
+  principal em vez do cinza, que ficava abaixo do contraste mínimo no tema claro. As iniciais do
+  avatar também ficaram mais escuras, e a grade vazia do heatmap passou a aparecer no tema escuro.
+- **A barra lateral recolhe para os ícones em janelas com menos de 1024px** e volta a abrir acima
+  disso. O botão de recolher continua funcionando.
 - **Programas novos nascem no azul da marca**, e não mais em vermelho. Na paleta, o azul da marca
   substitui o azul anterior, que era quase igual. Programas que já existem continuam com a cor deles.
 - **Tabela de atividades:** a coluna "Progresso" passa a se chamar "Última avaliação", e a próxima

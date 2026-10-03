@@ -55,12 +55,14 @@ function Face({
       data-face={face}
       style={faceStyle(color, face)}
     >
-      <span className="text-muted-foreground text-xs">{label}</span>
+      {/* On the program's tint, secondary text comes from the foreground,
+          not gray (docs/specs/audit-a11y.md AC-2). */}
+      <span className="text-foreground/70 text-xs">{label}</span>
       <div className="flex flex-1 items-center justify-center text-center">
         {children}
       </div>
       {hint ? (
-        <span className="self-center text-[0.625rem] text-muted-foreground">
+        <span className="self-center text-[0.625rem] text-foreground/70">
           {hint}
         </span>
       ) : null}

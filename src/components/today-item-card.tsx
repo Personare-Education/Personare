@@ -61,7 +61,8 @@ export default function TodayItemCard({
 
   const content = (
     <>
-      <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+      {/* Foreground, not gray, on the program's tint (docs/specs/audit-a11y.md AC-2). */}
+      <span className="flex items-center gap-1.5 text-foreground/70 text-xs">
         <Icon aria-hidden="true" className="size-3.5" />
         {typeLabel}
         {item.cardCount > 0 ? (
@@ -78,7 +79,7 @@ export default function TodayItemCard({
       >
         {item.activityTitle}
       </span>
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground/70 text-xs">
         <span>{item.moduleName}</span>
         <span
           className={cn(

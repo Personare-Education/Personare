@@ -1,6 +1,8 @@
 import { render } from "@testing-library/react";
+import i18n from "i18next";
 import { expect, test } from "vitest";
 import ToggleTheme from "@/components/toggle-theme";
+import "@/localization/i18n";
 
 test("renders ToggleTheme", () => {
   const { getByRole } = render(<ToggleTheme />);
@@ -23,4 +25,13 @@ test("is moon icon", () => {
   const svg = getByRole("button").querySelector("svg");
 
   expect(svg?.classList).toContain(svgIconClassName);
+});
+
+/** docs/specs/audit-a11y.md AC-1 */
+test("has an accessible name", () => {
+  const { getByRole } = render(<ToggleTheme />);
+
+  expect(
+    getByRole("button", { name: i18n.t("toggleThemeAction") })
+  ).toBeInTheDocument();
 });
