@@ -41,7 +41,9 @@ function GateScreen({
             <Icon className="size-5 text-muted-foreground" />
           </div>
           <div className="flex flex-col gap-2">
-            <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
+            <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
+              {title}
+            </h1>
             <p className="text-muted-foreground leading-relaxed">
               {description}
             </p>

@@ -203,7 +203,9 @@ export default function AccountSection({
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="font-semibold text-lg">{t("accountSectionTitle")}</h2>
+      <h2 className="font-medium font-serif text-xl">
+        {t("accountSectionTitle")}
+      </h2>
       <p className="text-muted-foreground text-sm">
         {t("accountSectionDescription")}
       </p>

@@ -93,4 +93,15 @@ describe("MarkdownContent (Issue #96)", () => {
     expect(container.querySelector(".mfrac")).not.toBeNull();
     expect(container.querySelector(".sizing")).toBeNull();
   });
+
+  /**
+   * docs/specs/typography-newsreader-instrument-sans.md: what the student
+   * studies (questions, alternatives, flashcards) reads in the serif, set
+   * apart from the interface around it.
+   */
+  it("sets the study content in the reading serif", () => {
+    const { container } = render(<MarkdownContent content="Pergunta" />);
+
+    expect(container.firstElementChild).toHaveClass("font-serif");
+  });
 });

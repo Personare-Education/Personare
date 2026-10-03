@@ -46,7 +46,9 @@ export default function MarkdownContent({
   content,
 }: MarkdownContentProps) {
   return (
-    <div className={cn("min-w-0 text-sm", className)}>
+    // The study content reads in the serif, apart from the interface around
+    // it (docs/specs/typography-newsreader-instrument-sans.md).
+    <div className={cn("min-w-0 font-serif text-[0.95rem]", className)}>
       <ReactMarkdown
         components={components}
         rehypePlugins={[[rehypeKatex, katexOptions]]}
