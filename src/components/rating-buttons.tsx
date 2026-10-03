@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId } from "react";
+import { type CSSProperties, useCallback, useEffect, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { formatInterval } from "@/utils/review-time";
@@ -31,6 +31,17 @@ export const RATING_LABEL_KEYS: Record<
     good: "ratingGoodAction",
     hard: "ratingHardAction",
   },
+};
+
+/**
+ * Each rating's tone, from "again" to "easy" (docs/specs/polish.md AC-1): a
+ * light fill and border in it, the label in the foreground for contrast.
+ */
+const RATING_TONES: Record<RatingValue, string> = {
+  again: "var(--destructive)",
+  easy: "var(--brand)",
+  good: "var(--success)",
+  hard: "var(--warning)",
 };
 
 /** The keys 1-4 rate, in the buttons' order (docs/specs/today-review-queue.md AC-7). */
@@ -74,8 +85,10 @@ function RatingButton({
     <Button
       aria-describedby={interval ? intervalId : undefined}
       aria-keyshortcuts={shortcut}
-      className="h-auto min-h-7 flex-col gap-0 py-1 leading-tight"
+      className="!border-[color-mix(in_srgb,var(--tone)_45%,transparent)] !bg-[color-mix(in_srgb,var(--tone)_12%,transparent)] hover:!bg-[color-mix(in_srgb,var(--tone)_22%,transparent)] h-auto min-h-7 flex-col gap-0 py-1 text-foreground leading-tight"
       onClick={handleClick}
+      style={{ "--tone": RATING_TONES[rating] } as CSSProperties}
+      variant="outline"
     >
       {label}
       {interval ? (

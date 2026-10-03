@@ -53,4 +53,21 @@ describe("RatingButtons", () => {
       screen.getByRole("button", { name: i18n.t("activityRatingAgainAction") })
     ).toBeInTheDocument();
   });
+
+  /** docs/specs/polish.md AC-1 */
+  it("gives each rating its own tone instead of four equal buttons", () => {
+    render(<RatingButtons onRate={vi.fn()} />);
+
+    const tones = {
+      ratingAgainAction: "var(--destructive)",
+      ratingEasyAction: "var(--brand)",
+      ratingGoodAction: "var(--success)",
+      ratingHardAction: "var(--warning)",
+    };
+    for (const [key, tone] of Object.entries(tones)) {
+      const button = screen.getByRole("button", { name: i18n.t(key) });
+      expect(button.style.getPropertyValue("--tone")).toBe(tone);
+      expect(button).toHaveAttribute("data-variant", "outline");
+    }
+  });
 });
