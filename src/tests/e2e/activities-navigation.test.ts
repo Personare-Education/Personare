@@ -56,9 +56,13 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
 
   // The app opens on Today; programs live under "Programs"
   // (docs/specs/today-review-queue.md).
-  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { exact: true, name: "Today" })
+  ).toBeVisible();
   await page.getByRole("link", { exact: true, name: "Programs" }).click();
-  await expect(page.getByRole("heading", { name: "Programs" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { exact: true, name: "Programs" })
+  ).toBeVisible();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();
@@ -66,7 +70,9 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   // Issue #99: Programs is now a card grid, each card a single button that
   // both shows the name and navigates -- no more "View modules" row/icon.
   await page.getByRole("button", { name: new RegExp(programName) }).click();
-  await expect(page.getByRole("heading", { name: "Modules" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { exact: true, name: "Modules" })
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "New module" }).click();
   await page.getByLabel("Name").fill(moduleName);
@@ -79,7 +85,9 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
 
   // The regression: this heading, and everything below it, never appeared
   // before the Outlet fix -- the app silently stayed on the Modules page.
-  await expect(page.getByRole("heading", { name: "Activities" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { exact: true, name: "Activities" })
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "New activity" }).click();
   await page.getByLabel("Title").fill(activityName);

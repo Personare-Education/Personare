@@ -20,6 +20,7 @@ import { listPrograms } from "@/actions/programs";
 import DeleteModuleDialog from "@/components/delete-module-dialog";
 import ModuleFormDialog from "@/components/module-form-dialog";
 import ModulesDataTable, { type Module } from "@/components/modules-data-table";
+import { ModulesEmptyState } from "@/components/onboarding-empty-states";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -47,6 +48,8 @@ function ProgramModulesPage() {
     programId,
   });
   const [modules, setModules] = useState<Module[]>([]);
+  // The empty state waits for the first load, so it does not flash by.
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [programName, setProgramName] = useState("");
   const [, startTransition] = useTransition();
   const [formModule, setFormModule] = useState<Module | null>(null);
@@ -57,7 +60,10 @@ function ProgramModulesPage() {
 
   const refreshModules = useCallback(() => {
     startTransition(() => {
-      listModules(programId).then(setModules);
+      listModules(programId).then((loaded) => {
+        setModules(loaded);
+        setHasLoaded(true);
+      });
     });
   }, [programId]);
 
@@ -154,13 +160,18 @@ function ProgramModulesPage() {
     });
   }, [modulePendingDelete, refreshModules, t, undoDelete]);
 
+  const isEmpty = hasLoaded && modules.length === 0;
+
   return (
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="flex items-center justify-between">
         <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
           {t("modulesPageTitle")}
         </h1>
-        <Button onClick={handleCreateClick}>{t("createModuleAction")}</Button>
+        {/* One create button per area (docs/specs/onboard-empty-states.md AC-6). */}
+        {isEmpty ? null : (
+          <Button onClick={handleCreateClick}>{t("createModuleAction")}</Button>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -181,13 +192,17 @@ function ProgramModulesPage() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <ModulesDataTable
-        highlightByModuleId={highlightByModuleId}
-        modules={modules}
-        onEdit={handleEdit}
-        onNavigateToActivities={handleNavigateToActivities}
-        onRequestDelete={handleRequestDelete}
-      />
+      {isEmpty ? (
+        <ModulesEmptyState onCreate={handleCreateClick} />
+      ) : (
+        <ModulesDataTable
+          highlightByModuleId={highlightByModuleId}
+          modules={modules}
+          onEdit={handleEdit}
+          onNavigateToActivities={handleNavigateToActivities}
+          onRequestDelete={handleRequestDelete}
+        />
+      )}
       <ModuleFormDialog
         module={formModule}
         onOpenChange={handleFormOpenChange}

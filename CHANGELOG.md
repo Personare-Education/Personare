@@ -8,6 +8,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Primeira abertura:** sem nenhum programa, a tela Hoje mostra "Estude hoje o que você esqueceria
+  amanhã." e o ciclo em três passos (criar um programa, adicionar o material, estudar e dizer como
+  foi). **Criar primeiro programa** abre Programas com o formulário já aberto.
+- **Listas vazias que explicam:** Programas, Módulos e Atividades dizem o que vai em cada uma, com um
+  exemplo e o botão de criar. Enquanto a lista está vazia, o botão do cabeçalho some, e a busca de
+  atividades só aparece quando há atividades. Uma busca sem resultados diz que nenhuma atividade tem
+  esse nome.
+- **O heatmap vazio diz que as revisões vão colori-lo.**
 - **Fins de sessão em cartões na cor do programa.** "Tudo revisado" aparece num cartão no azul da
   marca, com o que foi revisado em cada programa, na cor dele. O fim da revisão de um baralho mostra,
   num cartão na cor do programa, quantos cards foram revisados. No resultado do quiz, a pontuação e os
@@ -36,6 +44,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- A barra lateral mostra "Sem sequência ainda" no lugar de "0 dias", e a tela Hoje sem nada agendado
+  explica que as revisões aparecem depois de estudar uma atividade e dizer como foi.
 - **Programas novos nascem no azul da marca**, e não mais em vermelho. Na paleta, o azul da marca
   substitui o azul anterior, que era quase igual. Programas que já existem continuam com a cor deles.
 - **Tabela de atividades:** a coluna "Progresso" passa a se chamar "Última avaliação", e a próxima

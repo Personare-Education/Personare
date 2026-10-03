@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { format, subDays } from "date-fns";
+import i18n from "i18next";
 import { describe, expect, it } from "vitest";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
 import "@/localization/i18n";
@@ -118,5 +119,22 @@ describe("ActivityHeatmap fill animation", () => {
       />
     );
     expect(container.querySelector("[aria-hidden='true']")).toBe(filledGrid);
+  });
+
+  /** docs/specs/onboard-empty-states.md AC-7 */
+  it("says the reviews will fill an empty heatmap in", () => {
+    render(<ActivityHeatmap color="#ef4444" counts={[]} weeks={4} />);
+
+    expect(
+      screen.getByText(i18n.t("programHeatmapEmptyMessage"))
+    ).toBeInTheDocument();
+  });
+
+  it("has no empty message once there are reviews", () => {
+    render(<ActivityHeatmap color="#ef4444" counts={COUNTS} weeks={4} />);
+
+    expect(
+      screen.queryByText(i18n.t("programHeatmapEmptyMessage"))
+    ).not.toBeInTheDocument();
   });
 });

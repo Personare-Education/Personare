@@ -15,8 +15,11 @@ i18n.use(initReactI18next).init({
           "Sign in with your Google account to use features that depend on it (Calendar sync, Drive backup). The app continues to work fully without signing in.",
         accountSectionTitle: "Account",
         actionsColumnLabel: "Actions",
+        activitiesEmptyMessage:
+          "An activity is what you study: a PDF, a link, a quiz or a flashcard deck. When you finish one and say how it went, it comes back for review on the day you'd be about to forget it.",
+        activitiesEmptyTitle: "No activities yet",
         activitiesPageTitle: "Activities",
-        activitiesTableEmptyMessage: "No activities found.",
+        activitiesTableEmptyMessage: "No activity has that name.",
         activityDeletedMessage: "“{{title}}” deleted",
         activityDifficultyContextLabel: "{{programName}} · {{moduleName}}",
         activityDifficultyPromptMessage: "How difficult was this activity?",
@@ -235,6 +238,9 @@ i18n.use(initReactI18next).init({
         markdownWriteTabLabel: "Write",
         moduleDeletedMessage: "“{{name}}” deleted",
         moduleNameLabel: "Name",
+        modulesEmptyMessage:
+          "A module is a part of the program: a topic, a unit, a chapter. Its activities go inside it.",
+        modulesEmptyTitle: "No modules yet",
         modulesPageTitle: "Modules",
         modulesTableEmptyMessage: "No modules found.",
         navCalendar: "Calendar",
@@ -253,8 +259,12 @@ i18n.use(initReactI18next).init({
         programColorLabel: "Color",
         programDeletedMessage: "“{{name}}” deleted",
         programDueCount: "{{count}} to review",
+        programHeatmapEmptyMessage: "Your reviews will color this in.",
         programIconLabel: "Icon",
         programNameLabel: "Name",
+        programsEmptyMessage:
+          "A program is an area of study: a course, a subject, an exam. Its modules go inside it, and in them, what you study.",
+        programsEmptyTitle: "No programs yet",
         programsPageTitle: "Programs",
         programsTableEmptyMessage: "No programs found.",
         quizAverageTimeLabel: "Average per question",
@@ -353,7 +363,9 @@ i18n.use(initReactI18next).init({
         streakDayOfMonthLabel: "Day {{day}}",
         streakDaysLabel_one: "{{count}} day",
         streakDaysLabel_other: "{{count}} days",
+        streakDaysLabel_zero: "$t(streakNoneYetLabel)",
         streakHintMessage: "Complete a review a day to keep your streak",
+        streakNoneYetLabel: "No streak yet",
         streakResetsAtMidnightMessage: "Resets at midnight",
         syncCalendarAction: "Sync now",
         takeQuizAction: "Take quiz",
@@ -369,7 +381,8 @@ i18n.use(initReactI18next).init({
         todayGoToProgramsAction: "Go to Programs",
         todayLoadError: "Couldn't load today's reviews.",
         todayNextReview: "Next review: {{date}}",
-        todayNothingScheduled: "No reviews scheduled yet.",
+        todayNothingScheduled:
+          "Reviews show up here once you study an activity and say how it went.",
         todayOpenLinkAction: "Open link",
         todayOpenPdfAction: "Open PDF",
         todayOverdueSummary_one: "{{count}} overdue",
@@ -396,6 +409,17 @@ i18n.use(initReactI18next).init({
         todayUrgencyOverdue_one: "Overdue by {{count}} day",
         todayUrgencyOverdue_other: "Overdue by {{count}} days",
         todayUrgencyToday: "Today",
+        todayWelcomeAction: "Create your first program",
+        todayWelcomeMessage:
+          "Personare brings together what you study and brings each thing back on the day you'd be about to forget it.",
+        todayWelcomeStep1:
+          "Create a program for what you're studying: a course, a subject, an exam.",
+        todayWelcomeStep2:
+          "Add your material: PDFs, links, quizzes and flashcards.",
+        todayWelcomeStep3:
+          "Study it and say how it went. The review comes back here, on the right day.",
+        todayWelcomeStepsLabel: "How it works",
+        todayWelcomeTitle: "Study today what you'd forget tomorrow.",
         undoAction: "Undo",
         viewActivitiesAction: "View activities",
         viewImageAction: "View image",
@@ -419,8 +443,11 @@ i18n.use(initReactI18next).init({
           "Entre com sua conta Google para usar funcionalidades que dependem dela (sincronização de Calendário, backup no Drive). O app continua funcionando normalmente sem entrar.",
         accountSectionTitle: "Conta",
         actionsColumnLabel: "Ações",
+        activitiesEmptyMessage:
+          "Uma atividade é o que você estuda: um PDF, um link, um quiz ou um baralho de flashcards. Quando você termina uma e diz como foi, ela volta para revisão no dia em que você estaria para esquecer.",
+        activitiesEmptyTitle: "Nenhuma atividade ainda",
         activitiesPageTitle: "Atividades",
-        activitiesTableEmptyMessage: "Nenhuma atividade encontrada.",
+        activitiesTableEmptyMessage: "Nenhuma atividade tem esse nome.",
         activityDeletedMessage: "“{{title}}” excluída",
         activityDifficultyContextLabel: "{{programName}} · {{moduleName}}",
         activityDifficultyPromptMessage:
@@ -641,6 +668,9 @@ i18n.use(initReactI18next).init({
         markdownWriteTabLabel: "Escrever",
         moduleDeletedMessage: "“{{name}}” excluído",
         moduleNameLabel: "Nome",
+        modulesEmptyMessage:
+          "Um módulo é uma parte do programa: um tema, uma unidade, um capítulo. As atividades ficam dentro dele.",
+        modulesEmptyTitle: "Nenhum módulo ainda",
         modulesPageTitle: "Módulos",
         modulesTableEmptyMessage: "Nenhum módulo encontrado.",
         navCalendar: "Calendário",
@@ -659,8 +689,12 @@ i18n.use(initReactI18next).init({
         programColorLabel: "Cor",
         programDeletedMessage: "“{{name}}” excluído",
         programDueCount: "{{count}} para revisar",
+        programHeatmapEmptyMessage: "Suas revisões vão colorir este quadro.",
         programIconLabel: "Ícone",
         programNameLabel: "Nome",
+        programsEmptyMessage:
+          "Um programa é uma área de estudo: um curso, uma disciplina, um concurso. Dentro dele ficam os módulos, e neles, o que você estuda.",
+        programsEmptyTitle: "Nenhum programa ainda",
         programsPageTitle: "Programas",
         programsTableEmptyMessage: "Nenhum programa encontrado.",
         quizAverageTimeLabel: "Média por questão",
@@ -760,8 +794,10 @@ i18n.use(initReactI18next).init({
         streakDayOfMonthLabel: "Dia {{day}}",
         streakDaysLabel_one: "{{count}} dia",
         streakDaysLabel_other: "{{count}} dias",
+        streakDaysLabel_zero: "$t(streakNoneYetLabel)",
         streakHintMessage:
           "Complete uma revisão por dia para manter sua sequência",
+        streakNoneYetLabel: "Sem sequência ainda",
         streakResetsAtMidnightMessage: "Reseta à meia-noite",
         syncCalendarAction: "Sincronizar agora",
         takeQuizAction: "Responder quiz",
@@ -777,7 +813,8 @@ i18n.use(initReactI18next).init({
         todayGoToProgramsAction: "Ir para Programas",
         todayLoadError: "Não foi possível carregar as revisões de hoje.",
         todayNextReview: "Próxima revisão: {{date}}",
-        todayNothingScheduled: "Nenhuma revisão agendada ainda.",
+        todayNothingScheduled:
+          "As revisões aparecem aqui depois que você estuda uma atividade e diz como foi.",
         todayOpenLinkAction: "Abrir link",
         todayOpenPdfAction: "Abrir PDF",
         todayOverdueSummary_one: "{{count}} atrasada",
@@ -804,6 +841,17 @@ i18n.use(initReactI18next).init({
         todayUrgencyOverdue_one: "Atrasada há {{count}} dia",
         todayUrgencyOverdue_other: "Atrasada há {{count}} dias",
         todayUrgencyToday: "Hoje",
+        todayWelcomeAction: "Criar primeiro programa",
+        todayWelcomeMessage:
+          "O Personare junta o que você estuda e traz cada coisa de volta no dia em que você estaria para esquecer.",
+        todayWelcomeStep1:
+          "Crie um programa para o que você estuda: um curso, uma disciplina, um concurso.",
+        todayWelcomeStep2:
+          "Adicione o material: PDFs, links, quizzes e flashcards.",
+        todayWelcomeStep3:
+          "Estude e diga como foi. A revisão volta aqui, no dia certo.",
+        todayWelcomeStepsLabel: "Como funciona",
+        todayWelcomeTitle: "Estude hoje o que você esqueceria amanhã.",
         undoAction: "Desfazer",
         viewActivitiesAction: "Ver atividades",
         viewImageAction: "Ver imagem",
