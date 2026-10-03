@@ -31,6 +31,7 @@ import ActivityDifficultyDialog from "@/components/activity-difficulty-dialog";
 import ActivityFormDialog from "@/components/activity-form-dialog";
 import DeleteActivityDialog from "@/components/delete-activity-dialog";
 import FlashcardManagerDialog from "@/components/flashcard-manager-dialog";
+import { ActivitiesEmptyState } from "@/components/onboarding-empty-states";
 import QuizQuestionManagerDialog from "@/components/quiz-question-manager-dialog";
 import QuizRunnerDialog from "@/components/quiz-runner-dialog";
 import ReviewSessionDialog from "@/components/review-session-dialog";
@@ -65,6 +66,8 @@ function ModuleActivitiesPage() {
   const { focusDate } = Route.useSearch();
   const { refresh: refreshSchedule, rows: scheduleRows } = useReviewSchedule();
   const [activities, setActivities] = useState<Activity[]>([]);
+  // The empty state waits for the first load, so it does not flash by.
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [programName, setProgramName] = useState("");
   // The program's color, for the flashcards (editor and review).
@@ -100,7 +103,10 @@ function ModuleActivitiesPage() {
 
   const refreshActivities = useCallback(() => {
     startTransition(() => {
-      listActivities(moduleId).then(setActivities);
+      listActivities(moduleId).then((loaded) => {
+        setActivities(loaded);
+        setHasLoaded(true);
+      });
     });
   }, [moduleId]);
 
@@ -337,13 +343,20 @@ function ModuleActivitiesPage() {
     );
   }, [activities, searchTerm]);
 
+  const isEmpty = hasLoaded && activities.length === 0;
+
   return (
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
           {t("activitiesPageTitle")}
         </h1>
-        <Button onClick={handleCreateClick}>{t("createActivityAction")}</Button>
+        {/* One create button per area (docs/specs/onboard-empty-states.md AC-6). */}
+        {isEmpty ? null : (
+          <Button onClick={handleCreateClick}>
+            {t("createActivityAction")}
+          </Button>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -372,29 +385,35 @@ function ModuleActivitiesPage() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="relative max-w-xs">
-        <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          aria-label={t("searchActivityPlaceholder")}
-          className="pl-7"
-          onChange={handleSearchTermChange}
-          placeholder={t("searchActivityPlaceholder")}
-          value={searchTerm}
-        />
-      </div>
-      <ActivitiesDataTable
-        activities={visibleActivities}
-        highlightByActivityId={highlightByActivityId}
-        onEdit={handleEdit}
-        onManageFlashcards={handleManageFlashcards}
-        onManageQuiz={handleManageQuiz}
-        onOpenLink={armRatingOnReturn}
-        onRequestDelete={handleRequestDelete}
-        onStartReview={handleStartReview}
-        onTakeQuiz={handleTakeQuiz}
-        onViewPdf={openPdf}
-        reviewStateByActivityId={reviewStateByActivityId}
-      />
+      {isEmpty ? (
+        <ActivitiesEmptyState onCreate={handleCreateClick} />
+      ) : (
+        <>
+          <div className="relative max-w-xs">
+            <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              aria-label={t("searchActivityPlaceholder")}
+              className="pl-7"
+              onChange={handleSearchTermChange}
+              placeholder={t("searchActivityPlaceholder")}
+              value={searchTerm}
+            />
+          </div>
+          <ActivitiesDataTable
+            activities={visibleActivities}
+            highlightByActivityId={highlightByActivityId}
+            onEdit={handleEdit}
+            onManageFlashcards={handleManageFlashcards}
+            onManageQuiz={handleManageQuiz}
+            onOpenLink={armRatingOnReturn}
+            onRequestDelete={handleRequestDelete}
+            onStartReview={handleStartReview}
+            onTakeQuiz={handleTakeQuiz}
+            onViewPdf={openPdf}
+            reviewStateByActivityId={reviewStateByActivityId}
+          />
+        </>
+      )}
       <ActivityFormDialog
         activity={formActivity}
         onImportQuiz={handleImportQuiz}

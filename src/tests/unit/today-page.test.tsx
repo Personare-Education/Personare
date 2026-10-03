@@ -258,4 +258,31 @@ describe("TodayPage", () => {
       ).toBeInTheDocument();
     });
   });
+
+  /** docs/specs/onboard-empty-states.md AC-1 */
+  it("welcomes a first run with the study loop and a way to start", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listPrograms).mockResolvedValue([]);
+    vi.mocked(listSchedule).mockResolvedValue([]);
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: i18n.t("todayWelcomeTitle") })
+    ).toBeInTheDocument();
+    const steps = screen.getByRole("list", {
+      name: i18n.t("todayWelcomeStepsLabel"),
+    });
+    expect(within(steps).getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      screen.queryByText(i18n.t("todayFreeDayTitle"))
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(i18n.t("todayUpcomingTitle"))
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("link", { name: i18n.t("todayWelcomeAction") })
+    );
+    expect(await screen.findByText("programs-page")).toBeInTheDocument();
+  });
 });

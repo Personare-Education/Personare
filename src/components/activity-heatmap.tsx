@@ -79,51 +79,64 @@ export function ActivityHeatmap({
   const hasCounts = total > 0;
 
   return (
-    <div
-      aria-label={t("programActivityHeatmapSummary", { count: total })}
-      className={cn(
-        "no-scrollbar flex gap-[3px] overflow-x-auto",
-        isScrollable &&
-          "[mask-image:linear-gradient(to_right,transparent,black_24px)]"
+    <div className="relative">
+      <div
+        aria-label={t("programActivityHeatmapSummary", { count: total })}
+        className={cn(
+          "no-scrollbar flex gap-[3px] overflow-x-auto",
+          isScrollable &&
+            "[mask-image:linear-gradient(to_right,transparent,black_24px)]"
+        )}
+        ref={scrollRef}
+        role="img"
+      >
+        <Fragment key={hasCounts ? "filled" : "empty"}>
+          {heatmapWeeks.map((week, weekIndex) => (
+            <div
+              aria-hidden="true"
+              className="flex shrink-0 flex-col gap-[3px]"
+              // biome-ignore lint/suspicious/noArrayIndexKey: weeks/days are a fixed-size grid, never reordered.
+              key={weekIndex}
+            >
+              {week.map((day, dayIndex) => (
+                <div
+                  className={cn(
+                    "size-2.5 rounded-xs",
+                    day ? undefined : "bg-transparent",
+                    day && hasCounts && "heatmap-cell"
+                  )}
+                  key={day?.date ?? dayIndex}
+                  style={
+                    day
+                      ? ({
+                          // Most recent first (AC-2): the delay grows with
+                          // the day's age, week by week, then day by day.
+                          "--col": heatmapWeeks.length - 1 - weekIndex,
+                          "--row": week.length - 1 - dayIndex,
+                          backgroundColor:
+                            day.level === 0
+                              ? "var(--heatmap-empty-cell)"
+                              : color,
+                          opacity:
+                            day.level === 0 ? 1 : LEVEL_OPACITY[day.level],
+                        } as CSSProperties)
+                      : undefined
+                  }
+                  title={day ? `${day.date}: ${day.count}` : undefined}
+                />
+              ))}
+            </div>
+          ))}
+        </Fragment>
+      </div>
+      {/* An empty grid says what will fill it (docs/specs/onboard-empty-states.md AC-7). */}
+      {hasCounts ? null : (
+        <p className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="rounded-md bg-card px-2 py-1 text-muted-foreground text-xs shadow-sm">
+            {t("programHeatmapEmptyMessage")}
+          </span>
+        </p>
       )}
-      ref={scrollRef}
-      role="img"
-    >
-      <Fragment key={hasCounts ? "filled" : "empty"}>
-        {heatmapWeeks.map((week, weekIndex) => (
-          <div
-            aria-hidden="true"
-            className="flex shrink-0 flex-col gap-[3px]"
-            // biome-ignore lint/suspicious/noArrayIndexKey: weeks/days are a fixed-size grid, never reordered.
-            key={weekIndex}
-          >
-            {week.map((day, dayIndex) => (
-              <div
-                className={cn(
-                  "size-2.5 rounded-xs",
-                  day ? undefined : "bg-transparent",
-                  day && hasCounts && "heatmap-cell"
-                )}
-                key={day?.date ?? dayIndex}
-                style={
-                  day
-                    ? ({
-                        // Most recent first (AC-2): the delay grows with
-                        // the day's age, week by week, then day by day.
-                        "--col": heatmapWeeks.length - 1 - weekIndex,
-                        "--row": week.length - 1 - dayIndex,
-                        backgroundColor:
-                          day.level === 0 ? "var(--heatmap-empty-cell)" : color,
-                        opacity: day.level === 0 ? 1 : LEVEL_OPACITY[day.level],
-                      } as CSSProperties)
-                    : undefined
-                }
-                title={day ? `${day.date}: ${day.count}` : undefined}
-              />
-            ))}
-          </div>
-        ))}
-      </Fragment>
     </div>
   );
 }

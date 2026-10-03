@@ -82,6 +82,8 @@ export function useTodayQueue() {
       return null;
     }
     return {
+      // No program at all: the first run (docs/specs/onboard-empty-states.md AC-1).
+      hasPrograms: data.programOrder.length > 0,
       queue: buildTodayQueue(data.rows, now, data.programOrder),
       reviewedToday: countReviewedOn(data.counts, now),
       streak: computeCurrentStreak(toActiveDateSet(data.counts), now),

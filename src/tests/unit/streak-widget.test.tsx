@@ -59,6 +59,17 @@ describe("StreakWidget", () => {
     ).toBeInTheDocument();
   });
 
+  /** docs/specs/onboard-empty-states.md AC-8 */
+  it("says there is no streak yet instead of 0 days", async () => {
+    vi.mocked(listActivityCounts).mockResolvedValue([]);
+
+    renderWidget();
+
+    expect(
+      await screen.findByText(i18n.t("streakDaysLabel", { count: 0 }))
+    ).toHaveTextContent(i18n.t("streakNoneYetLabel"));
+  });
+
   it("opens a popover with today's day-of-month, streak stats and the hint message", async () => {
     const user = userEvent.setup();
     vi.mocked(listActivityCounts).mockResolvedValue([

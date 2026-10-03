@@ -137,6 +137,54 @@ function DueToday({
   );
 }
 
+const WELCOME_STEPS = [
+  "todayWelcomeStep1",
+  "todayWelcomeStep2",
+  "todayWelcomeStep3",
+] as const;
+
+/**
+ * The first run, before any program exists (docs/specs/onboard-empty-states.md
+ * AC-1): what the app does, the loop in three steps, and the first one.
+ */
+function Welcome() {
+  const { t } = useTranslation();
+
+  return (
+    <section className="flex max-w-xl flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-balance font-medium font-serif text-2xl leading-tight">
+          {t("todayWelcomeTitle")}
+        </h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {t("todayWelcomeMessage")}
+        </p>
+      </div>
+      <ol
+        aria-label={t("todayWelcomeStepsLabel")}
+        className="flex flex-col gap-3"
+      >
+        {WELCOME_STEPS.map((key, index) => (
+          <li className="flex items-start gap-3 text-sm" key={key}>
+            <span
+              aria-hidden="true"
+              className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/10 font-medium text-brand text-xs tabular-nums"
+            >
+              {index + 1}
+            </span>
+            <span className="pt-0.5 leading-relaxed">{t(key)}</span>
+          </li>
+        ))}
+      </ol>
+      <Button asChild className="self-start" size="lg">
+        <Link search={{ new: true }} to="/programs">
+          {t("todayWelcomeAction")}
+        </Link>
+      </Button>
+    </section>
+  );
+}
+
 /** Nothing left for today: how the day went and when to come back (AC-8). */
 function DayClosed({
   reviewedToday,
@@ -181,8 +229,16 @@ function DayClosed({
  */
 export function TodayPage() {
   const { i18n, t } = useTranslation();
-  const { now, queue, retry, reviewedToday, status, streak, upcoming } =
-    useTodayQueue();
+  const {
+    hasPrograms,
+    now,
+    queue,
+    retry,
+    reviewedToday,
+    status,
+    streak,
+    upcoming,
+  } = useTodayQueue();
   const [sessionItems, setSessionItems] = useState<TodayItem[] | null>(null);
   const locale = resolveEventCalendarLocale(i18n.language);
 
@@ -231,6 +287,8 @@ export function TodayPage() {
         </div>
       ) : null}
 
+      {queue && hasPrograms === false ? <Welcome /> : null}
+
       {queue && hasDue ? (
         <DueToday
           onSelect={handleSelect}
@@ -239,7 +297,7 @@ export function TodayPage() {
         />
       ) : null}
 
-      {queue && !hasDue && upcoming ? (
+      {queue && hasPrograms && !hasDue && upcoming ? (
         <DayClosed
           reviewedToday={reviewedToday ?? 0}
           streak={streak ?? 0}
