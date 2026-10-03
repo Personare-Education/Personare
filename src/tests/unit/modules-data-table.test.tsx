@@ -83,28 +83,34 @@ describe("ModulesDataTable", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders an edit, a delete and a view-activities action for every module", () => {
+  /** docs/specs/layout-tables.md AC-4 */
+  it("shows view activities on every row and keeps edit and delete in 'More actions'", () => {
     renderTable();
 
     expect(
-      screen.getAllByRole("button", { name: i18n.t("editModuleAction") })
-    ).toHaveLength(MODULES.length);
-    expect(
-      screen.getAllByRole("button", { name: i18n.t("deleteModuleAction") })
-    ).toHaveLength(MODULES.length);
-    expect(
       screen.getAllByRole("button", { name: i18n.t("viewActivitiesAction") })
     ).toHaveLength(MODULES.length);
+    expect(
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })
+    ).toHaveLength(MODULES.length);
+    expect(
+      screen.queryByRole("button", { name: i18n.t("editModuleAction") })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("deleteModuleAction") })
+    ).toBeNull();
   });
 
   it("calls onEdit with the corresponding module when its edit action is triggered", async () => {
     const user = userEvent.setup();
     const { onEdit } = renderTable();
 
-    const editButtons = screen.getAllByRole("button", {
-      name: i18n.t("editModuleAction"),
-    });
-    await user.click(editButtons[1]);
+    await user.click(
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })[1]
+    );
+    await user.click(
+      await screen.findByRole("menuitem", { name: i18n.t("editModuleAction") })
+    );
 
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(MODULES[1]);
@@ -114,10 +120,14 @@ describe("ModulesDataTable", () => {
     const user = userEvent.setup();
     const { onRequestDelete } = renderTable();
 
-    const deleteButtons = screen.getAllByRole("button", {
-      name: i18n.t("deleteModuleAction"),
-    });
-    await user.click(deleteButtons[0]);
+    await user.click(
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })[0]
+    );
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("deleteModuleAction"),
+      })
+    );
 
     expect(onRequestDelete).toHaveBeenCalledTimes(1);
     expect(onRequestDelete).toHaveBeenCalledWith(MODULES[0]);
@@ -162,8 +172,12 @@ describe("ModulesDataTable row click and context menu", () => {
     const user = userEvent.setup();
     const { onEdit, onNavigateToActivities } = renderTable();
 
+    // Neither the "More actions" button nor its menu item opens the row.
     await user.click(
-      screen.getAllByRole("button", { name: i18n.t("editModuleAction") })[0]
+      screen.getAllByRole("button", { name: i18n.t("moreActionsAction") })[0]
+    );
+    await user.click(
+      await screen.findByRole("menuitem", { name: i18n.t("editModuleAction") })
     );
 
     expect(onEdit).toHaveBeenCalledWith(MODULES[0]);

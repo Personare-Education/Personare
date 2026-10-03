@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
+import ReviewHighlightChip from "@/components/review-highlight-chip";
 import ReviewHighlightTableFrame from "@/components/review-highlight-table-frame";
 import {
   Table,
@@ -61,6 +62,7 @@ function ModuleRow({
       },
       {
         icon: <Pencil />,
+        inMenu: true,
         key: "edit",
         label: t("editModuleAction"),
         onSelect: () => onEdit(module),
@@ -68,6 +70,7 @@ function ModuleRow({
       {
         destructive: true,
         icon: <Trash2 />,
+        inMenu: true,
         key: "delete",
         label: t("deleteModuleAction"),
         onSelect: () => onRequestDelete(module),
@@ -83,7 +86,13 @@ function ModuleRow({
       onOpen={actions[0].onSelect}
       rowId={module.id}
     >
-      <TableCell className="font-medium">{module.name}</TableCell>
+      <TableCell className="font-medium">
+        <span className="flex items-center gap-2">
+          {module.name}
+          {/* Beside the name, not among the actions (docs/specs/layout-tables.md AC-3). */}
+          {highlight ? <ReviewHighlightChip highlight={highlight} /> : null}
+        </span>
+      </TableCell>
     </ActionableTableRow>
   );
 }

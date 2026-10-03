@@ -1,3 +1,4 @@
+import { MoreHorizontal } from "lucide-react";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -12,6 +13,12 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ReviewHighlight } from "@/utils/review-highlight";
 import { cn } from "@/utils/tailwind";
@@ -19,13 +26,21 @@ import { cn } from "@/utils/tailwind";
 export interface RowAction {
   destructive?: boolean;
   icon: ReactNode;
+  /**
+   * Behind the row's "More actions" menu instead of a button of its own,
+   * e.g. edit and delete (docs/specs/layout-tables.md AC-4).
+   */
+  inMenu?: boolean;
   key: string;
   label: string;
   onSelect: () => void;
 }
 
 interface ActionableTableRowProps {
-  /** Rendered as the row's buttons and, in the same order, its context menu. */
+  /**
+   * Rendered as the row's buttons (or its "More actions" menu, when
+   * `inMenu`) and, all of them in the same order, its context menu.
+   */
   actions: RowAction[];
   /** Cells before the actions cell. */
   children: ReactNode;
@@ -39,12 +54,6 @@ interface ActionableTableRowProps {
   onOpen: () => void;
   rowId?: string;
 }
-
-const HIGHLIGHT_LABEL_KEYS: Record<ReviewHighlight, string> = {
-  focus: "reviewFocusLabel",
-  overdue: "reviewOverdueLabel",
-  today: "reviewDueTodayLabel",
-};
 
 function stopPropagation(event: MouseEvent) {
   event.stopPropagation();
@@ -71,6 +80,8 @@ export default function ActionableTableRow({
     },
     [onOpen]
   );
+  const buttonActions = actions.filter((action) => !action.inMenu);
+  const menuActions = actions.filter((action) => action.inMenu);
 
   return (
     <ContextMenu>
@@ -91,21 +102,7 @@ export default function ActionableTableRow({
           {/* The buttons run their own action, not the row's. */}
           <TableCell onClick={stopPropagation}>
             <div className="flex items-center gap-1">
-              {/* Visible, not only for assistive tech
-                  (docs/specs/today-review-queue.md AC-11). */}
-              {highlight ? (
-                <span
-                  className={cn(
-                    "mr-1 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[0.6875rem]",
-                    highlight === "overdue"
-                      ? "bg-destructive/10 text-destructive-text"
-                      : "bg-brand/10 text-brand-text"
-                  )}
-                >
-                  {t(HIGHLIGHT_LABEL_KEYS[highlight])}
-                </span>
-              ) : null}
-              {actions.map((action) => (
+              {buttonActions.map((action) => (
                 <ActionIconButton
                   key={action.key}
                   label={action.label}
@@ -114,6 +111,27 @@ export default function ActionableTableRow({
                   {action.icon}
                 </ActionIconButton>
               ))}
+              {menuActions.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <ActionIconButton label={t("moreActionsAction")}>
+                      <MoreHorizontal />
+                    </ActionIconButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {menuActions.map((action) => (
+                      <DropdownMenuItem
+                        key={action.key}
+                        onClick={action.onSelect}
+                        variant={action.destructive ? "destructive" : "default"}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
             </div>
           </TableCell>
         </TableRow>
