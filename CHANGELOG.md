@@ -43,6 +43,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   a interface. As duas são gratuitas e vêm dentro do app. Isso também corrige um bug antigo: o app pedia
   a fonte "Geist", mas ela era registrada como "Geist Variable", então tudo caía na Arial.
 
+### Fixed
+
+- **Revisões de hoje:** o flashcard tem a mesma largura do cartão do item acima dele, o brilho dos
+  cartões não é mais cortado nas bordas e a barra de rolagem segue o tema do app.
+
 ### Added
 
 - **O heatmap dos cards de programa "preenche" ao carregar**, com a mesma animação do site: cada dia
