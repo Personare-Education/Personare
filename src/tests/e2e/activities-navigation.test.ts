@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Regression test for Issue #60: `/programs/$programId/modules/$moduleId`
@@ -62,7 +63,7 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   await expect(
     page.getByRole("heading", { exact: true, name: "Today" })
   ).toBeVisible();
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await expect(
     page.getByRole("heading", { exact: true, name: "Programs" })
   ).toBeVisible();
@@ -73,8 +74,9 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   // Issue #99: Programs is now a card grid, each card a single button that
   // both shows the name and navigates -- no more "View modules" row/icon.
   await page.getByRole("button", { name: new RegExp(programName) }).click();
+  // The program's own name heads its screen (docs/specs/organize-identity.md).
   await expect(
-    page.getByRole("heading", { exact: true, name: "Modules" })
+    page.getByRole("heading", { exact: true, name: programName })
   ).toBeVisible();
 
   await page.getByRole("button", { name: "New module" }).click();
@@ -89,7 +91,7 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   // The regression: this heading, and everything below it, never appeared
   // before the Outlet fix -- the app silently stayed on the Modules page.
   await expect(
-    page.getByRole("heading", { exact: true, name: "Activities" })
+    page.getByRole("heading", { exact: true, name: moduleName })
   ).toBeVisible();
 
   await page.getByRole("button", { name: "New activity" }).click();

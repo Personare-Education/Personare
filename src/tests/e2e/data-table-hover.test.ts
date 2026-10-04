@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Data tables: the header row must not change color on hover, and a body
@@ -46,7 +47,7 @@ test("data table header ignores hover and rows stay inside the rounded border", 
 
   // The app opens on Today; programs live under "Programs"
   // (docs/specs/today-review-queue.md).
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();
