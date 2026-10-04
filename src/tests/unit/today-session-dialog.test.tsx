@@ -33,17 +33,25 @@ vi.mock("@/components/quiz-runner-dialog", () => ({
   default: ({
     activity,
     onFinished,
+    onRated,
     open,
   }: {
     activity: { id: string } | null;
     onFinished: (activity: { id: string }) => void;
+    onRated?: (activity: { id: string }) => void;
     open: boolean;
   }) =>
     open && activity ? (
-      // biome-ignore lint/performance/noJsxPropsBind: a test stand-in.
-      <button onClick={() => onFinished(activity)} type="button">
-        quiz-runner-finish
-      </button>
+      <>
+        {/* biome-ignore lint/performance/noJsxPropsBind: a test stand-in. */}
+        <button onClick={() => onFinished(activity)} type="button">
+          quiz-runner-finish
+        </button>
+        {/* biome-ignore lint/performance/noJsxPropsBind: a test stand-in. */}
+        <button onClick={() => onRated?.(activity)} type="button">
+          quiz-runner-rate
+        </button>
+      </>
     ) : null,
 }));
 
@@ -185,6 +193,18 @@ describe("TodaySessionDialog", () => {
     await user.click(button(i18n.t("activityRatingAgainAction")));
 
     expect(markActivityDifficulty).toHaveBeenCalledWith("quiz", "again");
+  });
+
+  /** docs/specs/quiz-result-rating.md AC-3 */
+  it("moves on when the quiz was rated on its own result", async () => {
+    const user = userEvent.setup();
+    renderSession([QUIZ, PDF]);
+
+    await user.click(button(i18n.t("takeQuizAction")));
+    await user.click(button("quiz-runner-rate"));
+
+    expect(await screen.findByText(PDF.activityTitle)).toBeInTheDocument();
+    expect(markActivityDifficulty).not.toHaveBeenCalled();
   });
 
   it("reviews a deck's due cards in place, then moves on", async () => {

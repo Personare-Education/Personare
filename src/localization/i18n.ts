@@ -330,6 +330,9 @@ i18n.use(initReactI18next).init({
         quizQuestionsSavedCount_one: "{{count}} question saved in this quiz",
         quizQuestionsSavedCount_other: "{{count}} questions saved in this quiz",
         quizQuestionsSavedCount_zero: "No questions saved yet",
+        quizRatePrompt:
+          "How did it go? Your rating sets when the quiz comes back.",
+        quizRatingSuggestion: "Suggested by your score: {{rating}}",
         quizResultMessage: "{{correct}} of {{total}} correct",
         quizReviewCorrectAnswerLabel: "Correct answer:",
         quizReviewCorrectStatusLabel: "Correct",
@@ -798,6 +801,8 @@ i18n.use(initReactI18next).init({
         quizQuestionsSavedCount_one: "{{count}} pergunta salva neste quiz",
         quizQuestionsSavedCount_other: "{{count}} perguntas salvas neste quiz",
         quizQuestionsSavedCount_zero: "Nenhuma pergunta salva ainda",
+        quizRatePrompt: "Como foi? A avaliação decide quando o quiz volta.",
+        quizRatingSuggestion: "Sugestão pela sua pontuação: {{rating}}",
         quizResultMessage: "{{correct}} de {{total}} corretas",
         quizReviewCorrectAnswerLabel: "Resposta correta:",
         quizReviewCorrectStatusLabel: "Correta",

@@ -25,47 +25,20 @@ vi.mock("@/actions/quiz", () => ({
 vi.mock("@/actions/attachments", () => ({
   getAttachmentImageDataUrl: vi.fn(),
 }));
-
-/*
- * Motion drives CountUp's spring from real time, which fake timers do not
- * move. This stand-in keeps its contract -- shows `from` until startWhen,
- * then the final value, and calls onEnd `duration` seconds later -- so the
- * tests follow the result screen's steps on the fake clock.
- */
-vi.mock("@/components/count-up", async () => {
-  const { useEffect } = await import("react");
-
-  function CountUpStub({
-    duration = 2,
-    format = String,
-    from = 0,
-    onEnd,
-    startWhen = true,
-    to,
-  }: {
-    duration?: number;
-    format?: (value: number) => string;
-    from?: number;
-    onEnd?: () => void;
-    startWhen?: boolean;
-    to: number;
-  }) {
-    useEffect(() => {
-      if (!startWhen) {
-        return;
-      }
-      const timeoutId = setTimeout(() => onEnd?.(), duration * 1000);
-      return () => clearTimeout(timeoutId);
-    }, [duration, onEnd, startWhen]);
-
-    return <span>{format(startWhen ? to : from)}</span>;
-  }
-
-  return { default: CountUpStub };
-});
+vi.mock("@/actions/review", () => ({
+  armPendingActivityRating: vi.fn().mockResolvedValue(undefined),
+  clearPendingActivityRating: vi.fn().mockResolvedValue(undefined),
+  markActivityDifficulty: vi.fn().mockResolvedValue({}),
+  previewActivityRatings: vi.fn().mockResolvedValue({}),
+}));
 
 const { listQuizQuestionsWithOptions } = await import("@/actions/quiz");
 const { getAttachmentImageDataUrl } = await import("@/actions/attachments");
+const {
+  armPendingActivityRating,
+  clearPendingActivityRating,
+  markActivityDifficulty,
+} = await import("@/actions/review");
 const { default: QuizRunnerDialog } = await import(
   "@/components/quiz-runner-dialog"
 );
@@ -107,32 +80,24 @@ const RUNNER_QUESTIONS = [
   },
 ];
 
-/**
- * How long each count up (score, then each time card) runs, plus a little
- * slack for the chart to mount its center label.
- */
-const QUIZ_COUNT_UP_MS = 1600;
-
 const PREVIOUS_ACTION = /previous|anterior/i;
-
-async function waitForCountUps() {
-  await act(() => vi.advanceTimersByTimeAsync(QUIZ_COUNT_UP_MS * 2));
-}
 
 function renderRunner(activity: Activity | null = QUIZ_ACTIVITY) {
   const onFinished = vi.fn();
   const onOpenChange = vi.fn();
+  const onRated = vi.fn();
 
   render(
     <QuizRunnerDialog
       activity={activity}
       onFinished={onFinished}
       onOpenChange={onOpenChange}
+      onRated={onRated}
       open={activity !== null}
     />
   );
 
-  return { onFinished, onOpenChange };
+  return { onFinished, onOpenChange, onRated };
 }
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -283,62 +248,6 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     expect(screen.getAllByRole("radio")).toHaveLength(2);
   });
 
-  it("shows the radial chart result with score, total time, and average time per question on finish", async () => {
-    const user = userEvent.setup({
-      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
-    });
-    renderRunner();
-    await screen.findByText(RUNNER_QUESTIONS[0].text);
-
-    await act(() => vi.advanceTimersByTimeAsync(5000));
-    const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
-    await user.click(q1Radios[1]); // Brasilia (correct)
-    await user.click(checkButton());
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
-    );
-    await screen.findByText(RUNNER_QUESTIONS[1].text);
-
-    await act(() => vi.advanceTimersByTimeAsync(15_000));
-    const q2Radios = screen.getAllByRole("radio") as HTMLInputElement[];
-    await user.click(q2Radios[1]); // 4 (correct)
-    await user.click(checkButton());
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
-    );
-
-    const averageTimeName = i18n.t("quizAverageTimeLabel");
-    const totalTimeName = i18n.t("quizTotalTimeLabel");
-
-    // The score counts up with the chart; the time cards wait for it.
-    expect(
-      screen.getByText(i18n.t("quizScoreMaxLabel", { max: 1000 }))
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(i18n.t("quizResultMessage", { correct: 2, total: 2 }))
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("figure", { name: averageTimeName })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("figure", { name: totalTimeName })
-    ).not.toBeInTheDocument();
-
-    // Score scale: 0 to 1000. Once it is counted, both time cards come in
-    // together and count up.
-    await act(() => vi.advanceTimersByTimeAsync(QUIZ_COUNT_UP_MS));
-    const averageTimeCard = screen.getByRole("figure", {
-      name: averageTimeName,
-    });
-    const totalTimeCard = screen.getByRole("figure", { name: totalTimeName });
-
-    await waitForCountUps();
-    expect(screen.getByText("1000")).toBeInTheDocument();
-    expect(within(averageTimeCard).getByText("10s")).toBeInTheDocument();
-    expect(within(totalTimeCard).getByText("20s")).toBeInTheDocument();
-    expect(screen.queryAllByRole("radio")).toHaveLength(0);
-  });
-
   /**
    * RED phase (Issue #103, Spec Driven TDD): QuizRunnerDialog does not
    * expose an `onFinished` prop yet. Every test below is expected to fail
@@ -365,9 +274,6 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     await user.click(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
-    await waitForCountUps();
-    expect(screen.getByText("1000")).toBeInTheDocument();
-
     expect(onFinished).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Close" }));
 
@@ -412,33 +318,6 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       await Promise.resolve();
     });
     expect(screen.getByRole("dialog")).not.toHaveAttribute("data-shaking");
-  });
-
-  it("completes the quiz from the result screen's button, like closing it", async () => {
-    const user = userEvent.setup({
-      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
-    });
-    const { onFinished, onOpenChange } = renderRunner();
-    await screen.findByText(RUNNER_QUESTIONS[0].text);
-
-    const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
-    await user.click(q1Radios[1]);
-    await user.click(checkButton());
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
-    );
-    await screen.findByText(RUNNER_QUESTIONS[1].text);
-    await answer(user, 1);
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
-    );
-
-    await user.click(
-      await screen.findByRole("button", { name: i18n.t("completeQuizAction") })
-    );
-
-    expect(onFinished).toHaveBeenCalledWith(QUIZ_ACTIVITY);
-    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("does not call onFinished when the dialog is closed before finishing the quiz", async () => {
@@ -719,9 +598,161 @@ describe("QuizRunnerDialog immediate feedback", () => {
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
 
-    await waitForCountUps();
     expect(
-      screen.getByText(i18n.t("quizResultMessage", { correct: 1, total: 2 }))
+      await screen.findByText(
+        i18n.t("quizResultMessage", { correct: 1, total: 2 })
+      )
     ).toBeInTheDocument();
+  });
+});
+
+/**
+ * RED phase (docs/specs/quiz-result-rating.md): the result is where the
+ * quiz gets rated, without points, a gauge or timers.
+ */
+describe("QuizRunnerDialog result as the rating step", () => {
+  function setupUser() {
+    return userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+  }
+
+  /** Answers both questions by option index, then finishes. */
+  async function finishQuiz(user: User, picks: [number, number]) {
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    await answer(user, picks[0]);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await screen.findByText(RUNNER_QUESTIONS[1].text);
+    await answer(user, picks[1]);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
+    );
+  }
+
+  function ratingButton(key: string) {
+    return screen.getByRole("button", { name: i18n.t(key) });
+  }
+
+  it("shows how many were right and a mark per question, without points or timers (AC-1)", async () => {
+    const user = setupUser();
+    renderRunner();
+
+    await finishQuiz(user, [1, 0]);
+
+    expect(
+      await screen.findByText(
+        i18n.t("quizResultMessage", { correct: 1, total: 2 })
+      )
+    ).toBeInTheDocument();
+    const marks = screen
+      .getByTestId("quiz-result-marks")
+      .querySelectorAll("[data-mark]");
+    expect(Array.from(marks, (mark) => mark.getAttribute("data-mark"))).toEqual(
+      ["correct", "incorrect"]
+    );
+    expect(
+      screen.queryByText(i18n.t("quizScoreMaxLabel", { max: 1000 }))
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(i18n.t("quizAverageTimeLabel"))
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("completeQuizAction") })
+    ).not.toBeInTheDocument();
+    expect(ratingButton("activityRatingGoodAction")).toBeInTheDocument();
+  });
+
+  it("suggests the rating from the score and starts there (AC-2)", async () => {
+    const user = setupUser();
+    renderRunner();
+
+    await finishQuiz(user, [1, 0]);
+
+    const hard = await screen.findByRole("button", {
+      name: i18n.t("activityRatingHardAction"),
+    });
+    expect(hard).toHaveAttribute("data-suggested", "true");
+    expect(hard).toHaveFocus();
+    expect(
+      screen.getByText(
+        i18n.t("quizRatingSuggestion", {
+          rating: i18n.t("activityRatingHardAction"),
+        })
+      )
+    ).toBeInTheDocument();
+    expect(markActivityDifficulty).not.toHaveBeenCalled();
+  });
+
+  it("rates the quiz from the result and hands back (AC-3)", async () => {
+    const user = setupUser();
+    const { onFinished, onOpenChange, onRated } = renderRunner();
+    await finishQuiz(user, [1, 1]);
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: i18n.t("activityRatingGoodAction"),
+      })
+    );
+
+    expect(markActivityDifficulty).toHaveBeenCalledWith(
+      QUIZ_ACTIVITY.id,
+      "good"
+    );
+    expect(clearPendingActivityRating).toHaveBeenCalledWith(QUIZ_ACTIVITY.id);
+    expect(onRated).toHaveBeenCalledWith(QUIZ_ACTIVITY);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onFinished).not.toHaveBeenCalled();
+  });
+
+  it("stays on the result when the rating fails to save (AC-4)", async () => {
+    const user = setupUser();
+    vi.mocked(markActivityDifficulty).mockRejectedValueOnce(new Error("x"));
+    const { onOpenChange, onRated } = renderRunner();
+    await finishQuiz(user, [1, 1]);
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: i18n.t("activityRatingGoodAction"),
+      })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      i18n.t("ratingSaveErrorMessage")
+    );
+    expect(onRated).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("leaves the rating pending once the quiz is finished (AC-5)", async () => {
+    const user = setupUser();
+    renderRunner();
+
+    await finishQuiz(user, [1, 1]);
+
+    await screen.findByText(
+      i18n.t("quizResultMessage", { correct: 2, total: 2 })
+    );
+    expect(armPendingActivityRating).toHaveBeenCalledWith(QUIZ_ACTIVITY.id);
+  });
+
+  it("marks the reviewed answers in the feedback's green and red (AC-6)", async () => {
+    const user = setupUser();
+    renderRunner();
+
+    await finishQuiz(user, [1, 0]);
+
+    const review = within(
+      await screen.findByRole("region", { name: i18n.t("quizReviewHeading") })
+    );
+    expect(
+      review.getByRole("img", { name: i18n.t("quizReviewCorrectStatusLabel") })
+    ).toHaveClass("text-success-text");
+    expect(
+      review.getByRole("img", {
+        name: i18n.t("quizReviewIncorrectStatusLabel"),
+      })
+    ).toHaveClass("text-destructive-text");
   });
 });

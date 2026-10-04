@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import KeyHint from "@/components/key-hint";
 import { Button } from "@/components/ui/button";
 import { formatInterval } from "@/utils/review-time";
+import { cn } from "@/utils/tailwind";
 
 export type RatingValue = "again" | "hard" | "good" | "easy";
 
@@ -76,6 +77,7 @@ interface RatingButtonProps {
   onClick: (rating: RatingValue) => void;
   rating: RatingValue;
   shortcut: string;
+  suggested: boolean;
 }
 
 function RatingButton({
@@ -86,6 +88,7 @@ function RatingButton({
   onClick,
   rating,
   shortcut,
+  suggested,
 }: RatingButtonProps) {
   const intervalId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -108,7 +111,14 @@ function RatingButton({
       // aria-disabled, not disabled: the button keeps focus while saving.
       aria-disabled={disabled || undefined}
       aria-keyshortcuts={shortcut}
-      className="!border-[color-mix(in_srgb,var(--tone)_45%,transparent)] !bg-[color-mix(in_srgb,var(--tone)_12%,transparent)] hover:!bg-[color-mix(in_srgb,var(--tone)_22%,transparent)] h-auto min-h-7 flex-col gap-0 py-1 text-foreground leading-tight"
+      // The suggested one is outlined in its tone
+      // (docs/specs/quiz-result-rating.md AC-2).
+      className={cn(
+        "!border-[color-mix(in_srgb,var(--tone)_45%,transparent)] !bg-[color-mix(in_srgb,var(--tone)_12%,transparent)] hover:!bg-[color-mix(in_srgb,var(--tone)_22%,transparent)] h-auto min-h-7 flex-col gap-0 py-1 text-foreground leading-tight",
+        suggested &&
+          "ring-2 ring-[var(--tone)] ring-offset-1 ring-offset-background"
+      )}
+      data-suggested={suggested || undefined}
       onClick={handleClick}
       ref={buttonRef}
       style={{ "--tone": RATING_TONES[rating] } as CSSProperties}
@@ -143,6 +153,8 @@ interface RatingButtonsProps {
   intervals?: Partial<Record<RatingValue, Date>>;
   onRate: (rating: RatingValue) => void;
   scale?: RatingScale;
+  /** One rating to point out, e.g. from a quiz's score; focus starts there. */
+  suggested?: RatingValue;
 }
 
 /**
@@ -156,6 +168,7 @@ export function RatingButtons({
   intervals,
   onRate,
   scale = "flashcard",
+  suggested,
 }: RatingButtonsProps) {
   const { t } = useTranslation();
 
@@ -185,7 +198,7 @@ export function RatingButtons({
     <>
       {RATINGS.map((rating, index) => (
         <RatingButton
-          autoFocus={autoFocus && rating === "good"}
+          autoFocus={autoFocus && rating === (suggested ?? "good")}
           disabled={disabled}
           interval={intervals?.[rating]}
           key={rating}
@@ -193,6 +206,7 @@ export function RatingButtons({
           onClick={onRate}
           rating={rating}
           shortcut={String(index + 1)}
+          suggested={rating === suggested}
         />
       ))}
     </>

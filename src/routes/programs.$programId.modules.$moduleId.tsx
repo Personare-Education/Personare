@@ -430,6 +430,7 @@ function ModuleActivitiesPage() {
         activity={activityTakingQuiz}
         onFinished={handleQuizFinished}
         onOpenChange={handleQuizRunnerOpenChange}
+        onRated={handleActivityRated}
         open={activityTakingQuiz !== null}
       />
       <FlashcardManagerDialog
