@@ -56,3 +56,15 @@ export function formatRelativeDue(due: Date, now: Date, t: TFunction): string {
   }
   return t("reviewDueInDays", { count: days });
 }
+
+/**
+ * How far ahead a card may come back within the same review session: the
+ * FSRS short learning steps (1 and 10 minutes) fit, a day does not
+ * (docs/specs/relearn-in-session.md AC-1).
+ */
+const SESSION_RETURN_WINDOW_MS = 20 * 60 * 1000;
+
+/** Whether a card rated just now comes back before the session ends. */
+export function returnsThisSession(due: Date, now: Date): boolean {
+  return due.getTime() - now.getTime() <= SESSION_RETURN_WINDOW_MS;
+}

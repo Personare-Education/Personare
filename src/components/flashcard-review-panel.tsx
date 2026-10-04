@@ -19,6 +19,7 @@ import {
 import SessionEndCard from "@/components/session-end-card";
 import { Button } from "@/components/ui/button";
 import { resolveProgramColor } from "@/constants/program-appearance";
+import { returnsThisSession } from "@/utils/review-time";
 
 interface DueReviewItem {
   back: string;
@@ -63,7 +64,9 @@ export default function FlashcardReviewPanel({
   const [isFlipped, setIsFlipped] = useState(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
-  const ratedCountRef = useRef(0);
+  // Each card counts once, even when it came back in the session
+  // (docs/specs/relearn-in-session.md AC-5).
+  const ratedIdsRef = useRef(new Set<string>());
   // One rating in flight at a time; a failed save keeps the card
   // (docs/specs/review-focus-errors.md AC-3, AC-4).
   const [isSaving, setIsSaving] = useState(false);
@@ -75,7 +78,7 @@ export default function FlashcardReviewPanel({
     setInitialCount(null);
     setIsRevealed(false);
     setIsFlipped(false);
-    ratedCountRef.current = 0;
+    ratedIdsRef.current = new Set();
     ensureReviewItems(activityId)
       .then(() => listDue(activityId))
       .then((items) => {
@@ -145,15 +148,23 @@ export default function FlashcardReviewPanel({
       isSavingRef.current = true;
       setIsSaving(true);
       Promise.resolve(submitRating(currentItem.id, rating))
-        .then(() => {
+        .then((updated) => {
           setSaveFailed(false);
-          ratedCountRef.current += 1;
+          ratedIdsRef.current.add(currentItem.id);
+          // A short learning step ("Again · 1 minute") comes back at the end
+          // of this session, as the button promised (AC-1).
+          const dueDate = updated?.dueDate ? new Date(updated.dueDate) : null;
+          const comesBack =
+            dueDate !== null && returnsThisSession(dueDate, new Date());
           setIsRevealed(false);
           setIsFlipped(false);
           setQueue((prev) => {
             const next = prev.slice(1);
+            if (comesBack) {
+              next.push({ ...currentItem, dueDate });
+            }
             if (next.length === 0) {
-              onDoneRef.current?.(ratedCountRef.current);
+              onDoneRef.current?.(ratedIdsRef.current.size);
             }
             return next;
           });
@@ -191,6 +202,10 @@ export default function FlashcardReviewPanel({
       {currentItem ? (
         <>
           <div className="flex flex-col gap-3 py-2">
+            {/* docs/specs/relearn-in-session.md AC-3 */}
+            <p className="text-muted-foreground text-xs tabular-nums">
+              {t("reviewCardsLeftLabel", { count: queue.length })}
+            </p>
             {/* Keyed by item: the next card shows up on its front, instead of
                 flipping back through its own back. */}
             <FlipCard
