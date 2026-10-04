@@ -3,9 +3,10 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * docs/specs/brand-primary.md AC-1, AC-2, AC-4: the primary is the brand
- * blue, and both its label and its use as text on the card stay at 4.5:1 or
- * more, in light and dark. Reads the real tokens from global.css.
+ * docs/specs/brand-primary.md AC-1, AC-4 and docs/specs/dark-primary.md: the
+ * primary is the brand blue in both themes, its label stays at 4.5:1 or
+ * more, and the button stands out from the page. Blue text uses
+ * --brand-text, not the primary. Reads the real tokens from global.css.
  */
 
 const CSS = fs.readFileSync(
@@ -16,6 +17,19 @@ const ROOT_BLOCK = /:root\s*\{([^}]*)\}/;
 const DARK_BLOCK = /\.dark\s*\{([^}]*)\}/;
 const HEX = /^#([0-9a-f]{6})$/i;
 const ACHROMATIC_OKLCH = /^oklch\(([\d.]+) 0 0\)$/;
+const TEXT_PRIMARY = /\btext-primary(?![-\w])/g;
+const SRC = path.resolve(import.meta.dirname, "../..");
+const SOURCE_FILE = /\.tsx?$/;
+
+function sourceFiles(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return entry.name === "tests" ? [] : sourceFiles(full);
+    }
+    return SOURCE_FILE.test(entry.name) ? [full] : [];
+  });
+}
 
 function token(block: string, name: string): string {
   const match = block.match(new RegExp(`--${name}:\\s*([^;]+);`));
@@ -58,6 +72,24 @@ describe("primary", () => {
     expect(token(THEMES.light, "primary").toLowerCase()).toBe("#2f5ce0");
   });
 
+  /** docs/specs/dark-primary.md AC-1 */
+  it("is the same blue with a white label in dark, not a pale one", () => {
+    expect(token(THEMES.dark, "primary").toLowerCase()).toBe("#2f5ce0");
+    expect(token(THEMES.dark, "primary-foreground").toLowerCase()).toBe(
+      "#ffffff"
+    );
+  });
+
+  /** docs/specs/dark-primary.md AC-3 */
+  it("is never used for text: blue text is --brand-text", () => {
+    const offenders = sourceFiles(SRC).flatMap((file) =>
+      (fs.readFileSync(file, "utf8").match(TEXT_PRIMARY) ?? []).map(
+        (match) => `${path.relative(SRC, file)}: ${match}`
+      )
+    );
+    expect(offenders).toEqual([]);
+  });
+
   for (const [theme, block] of Object.entries(THEMES)) {
     it(`keeps its label readable in ${theme}`, () => {
       expect(
@@ -65,10 +97,10 @@ describe("primary", () => {
       ).toBeGreaterThanOrEqual(4.5);
     });
 
-    it(`reads as text on the card in ${theme}`, () => {
+    it(`stands out from the page in ${theme}`, () => {
       expect(
-        contrast(token(block, "primary"), token(block, "card"))
-      ).toBeGreaterThanOrEqual(4.5);
+        contrast(token(block, "primary"), token(block, "background"))
+      ).toBeGreaterThanOrEqual(3);
     });
   }
 });

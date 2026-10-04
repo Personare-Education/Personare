@@ -149,7 +149,7 @@ function EventCalendarAgendaView({
                   <span
                     className={cn(
                       "text-foreground font-semibold",
-                      isToday(day) && "text-primary"
+                      isToday(day) && "text-brand-text"
                     )}
                   >
                     {weekday}
