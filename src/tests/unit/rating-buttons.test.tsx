@@ -88,4 +88,27 @@ describe("RatingButtons", () => {
       expect(hint).toHaveAttribute("aria-hidden", "true");
     }
   });
+
+  /** docs/specs/review-focus-errors.md AC-1 */
+  it("focuses Good when asked to", () => {
+    render(<RatingButtons autoFocus onRate={vi.fn()} />);
+
+    expect(
+      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+    ).toHaveFocus();
+  });
+
+  /** docs/specs/review-focus-errors.md AC-4 */
+  it("rates nothing while disabled, by click or key", async () => {
+    const user = userEvent.setup();
+    const onRate = vi.fn();
+    render(<RatingButtons disabled onRate={onRate} />);
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+    );
+    await user.keyboard("3");
+
+    expect(onRate).not.toHaveBeenCalled();
+  });
 });

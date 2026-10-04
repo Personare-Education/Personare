@@ -13,6 +13,7 @@ import MarkdownContent from "@/components/markdown-content";
 import {
   isTypingTarget,
   RatingButtons,
+  RatingSaveError,
   type RatingValue,
 } from "@/components/rating-buttons";
 import SessionEndCard from "@/components/session-end-card";
@@ -63,6 +64,11 @@ export default function FlashcardReviewPanel({
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
   const ratedCountRef = useRef(0);
+  // One rating in flight at a time; a failed save keeps the card
+  // (docs/specs/review-focus-errors.md AC-3, AC-4).
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     setQueue([]);
@@ -132,22 +138,31 @@ export default function FlashcardReviewPanel({
 
   const handleRate = useCallback(
     (rating: RatingValue) => {
-      if (!currentItem) {
+      if (!currentItem || isSavingRef.current) {
         return;
       }
 
-      Promise.resolve(submitRating(currentItem.id, rating)).then(() => {
-        ratedCountRef.current += 1;
-        setIsRevealed(false);
-        setIsFlipped(false);
-        setQueue((prev) => {
-          const next = prev.slice(1);
-          if (next.length === 0) {
-            onDoneRef.current?.(ratedCountRef.current);
-          }
-          return next;
+      isSavingRef.current = true;
+      setIsSaving(true);
+      Promise.resolve(submitRating(currentItem.id, rating))
+        .then(() => {
+          setSaveFailed(false);
+          ratedCountRef.current += 1;
+          setIsRevealed(false);
+          setIsFlipped(false);
+          setQueue((prev) => {
+            const next = prev.slice(1);
+            if (next.length === 0) {
+              onDoneRef.current?.(ratedCountRef.current);
+            }
+            return next;
+          });
+        })
+        .catch(() => setSaveFailed(true))
+        .finally(() => {
+          isSavingRef.current = false;
+          setIsSaving(false);
         });
-      });
     },
     [currentItem]
   );
@@ -212,9 +227,15 @@ export default function FlashcardReviewPanel({
               />
             </div>
           </div>
+          {saveFailed ? <RatingSaveError /> : null}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             {isRevealed ? (
-              <RatingButtons intervals={intervals} onRate={handleRate} />
+              <RatingButtons
+                autoFocus
+                disabled={isSaving}
+                intervals={intervals}
+                onRate={handleRate}
+              />
             ) : (
               <Button aria-keyshortcuts="Space" onClick={reveal}>
                 {t("revealAnswerAction")}

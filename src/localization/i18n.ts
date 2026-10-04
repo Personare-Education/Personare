@@ -349,6 +349,7 @@ i18n.use(initReactI18next).init({
         ratingEasyAction: "Easy",
         ratingGoodAction: "Good",
         ratingHardAction: "Hard",
+        ratingSaveErrorMessage: "Couldn't save the rating. Try again.",
         removeImageAction: "Remove image",
         removeQuizOptionAction: "Remove alternative",
         replayWelcomeAction: "Show introduction",
@@ -812,6 +813,8 @@ i18n.use(initReactI18next).init({
         ratingEasyAction: "Fácil",
         ratingGoodAction: "Bom",
         ratingHardAction: "Difícil",
+        ratingSaveErrorMessage:
+          "Não foi possível salvar a avaliação. Tente de novo.",
         removeImageAction: "Remover imagem",
         removeQuizOptionAction: "Remover alternativa",
         replayWelcomeAction: "Ver introdução",

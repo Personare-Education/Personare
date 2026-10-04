@@ -254,4 +254,33 @@ describe("TodaySessionDialog", () => {
       i18n.t("todaySessionProgramCount", { count: 1 })
     );
   });
+
+  /** docs/specs/review-focus-errors.md AC-2 */
+  it("moves focus to the middle rating once an activity is opened", async () => {
+    const user = userEvent.setup();
+    renderSession([PDF]);
+
+    await user.click(button(i18n.t("todayOpenPdfAction")));
+
+    expect(button(i18n.t("activityRatingGoodAction"))).toHaveFocus();
+  });
+
+  /** docs/specs/review-focus-errors.md AC-3 */
+  it("stays on the activity and says so when its rating fails to save", async () => {
+    const user = userEvent.setup();
+    vi.mocked(markActivityDifficulty).mockRejectedValueOnce(new Error("x"));
+    renderSession([PDF, LINK]);
+    await user.click(button(i18n.t("todayOpenPdfAction")));
+
+    await user.click(button(i18n.t("activityRatingGoodAction")));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      i18n.t("ratingSaveErrorMessage")
+    );
+    expect(screen.getByText(PDF.activityTitle)).toBeInTheDocument();
+
+    await user.click(button(i18n.t("activityRatingGoodAction")));
+
+    expect(await screen.findByText(LINK.activityTitle)).toBeInTheDocument();
+  });
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   clearPendingActivityRating,
@@ -6,7 +6,7 @@ import {
   previewActivityRatings,
   type RatingValue,
 } from "@/actions/review";
-import { RatingButtons } from "@/components/rating-buttons";
+import { RatingButtons, RatingSaveError } from "@/components/rating-buttons";
 import {
   Dialog,
   DialogContent,
@@ -52,8 +52,14 @@ export default function ActivityDifficultyDialog({
     Partial<Record<RatingValue, Date>> | undefined
   >();
 
+  // A failed save keeps the dialog open (docs/specs/review-focus-errors.md AC-3, AC-4).
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const isSavingRef = useRef(false);
+
   useEffect(() => {
     setIntervals(undefined);
+    setSaveFailed(false);
     if (open && activityId) {
       previewActivityRatings(activityId)
         .then(setIntervals)
@@ -63,15 +69,23 @@ export default function ActivityDifficultyDialog({
 
   const handleRatingClick = useCallback(
     (rating: RatingValue) => {
-      if (!activityId) {
+      if (!activityId || isSavingRef.current) {
         return;
       }
 
-      Promise.resolve(markActivityDifficulty(activityId, rating)).then(() => {
-        clearPendingActivityRating(activityId);
-        onOpenChange(false);
-        onRated();
-      });
+      isSavingRef.current = true;
+      setIsSaving(true);
+      Promise.resolve(markActivityDifficulty(activityId, rating))
+        .then(() => {
+          clearPendingActivityRating(activityId);
+          onOpenChange(false);
+          onRated();
+        })
+        .catch(() => setSaveFailed(true))
+        .finally(() => {
+          isSavingRef.current = false;
+          setIsSaving(false);
+        });
     },
     [activityId, onOpenChange, onRated]
   );
@@ -90,12 +104,14 @@ export default function ActivityDifficultyDialog({
         <p className="text-muted-foreground text-sm">
           {t("activityDifficultyPromptMessage")}
         </p>
+        {saveFailed ? <RatingSaveError /> : null}
         <div
           className="grid grid-cols-2 gap-2 sm:grid-cols-4"
           data-slot="rating-grid"
         >
           {open ? (
             <RatingButtons
+              disabled={isSaving}
               intervals={intervals}
               onRate={handleRatingClick}
               scale="activity"

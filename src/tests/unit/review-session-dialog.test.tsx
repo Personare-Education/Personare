@@ -360,4 +360,39 @@ describe("ReviewSessionDialog (Issue #16)", () => {
       i18n.t("keySpaceLabel")
     );
   });
+
+  /** docs/specs/review-focus-errors.md AC-1 */
+  it("moves focus to Good once the answer shows", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.keyboard(" ");
+
+    expect(
+      screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
+    ).toHaveFocus();
+  });
+
+  /** docs/specs/review-focus-errors.md AC-3 */
+  it("keeps the card and says so when the rating fails to save", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitRating).mockRejectedValueOnce(new Error("disk full"));
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+    await user.keyboard(" ");
+
+    await user.keyboard("3");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      i18n.t("ratingSaveErrorMessage")
+    );
+    expect(visibleFace()).toHaveTextContent(DUE_ITEMS[0].back);
+
+    await user.keyboard("3");
+
+    expect(await screen.findByText(DUE_ITEMS[1].front)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(submitRating).toHaveBeenCalledTimes(2);
+  });
 });
