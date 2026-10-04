@@ -70,6 +70,23 @@ describe("StreakWidget", () => {
     ).toHaveTextContent(i18n.t("streakNoneYetLabel"));
   });
 
+  /** docs/specs/contrast-translation.md AC-4 */
+  it("makes the month buttons 24px targets", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listActivityCounts).mockResolvedValue([]);
+    renderWidget();
+    await user.click(await screen.findByRole("button"));
+
+    expect(
+      await screen.findByRole("button", {
+        name: i18n.t("calendarPreviousAction"),
+      })
+    ).toHaveAttribute("data-size", "icon-sm");
+    expect(
+      screen.getByRole("button", { name: i18n.t("calendarNextAction") })
+    ).toHaveAttribute("data-size", "icon-sm");
+  });
+
   it("opens a popover with today's day-of-month, streak stats and the hint message", async () => {
     const user = userEvent.setup();
     vi.mocked(listActivityCounts).mockResolvedValue([

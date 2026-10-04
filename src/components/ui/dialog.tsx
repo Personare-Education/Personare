@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 function Dialog({
   ...props
@@ -56,6 +57,9 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  // The close button speaks the app's language
+  // (docs/specs/contrast-translation.md AC-5).
+  const { t } = useTranslation()
   // A notice's Undo is not "outside": clicking it must not close the dialog
   // (docs/specs/safety-net.md AC-3a).
   const handleInteractOutside = React.useCallback(
@@ -101,7 +105,7 @@ function DialogContent({
             >
               <XIcon
               />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t("closeAction")}</span>
             </Button>
           </DialogPrimitive.Close>
         )}

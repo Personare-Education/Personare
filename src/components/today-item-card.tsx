@@ -85,7 +85,7 @@ export default function TodayItemCard({
           className={cn(
             "rounded-full px-2 py-0.5 font-medium",
             item.urgency === "overdue"
-              ? "bg-destructive/10 text-destructive"
+              ? "bg-destructive/10 text-destructive-text"
               : "bg-foreground/5 text-foreground"
           )}
         >
