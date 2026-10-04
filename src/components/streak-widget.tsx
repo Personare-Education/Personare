@@ -121,7 +121,7 @@ export function StreakWidget() {
               <Button
                 aria-label={t("calendarPreviousAction")}
                 onClick={handlePreviousMonth}
-                size="icon-xs"
+                size="icon-sm"
                 variant="ghost"
               >
                 <ChevronLeft />
@@ -132,7 +132,7 @@ export function StreakWidget() {
               <Button
                 aria-label={t("calendarNextAction")}
                 onClick={handleNextMonth}
-                size="icon-xs"
+                size="icon-sm"
                 variant="ghost"
               >
                 <ChevronRight />

@@ -14,6 +14,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Configurações na barra lateral:** um item com a engrenagem no rodapé, além do menu da conta.
 - **Dicas de tecla na revisão:** cada avaliação mostra a sua tecla (1 a 4), e **Revelar resposta** mostra
   **Espaço**.
+- **Quiz com resposta na hora:** em cada pergunta você escolhe uma alternativa e clica em **Confirmar
+  resposta**; na hora a pergunta mostra se acertou (a alternativa fica verde, com ✓) ou errou (a sua
+  fica vermelha, com ✗, a certa fica verde, e o aviso diz qual era a resposta). Depois o botão vira
+  **Próxima pergunta**.
 
 ### Changed
 
@@ -22,6 +26,26 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Uma ação principal por linha, com texto:** em Atividades e Módulos, "Iniciar revisão", "Responder
   quiz", "Ver PDF", "Abrir link" ou "Ver atividades" aparecem como botão; gerenciar, editar e excluir
   ficam em **Mais ações**.
+- **Quiz sem voltar atrás:** uma resposta confirmada é definitiva; "Pergunta anterior" saiu, e o aviso da
+  pergunta agora pede para escolher e confirmar.
+- **Telas de programa e de módulo com a cara do programa:** o título é o nome do programa (ou do módulo),
+  ao lado do selo com a cor e o ícone dele, e o caminho no topo começa em **Programas**, que leva de
+  volta à lista.
+
+### Fixed
+
+- **A barra lateral marca a página atual** (Hoje, Programas ou Calendário), também dentro de um programa
+  e com a barra recolhida.
+- **As avaliações de uma atividade cabem no diálogo**, em qualquer idioma e tamanho de texto: quatro
+  lado a lado num diálogo mais largo, ou duas por linha numa janela estreita.
+- **Revisão pelo teclado:** ao revelar a resposta, o foco vai para **Bom** (e, na sessão de Hoje, para
+  a avaliação do meio quando uma atividade pede a sua), em vez de se perder na página.
+- **Avaliação que não salva não some:** se salvar a avaliação falhar, o cartão ou a atividade fica na
+  tela com "Não foi possível salvar a avaliação. Tente de novo.", e avaliar de novo tenta outra vez.
+  Um clique duplo não avalia duas vezes.
+- **Contraste e tradução:** a dica de tecla dentro do botão azul, o "Ainda vazio" do editor de
+  flashcards e o selo "atrasado" dos cartões de Hoje ficaram mais legíveis; os botões de mês da
+  sequência ficaram maiores; o botão de fechar dos diálogos diz "Fechar" em português.
 
 ## [0.1.0-alpha.9] - 2026-10-03
 

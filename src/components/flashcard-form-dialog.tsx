@@ -94,7 +94,9 @@ function FaceText({ content }: { content: FaceContent | null }) {
   return content ? (
     <MarkdownContent className="text-base" content={content.text} />
   ) : (
-    <span className="text-muted-foreground text-sm">
+    // Over the program's tint, like the other text on it
+    // (docs/specs/contrast-translation.md AC-2).
+    <span className="text-foreground/75 text-sm">
       {t("flashcardFaceEmptyMessage")}
     </span>
   );
