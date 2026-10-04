@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import ActionIconButton from "@/components/action-icon-button";
+import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -26,11 +27,6 @@ import { cn } from "@/utils/tailwind";
 export interface RowAction {
   destructive?: boolean;
   icon: ReactNode;
-  /**
-   * Behind the row's "More actions" menu instead of a button of its own,
-   * e.g. edit and delete (docs/specs/layout-tables.md AC-4).
-   */
-  inMenu?: boolean;
   key: string;
   label: string;
   onSelect: () => void;
@@ -38,8 +34,9 @@ export interface RowAction {
 
 interface ActionableTableRowProps {
   /**
-   * Rendered as the row's buttons (or its "More actions" menu, when
-   * `inMenu`) and, all of them in the same order, its context menu.
+   * The first is the row's main action, a labeled button; the rest go in
+   * its "More actions" menu (docs/specs/row-primary-action.md). All of them,
+   * in the same order, make its context menu.
    */
   actions: RowAction[];
   /** Cells before the actions cell. */
@@ -80,8 +77,7 @@ export default function ActionableTableRow({
     },
     [onOpen]
   );
-  const buttonActions = actions.filter((action) => !action.inMenu);
-  const menuActions = actions.filter((action) => action.inMenu);
+  const [primaryAction, ...menuActions] = actions;
 
   return (
     <ContextMenu>
@@ -102,15 +98,17 @@ export default function ActionableTableRow({
           {/* The buttons run their own action, not the row's. */}
           <TableCell onClick={stopPropagation}>
             <div className="flex items-center gap-1">
-              {buttonActions.map((action) => (
-                <ActionIconButton
-                  key={action.key}
-                  label={action.label}
-                  onClick={action.onSelect}
+              {primaryAction ? (
+                <Button
+                  // Same name as its text, so it reads the same to everyone.
+                  aria-label={primaryAction.label}
+                  onClick={primaryAction.onSelect}
+                  variant="outline"
                 >
-                  {action.icon}
-                </ActionIconButton>
-              ))}
+                  {primaryAction.icon}
+                  {primaryAction.label}
+                </Button>
+              ) : null}
               {menuActions.length > 0 ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

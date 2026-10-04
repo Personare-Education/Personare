@@ -181,7 +181,6 @@ function ActivityRow({
       ...(typeActions[activity.type] ?? []),
       {
         icon: <Pencil />,
-        inMenu: true,
         key: "edit",
         label: t("editActivityAction"),
         onSelect: () => onEdit(activity),
@@ -189,7 +188,6 @@ function ActivityRow({
       {
         destructive: true,
         icon: <Trash2 />,
-        inMenu: true,
         key: "delete",
         label: t("deleteActivityAction"),
         onSelect: () => onRequestDelete(activity),
