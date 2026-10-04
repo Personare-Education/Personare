@@ -8,6 +8,7 @@ import {
   test,
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import { freshProfileArg } from "./fresh-profile";
 
 /**
  * Spec: docs/specs/pdf-activity-dropzone.md -- creating a PDF activity is
@@ -25,7 +26,9 @@ const PDF_PATH = path.join(os.tmpdir(), "apostila-e2e.pdf");
 test.beforeAll(async () => {
   const appInfo = parseElectronApp(findLatestBuild());
   process.env.CI = "e2e";
-  electronApp = await electron.launch({ args: [appInfo.main] });
+  electronApp = await electron.launch({
+    args: [appInfo.main, freshProfileArg()],
+  });
   page = await electronApp.firstWindow();
 
   await electronApp.evaluate(({ dialog }, pdfPath) => {

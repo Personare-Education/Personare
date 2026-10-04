@@ -6,6 +6,7 @@ import {
   test,
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import { freshProfileArg } from "./fresh-profile";
 
 /**
  * Regression test for Issue #60: `/programs/$programId/modules/$moduleId`
@@ -33,7 +34,9 @@ test.beforeAll(async () => {
   const appInfo = parseElectronApp(latestBuild);
   process.env.CI = "e2e";
 
-  electronApp = await electron.launch({ args: [appInfo.main] });
+  electronApp = await electron.launch({
+    args: [appInfo.main, freshProfileArg()],
+  });
   page = await electronApp.firstWindow();
 });
 

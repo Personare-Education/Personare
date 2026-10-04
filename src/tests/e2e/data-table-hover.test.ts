@@ -6,6 +6,7 @@ import {
   test,
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import { freshProfileArg } from "./fresh-profile";
 
 /**
  * Data tables: the header row must not change color on hover, and a body
@@ -21,7 +22,9 @@ test.beforeAll(async () => {
   const appInfo = parseElectronApp(latestBuild);
   process.env.CI = "e2e";
 
-  electronApp = await electron.launch({ args: [appInfo.main] });
+  electronApp = await electron.launch({
+    args: [appInfo.main, freshProfileArg()],
+  });
   page = await electronApp.firstWindow();
 });
 
