@@ -834,3 +834,72 @@ describe("ActivitiesDataTable sequences and order", () => {
     expect(onMove).toHaveBeenCalledWith(ACTIVITIES[0], 1);
   });
 });
+
+/** docs/specs/sequences-and-locks.md §4 AC-2, AC-3 */
+describe("ActivitiesDataTable locks", () => {
+  it("shows a padlock with what is missing, and keeps a locked one from opening", async () => {
+    const user = userEvent.setup();
+    const onUnlockRule = vi.fn();
+    const onViewPdf = vi.fn();
+    const pdf = ACTIVITIES.find(
+      (activity) => activity.type === "pdf"
+    ) as Activity;
+    render(
+      <ActivitiesDataTable
+        activities={[pdf]}
+        lockLabelById={{ [pdf.id]: "Unlocks after Capítulo 1" }}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onUnlockRule={onUnlockRule}
+        onViewPdf={onViewPdf}
+        reviewStateByActivityId={{}}
+      />
+    );
+
+    expect(
+      screen.getByRole("img", { name: i18n.t("lockedLabel") })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Unlocks after Capítulo 1")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: i18n.t("viewPdfAction") })
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("unlockRuleAction") })
+    );
+    expect(onUnlockRule).toHaveBeenCalledWith(pdf);
+    expect(onViewPdf).not.toHaveBeenCalled();
+  });
+
+  it("offers the unlock rule in More actions on a free one", async () => {
+    const user = userEvent.setup();
+    const onUnlockRule = vi.fn();
+    render(
+      <ActivitiesDataTable
+        activities={[ACTIVITIES[0]]}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onUnlockRule={onUnlockRule}
+        onViewPdf={vi.fn()}
+        reviewStateByActivityId={{}}
+      />
+    );
+
+    await openRowMenu(user, ACTIVITIES[0].title);
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("unlockRuleAction") })
+    );
+
+    expect(onUnlockRule).toHaveBeenCalledWith(ACTIVITIES[0]);
+  });
+});

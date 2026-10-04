@@ -1,6 +1,9 @@
 import { os } from "@orpc/server";
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { activities as activitiesTable } from "@/database/schema";
+import {
+  activities as activitiesTable,
+  modules as modulesTable,
+} from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
 import {
   cascadeRestoreActivity,
@@ -10,13 +13,16 @@ import {
   assertCanHoldActivity,
   markActivityCompleted,
   nextActivityPosition,
+  getUnlockRule as readUnlockRule,
   reorderRows,
   setUnlockRule as saveUnlockRule,
 } from "@/ipc/shared/sequences";
 import {
   completeActivityInputSchema,
   createActivityInputSchema,
+  getUnlockRuleInputSchema,
   listActivitiesInputSchema,
+  listByProgramInputSchema,
   reorderActivitiesInputSchema,
   setUnlockRuleInputSchema,
   softDeleteActivityInputSchema,
@@ -175,3 +181,45 @@ export const complete = os
   .handler(({ input }) => {
     markActivityCompleted(requireDatabaseClient(), input.id, new Date());
   });
+
+/**
+ * Every live activity of a program, with its module, in screen order: what
+ * an unlock rule can require (docs/specs/sequences-and-locks.md §4 AC-1).
+ */
+export const listByProgram = os
+  .input(listByProgramInputSchema)
+  .handler(({ input }) =>
+    requireDatabaseClient()
+      .select({
+        id: activitiesTable.id,
+        moduleId: modulesTable.id,
+        moduleName: modulesTable.name,
+        parentActivityId: activitiesTable.parentActivityId,
+        title: activitiesTable.title,
+        type: activitiesTable.type,
+        unlockMode: activitiesTable.unlockMode,
+      })
+      .from(activitiesTable)
+      .innerJoin(modulesTable, eq(modulesTable.id, activitiesTable.moduleId))
+      .where(
+        and(
+          eq(modulesTable.programId, input.programId),
+          isNull(modulesTable.deletedAt),
+          isNull(activitiesTable.deletedAt)
+        )
+      )
+      .orderBy(
+        asc(modulesTable.position),
+        asc(modulesTable.createdAt),
+        asc(activitiesTable.position),
+        asc(activitiesTable.createdAt)
+      )
+      .all()
+  );
+
+/** The activity's rule as saved, for its dialog (§4 AC-1). */
+export const getUnlockRule = os
+  .input(getUnlockRuleInputSchema)
+  .handler(({ input }) =>
+    readUnlockRule(requireDatabaseClient(), "activity", input.id)
+  );

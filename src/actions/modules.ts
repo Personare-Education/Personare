@@ -33,3 +33,7 @@ export function setModuleUnlockRule(
 ) {
   return ipc.client.modules.setUnlockRule({ id, mode, requiredIds });
 }
+
+export function getModuleUnlockRule(id: string) {
+  return ipc.client.modules.getUnlockRule({ id });
+}

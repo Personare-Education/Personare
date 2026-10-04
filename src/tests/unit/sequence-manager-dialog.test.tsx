@@ -10,6 +10,7 @@ vi.mock("@/actions/activities", () => ({
   listActivities: vi.fn(),
   reorderActivities: vi.fn().mockResolvedValue(undefined),
   restoreActivity: vi.fn().mockResolvedValue(undefined),
+  setActivityUnlockRule: vi.fn().mockResolvedValue(undefined),
   softDeleteActivity: vi.fn().mockResolvedValue(undefined),
   updateActivity: vi.fn().mockResolvedValue({}),
 }));
@@ -22,6 +23,7 @@ const {
   createActivity,
   listActivities,
   reorderActivities,
+  setActivityUnlockRule,
   softDeleteActivity,
 } = await import("@/actions/activities");
 const { default: SequenceManagerDialog } = await import(
@@ -189,5 +191,51 @@ describe("SequenceManagerDialog", () => {
     expect(
       await screen.findByText(i18n.t("sequenceEmptyMessage"))
     ).toBeInTheDocument();
+  });
+});
+
+/** docs/specs/sequences-and-locks.md §4 AC-4 */
+describe("SequenceManagerDialog order mode and locks", () => {
+  it("locks the sequence in order, the first one staying free", async () => {
+    const user = userEvent.setup();
+    render(
+      <SequenceManagerDialog
+        group={GROUP}
+        onManageQuiz={vi.fn()}
+        onOpenChange={vi.fn()}
+        open
+      />
+    );
+    await screen.findByText("Capítulo 3");
+
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("sequenceModeLock") })
+    );
+
+    expect(setActivityUnlockRule).toHaveBeenCalledWith("pdf", "none", []);
+    expect(setActivityUnlockRule).toHaveBeenCalledWith("video", "previous", []);
+    expect(setActivityUnlockRule).toHaveBeenCalledWith("quiz", "previous", []);
+  });
+
+  it("shows a step's padlock and opens its rule", async () => {
+    const user = userEvent.setup();
+    const onUnlockRule = vi.fn();
+    render(
+      <SequenceManagerDialog
+        group={GROUP}
+        lockLabelById={{ quiz: "Unlocks after Videoaula" }}
+        onManageQuiz={vi.fn()}
+        onOpenChange={vi.fn()}
+        onUnlockRule={onUnlockRule}
+        open
+      />
+    );
+    await screen.findByText("Quiz final");
+
+    expect(screen.getByText("Unlocks after Videoaula")).toBeInTheDocument();
+    await user.click(
+      screen.getAllByRole("button", { name: i18n.t("unlockRuleAction") })[2]
+    );
+    expect(onUnlockRule).toHaveBeenCalledWith(STEPS[2]);
   });
 });

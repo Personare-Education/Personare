@@ -8,11 +8,13 @@ import {
 } from "@/ipc/shared/cascade-soft-delete";
 import {
   nextModulePosition,
+  getUnlockRule as readUnlockRule,
   reorderRows,
   setUnlockRule as saveUnlockRule,
 } from "@/ipc/shared/sequences";
 import {
   createModuleInputSchema,
+  getModuleUnlockRuleInputSchema,
   listModulesInputSchema,
   reorderModulesInputSchema,
   setModuleUnlockRuleInputSchema,
@@ -139,3 +141,10 @@ export const setUnlockRule = os
       input.requiredIds
     );
   });
+
+/** The module's rule as saved, for its dialog (§4 AC-1). */
+export const getUnlockRule = os
+  .input(getModuleUnlockRuleInputSchema)
+  .handler(({ input }) =>
+    readUnlockRule(requireDatabaseClient(), "module", input.id)
+  );

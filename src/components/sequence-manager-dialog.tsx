@@ -4,6 +4,7 @@ import {
   FileText,
   Link,
   ListChecks,
+  Lock,
   type LucideIcon,
   Pencil,
   Plus,
@@ -16,6 +17,7 @@ import {
   listActivities,
   reorderActivities,
   restoreActivity,
+  setActivityUnlockRule,
   softDeleteActivity,
   updateActivity,
 } from "@/actions/activities";
@@ -26,6 +28,7 @@ import ActivityFormDialog, {
   type ActivityTypeOption,
 } from "@/components/activity-form-dialog";
 import DeleteActivityDialog from "@/components/delete-activity-dialog";
+import LockLabel from "@/components/lock-label";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
 import { showUndoToast } from "@/utils/undo-toast";
@@ -61,20 +65,24 @@ const STEP_TYPE_LABEL_KEYS: Record<string, string> = {
 interface StepRowProps {
   index: number;
   isLast: boolean;
+  lockLabel: string | undefined;
   onDelete: (step: Activity) => void;
   onEdit: (step: Activity) => void;
   onManageQuiz: (step: Activity, isNew: boolean) => void;
   onMove: (index: number, direction: -1 | 1) => void;
+  onUnlockRule?: (step: Activity) => void;
   step: Activity;
 }
 
 function StepRow({
   index,
   isLast,
+  lockLabel,
   onDelete,
   onEdit,
   onManageQuiz,
   onMove,
+  onUnlockRule,
   step,
 }: StepRowProps) {
   const { t } = useTranslation();
@@ -86,6 +94,10 @@ function StepRow({
   const handleManageQuiz = useCallback(
     () => onManageQuiz(step, false),
     [onManageQuiz, step]
+  );
+  const handleUnlockRule = useCallback(
+    () => onUnlockRule?.(step),
+    [onUnlockRule, step]
   );
 
   return (
@@ -105,8 +117,10 @@ function StepRow({
         <span className="truncate font-medium text-sm" data-slot="step-title">
           {step.title}
         </span>
-        <span className="text-muted-foreground text-xs">
+        <span className="flex flex-wrap items-center gap-x-2 text-muted-foreground text-xs">
           {t(STEP_TYPE_LABEL_KEYS[step.type] ?? "activityTypeLabel")}
+          {/* docs/specs/sequences-and-locks.md §4 AC-4 */}
+          {lockLabel ? <LockLabel label={lockLabel} /> : null}
         </span>
       </span>
       <span className="flex shrink-0 items-center">
@@ -132,6 +146,14 @@ function StepRow({
             <ListChecks />
           </ActionIconButton>
         ) : null}
+        {onUnlockRule ? (
+          <ActionIconButton
+            label={t("unlockRuleAction")}
+            onClick={handleUnlockRule}
+          >
+            <Lock />
+          </ActionIconButton>
+        ) : null}
         <ActionIconButton label={t("editActivityAction")} onClick={handleEdit}>
           <Pencil />
         </ActionIconButton>
@@ -148,12 +170,28 @@ function StepRow({
 
 interface SequenceManagerDialogProps {
   group: Activity | null;
+  /** What each locked step is missing; absent means free. */
+  lockLabelById?: Record<string, string | undefined>;
   /** After anything changed in the sequence, e.g. to refresh its count. */
   onChanged?: () => void;
   /** A quiz in the sequence opens its questions; a new one starts there. */
   onManageQuiz: (quiz: Activity, isNew: boolean) => void;
   onOpenChange: (open: boolean) => void;
+  /** Opens a step's unlock rule (§4 AC-4). */
+  onUnlockRule?: (step: Activity) => void;
   open: boolean;
+}
+
+const NO_LOCKS: Record<string, string | undefined> = {};
+
+type SequenceMode = "lock" | "suggest";
+
+/** Locked in order when every step after the first waits for the ones before. */
+function sequenceModeOf(steps: Activity[]): SequenceMode {
+  return steps.length > 1 &&
+    steps.slice(1).every((step) => step.unlockMode === "previous")
+    ? "lock"
+    : "suggest";
 }
 
 /**
@@ -163,9 +201,11 @@ interface SequenceManagerDialogProps {
  */
 export default function SequenceManagerDialog({
   group,
+  lockLabelById = NO_LOCKS,
   onChanged,
   onManageQuiz,
   onOpenChange,
+  onUnlockRule,
   open,
 }: SequenceManagerDialogProps) {
   const { t } = useTranslation();
@@ -215,6 +255,34 @@ export default function SequenceManagerDialog({
       ).then(() => onChanged?.());
     },
     [group, onChanged, steps]
+  );
+
+  // One switch for the whole sequence: only suggest the order, or lock
+  // each step until the ones before it are done; the first stays free
+  // (§4 AC-4).
+  const handleModeChange = useCallback(
+    (value: string) => {
+      if (value !== "lock" && value !== "suggest") {
+        return;
+      }
+      const lock = value === "lock";
+      setSteps((prev) =>
+        prev.map((step, index) => ({
+          ...step,
+          unlockMode: lock && index > 0 ? "previous" : "none",
+        }))
+      );
+      Promise.all(
+        steps.map((step, index) =>
+          setActivityUnlockRule(
+            step.id,
+            lock && index > 0 ? "previous" : "none",
+            []
+          )
+        )
+      ).then(changed);
+    },
+    [changed, steps]
   );
 
   const handleAddClick = useCallback(() => {
@@ -315,6 +383,34 @@ export default function SequenceManagerDialog({
           <DialogDescription>
             {t("sequenceManagerDescription")}
           </DialogDescription>
+          {steps.length > 1 ? (
+            <div className="flex items-center gap-3 pt-2">
+              <span className="text-muted-foreground text-xs">
+                {t("sequenceModeLabel")}
+              </span>
+              <ToggleGroup
+                aria-label={t("sequenceModeLabel")}
+                onValueChange={handleModeChange}
+                type="single"
+                value={sequenceModeOf(steps)}
+              >
+                <ToggleGroupItem
+                  className="data-[state=on]:border-brand/40 data-[state=on]:bg-brand/10 data-[state=on]:text-brand-text"
+                  value="suggest"
+                  variant="outline"
+                >
+                  {t("sequenceModeSuggest")}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  className="data-[state=on]:border-brand/40 data-[state=on]:bg-brand/10 data-[state=on]:text-brand-text"
+                  value="lock"
+                  variant="outline"
+                >
+                  {t("sequenceModeLock")}
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          ) : null}
         </DialogHeader>
         <div className="-mx-1 min-h-0 overflow-y-auto px-1 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
           {hasLoaded && steps.length === 0 ? (
@@ -329,10 +425,12 @@ export default function SequenceManagerDialog({
                     index={index}
                     isLast={index === steps.length - 1}
                     key={step.id}
+                    lockLabel={lockLabelById[step.id]}
                     onDelete={setStepPendingDelete}
                     onEdit={handleEdit}
                     onManageQuiz={onManageQuiz}
                     onMove={handleMove}
+                    onUnlockRule={onUnlockRule}
                     step={step}
                   />
                 ))}

@@ -38,6 +38,8 @@ export interface LockState {
   locked: true;
   /** What is still missing, in list order. */
   missing: MissingItem[];
+  /** Locked because its module or its sequence is: `missing` is that one. */
+  waiting?: true;
 }
 
 /** Only what is locked; anything absent is free. */
@@ -161,28 +163,39 @@ export function computeLocks({
     );
   }
 
-  const isActivityLocked = (row: LockActivity): MissingItem[] => {
+  const lockOf = (row: LockActivity): LockState | undefined => {
     // Locked with its module or its group: what is missing is unlocking
     // that first (AC-3).
     if (locks.modules[row.moduleId]) {
-      return [{ id: row.moduleId, kind: "module" }];
+      return {
+        locked: true,
+        missing: [{ id: row.moduleId, kind: "module" }],
+        waiting: true,
+      };
     }
     if (row.parentActivityId) {
       const group = activityById.get(row.parentActivityId);
-      if (group && isActivityLocked(group).length > 0) {
-        return [{ id: group.id, kind: "activity" }];
+      if (group && lockOf(group)) {
+        return {
+          locked: true,
+          missing: [{ id: group.id, kind: "activity" }],
+          waiting: true,
+        };
       }
     }
-    return (ownMissing.get(row.id) ?? []).map(({ id }) => ({
-      id,
-      kind: "activity",
-    }));
+    const missing = ownMissing.get(row.id) ?? [];
+    return missing.length > 0
+      ? {
+          locked: true,
+          missing: missing.map(({ id }) => ({ id, kind: "activity" })),
+        }
+      : undefined;
   };
 
   for (const row of activities) {
-    const missing = isActivityLocked(row);
-    if (missing.length > 0) {
-      locks.activities[row.id] = { locked: true, missing };
+    const lock = lockOf(row);
+    if (lock) {
+      locks.activities[row.id] = lock;
     }
   }
 

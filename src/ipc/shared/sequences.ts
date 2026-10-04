@@ -215,3 +215,30 @@ export function reorderRows(
     });
   });
 }
+
+/** An activity's or a module's rule as it is saved (§4 AC-1). */
+export function getUnlockRule(
+  db: DatabaseClient,
+  kind: "activity" | "module",
+  id: string
+): { mode: string; requiredIds: string[] } {
+  const row =
+    kind === "module"
+      ? db
+          .select({ mode: modulesTable.unlockMode })
+          .from(modulesTable)
+          .where(eq(modulesTable.id, id))
+          .get()
+      : db
+          .select({ mode: activitiesTable.unlockMode })
+          .from(activitiesTable)
+          .where(eq(activitiesTable.id, id))
+          .get();
+  const requiredIds = db
+    .select({ requiredId: unlockRequirementsTable.requiredId })
+    .from(unlockRequirementsTable)
+    .where(eq(unlockRequirementsTable.subjectId, id))
+    .all()
+    .map((requirement) => requirement.requiredId);
+  return { mode: row?.mode ?? "none", requiredIds };
+}

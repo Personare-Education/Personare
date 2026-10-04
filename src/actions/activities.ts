@@ -66,3 +66,12 @@ export function setActivityUnlockRule(
 export function completeActivity(id: string) {
   return ipc.client.activities.complete({ id });
 }
+
+/** A program's activities, by module: what a rule can require. */
+export function listProgramActivities(programId: string) {
+  return ipc.client.activities.listByProgram({ programId });
+}
+
+export function getActivityUnlockRule(id: string) {
+  return ipc.client.activities.getUnlockRule({ id });
+}
