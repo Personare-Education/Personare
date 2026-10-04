@@ -106,9 +106,16 @@ const DECK = item({
   cardCount: 1,
 });
 
-function renderSession(items: TodayItem[]) {
+function renderSession(items: TodayItem[], closeWhenDone = false) {
   const onOpenChange = vi.fn();
-  render(<TodaySessionDialog items={items} onOpenChange={onOpenChange} open />);
+  render(
+    <TodaySessionDialog
+      closeWhenDone={closeWhenDone}
+      items={items}
+      onOpenChange={onOpenChange}
+      open
+    />
+  );
   return { onOpenChange };
 }
 
@@ -227,6 +234,20 @@ describe("TodaySessionDialog", () => {
 
     expect(markActivityDifficulty).not.toHaveBeenCalled();
     expect(screen.getByText(LINK.activityTitle)).toBeInTheDocument();
+  });
+
+  /** docs/specs/day-done-peak.md AC-1 */
+  it("closes straight onto the day when it covered the whole day", async () => {
+    const user = userEvent.setup();
+    const { onOpenChange } = renderSession([PDF], true);
+    await user.click(button(i18n.t("todayOpenPdfAction")));
+
+    await user.click(button(i18n.t("activityRatingGoodAction")));
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(
+      screen.queryByText(i18n.t("todaySessionDoneTitle"))
+    ).not.toBeInTheDocument();
   });
 
   it("ends with a summary of what was reviewed", async () => {

@@ -254,9 +254,9 @@ describe("TodayPage", () => {
     expect(
       screen.getByText(i18n.t("todayReviewedToday", { count: 2 }))
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(i18n.t("todayStreak", { count: 1 }))
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("today-streak")).toHaveTextContent(
+      `1${i18n.t("todayStreakUnit", { count: 1 })}`
+    );
   });
 
   it("says when today's reviews could not be loaded, and retries", async () => {
@@ -350,9 +350,14 @@ describe("TodayPage", () => {
     ]);
     renderPage();
 
+    // The streak as a figure (docs/specs/day-done-peak.md AC-3).
+    const streak = await screen.findByTestId("today-streak");
+    expect(streak).toHaveTextContent(
+      `1${i18n.t("todayStreakUnit", { count: 1 })}`
+    );
     expect(
-      await screen.findByText(i18n.t("todayStreak", { count: 1 }))
-    ).toBeInTheDocument();
+      screen.getByRole("heading", { name: i18n.t("todayDayDoneTitle") })
+    ).toHaveClass("text-4xl");
     const byProgram = screen.getByRole("list", {
       name: i18n.t("todayDoneByProgramLabel"),
     });

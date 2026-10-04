@@ -317,15 +317,22 @@ function DayClosed({
   return (
     <div className="flex max-w-2xl flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h2 className="font-medium font-serif text-2xl">
+        {/* The end of the daily loop is the screen's peak
+            (docs/specs/day-done-peak.md AC-2, AC-3). */}
+        <h2 className="text-balance font-medium font-serif text-4xl leading-tight tracking-[-0.02em]">
           {reviewedToday ? t("todayDayDoneTitle") : t("todayFreeDayTitle")}
         </h2>
-        {/* The streak up front: the habit is the point
+        {/* The streak up front, as a figure: the habit is the point
             (docs/specs/delight-day-done.md AC-1). */}
         {streak ? (
-          <p className="flex items-center gap-2 font-medium text-lg">
-            <Flame aria-hidden="true" className="size-5 text-orange-500" />
-            {t("todayStreak", { count: streak })}
+          <p className="flex items-center gap-2" data-testid="today-streak">
+            <Flame aria-hidden="true" className="size-6 text-orange-500" />
+            <span className="font-medium font-serif text-5xl tabular-nums leading-none">
+              {streak}
+            </span>
+            <span className="self-end pb-1 font-medium text-sm">
+              {t("todayStreakUnit", { count: streak })}
+            </span>
           </p>
         ) : null}
         {reviewedToday ? (
@@ -366,6 +373,9 @@ export function TodayPage() {
     upcoming,
   } = useTodayQueue();
   const [sessionItems, setSessionItems] = useState<TodayItem[] | null>(null);
+  // Started with "Start": the whole day, so its end is the day's end
+  // (docs/specs/day-done-peak.md AC-1).
+  const [isWholeDay, setIsWholeDay] = useState(false);
   const search = useSearch({ strict: false }) as TodaySearch;
   // Asked for again from Settings, with programs already there.
   const isReplayingWelcome = Boolean(search.welcome) && hasPrograms === true;
@@ -373,11 +383,13 @@ export function TodayPage() {
 
   const handleStartClick = useCallback(() => {
     if (queue) {
+      setIsWholeDay(true);
       setSessionItems(queue.items);
     }
   }, [queue]);
 
   const handleSelect = useCallback((item: TodayItem) => {
+    setIsWholeDay(false);
     setSessionItems([item]);
   }, []);
 
@@ -438,6 +450,7 @@ export function TodayPage() {
       ) : null}
 
       <TodaySessionDialog
+        closeWhenDone={isWholeDay}
         items={sessionItems ?? []}
         onOpenChange={handleSessionOpenChange}
         open={sessionItems !== null}

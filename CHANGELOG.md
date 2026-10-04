@@ -18,11 +18,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   resposta**; na hora a pergunta mostra se acertou (a alternativa fica verde, com ✓) ou errou (a sua
   fica vermelha, com ✗, a certa fica verde, e o aviso diz qual era a resposta). Depois o botão vira
   **Próxima pergunta**.
+- **Avaliar o quiz no próprio resultado:** ao finalizar, o resultado mostra as respostas ao lado de "1 de 2
+  certas", uma marca por pergunta e as quatro avaliações com quando o quiz volta; a pontuação sugere uma
+  delas (contornada, e o foco começa nela). Avaliar ali fecha o quiz, sem o segundo diálogo.
+- **Começar com Enter:** na tela Hoje, o **Começar** fica logo abaixo do resumo e responde ao Enter.
 
 ### Changed
 
-- **Botão principal no azul da marca:** azul com texto branco no tema claro, e azul claro com texto
-  escuro no escuro, onde antes era um cinza que parecia desabilitado.
+- **Botão principal no azul da marca:** o mesmo azul com texto branco nos temas claro e escuro, onde antes
+  era um cinza que parecia desabilitado.
 - **Uma ação principal por linha, com texto:** em Atividades e Módulos, "Iniciar revisão", "Responder
   quiz", "Ver PDF", "Abrir link" ou "Ver atividades" aparecem como botão; gerenciar, editar e excluir
   ficam em **Mais ações**.
@@ -31,9 +35,16 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Telas de programa e de módulo com a cara do programa:** o título é o nome do programa (ou do módulo),
   ao lado do selo com a cor e o ícone dele, e o caminho no topo começa em **Programas**, que leva de
   volta à lista.
+- **O resultado do quiz deixou de parecer prova:** saíram o medidor vermelho e verde, os "pontos de 1000"
+  e os tempos médio e total. Esse resultado fica guardado para a futura atividade de prova.
+- **O fim do dia é o destaque:** "Dia concluído" em letras grandes e a sequência como um número; a sessão
+  começada pelo **Começar** fecha direto nessa tela, sem repetir o resumo antes.
+- **Cartões de Hoje mais limpos:** só os atrasados levam selo; o "Hoje" em cada cartão saiu.
 
 ### Fixed
 
+- **"Errei · 1 minuto" agora volta na sessão:** um card cujo próximo vencimento cai em até 20 minutos volta
+  para o fim da fila da mesma revisão, como o botão prometia, e a revisão mostra quantos cards faltam.
 - **A barra lateral marca a página atual** (Hoje, Programas ou Calendário), também dentro de um programa
   e com a barra recolhida.
 - **As avaliações de uma atividade cabem no diálogo**, em qualquer idioma e tamanho de texto: quatro
