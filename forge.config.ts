@@ -36,8 +36,22 @@ const config: ForgeConfig = {
     // win32: portable build, extract and run Personare.exe without installing.
     new MakerZIP({}, ["darwin", "win32"]),
     // Packager names the Linux binary after productName; these default to package.json's name.
-    new MakerRpm({ options: { bin: "Personare", icon: "./assets/icon.png" } }),
-    new MakerDeb({ options: { bin: "Personare", icon: "./assets/icon.png" } }),
+    // They also claim personare://, the Google login's callback
+    // (docs/specs/linux-appimage-protocol.md AC-5).
+    new MakerRpm({
+      options: {
+        bin: "Personare",
+        icon: "./assets/icon.png",
+        mimeType: ["x-scheme-handler/personare"],
+      },
+    }),
+    new MakerDeb({
+      options: {
+        bin: "Personare",
+        icon: "./assets/icon.png",
+        mimeType: ["x-scheme-handler/personare"],
+      },
+    }),
     {
       // ESM-only package: referenced by name so Forge loads it with import().
       config: {
@@ -45,6 +59,7 @@ const config: ForgeConfig = {
           bin: "Personare",
           categories: ["Education"],
           icon: "./assets/icon.png",
+          mimeType: ["x-scheme-handler/personare"],
         },
       },
       name: "@reforged/maker-appimage",

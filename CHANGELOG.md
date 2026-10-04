@@ -43,6 +43,9 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Fixed
 
+- **Login no Linux pelo AppImage:** o retorno do Google (`personare://`) não abria o app, porque o
+  AppImage não registra nada no sistema. Agora, ao abrir, ele se registra como o app desse link. Os pacotes
+  `.deb` e `.rpm` também passam a declará-lo.
 - **"Errei · 1 minuto" agora volta na sessão:** um card cujo próximo vencimento cai em até 20 minutos volta
   para o fim da fila da mesma revisão, como o botão prometia, e a revisão mostra quantos cards faltam.
 - **A barra lateral marca a página atual** (Hoje, Programas ou Calendário), também dentro de um programa

@@ -1,4 +1,8 @@
+import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
 import {
   app,
   BrowserWindow,
@@ -28,6 +32,7 @@ import { getOrCreateAppSettings } from "@/ipc/settings/handlers";
 import { loadToken, saveToken } from "@/main/auth-token-storage";
 import { fetchCurrentUser } from "@/main/backend-client";
 import { countDueReviews } from "@/main/due-reviews";
+import { registerAppImageProtocolHandler } from "@/main/linux-protocol";
 import {
   findOAuthCallbackUrl,
   getProtocolCallbackHost,
@@ -232,6 +237,8 @@ function getAuthTokenStoragePath() {
  * must be told to also pass the app's entry script back as an argument;
  * when packaged, the app's own exe already is the thing to register.
  */
+const execFileAsync = promisify(execFile);
+
 function registerOAuthProtocolClient() {
   if (process.defaultApp) {
     if (process.argv.length >= 2) {
@@ -242,6 +249,17 @@ function registerOAuthProtocolClient() {
   } else {
     app.setAsDefaultProtocolClient(OAUTH_PROTOCOL);
   }
+  // An AppImage registers personare:// for itself, or the Google login's
+  // callback never reaches it (docs/specs/linux-appimage-protocol.md).
+  registerAppImageProtocolHandler({
+    env: process.env,
+    homeDir: os.homedir(),
+    log: (message, error) => console.error(message, error),
+    mkdir: (dir, options) => fs.mkdir(dir, options),
+    platform: process.platform,
+    run: (command, args) => execFileAsync(command, args),
+    writeFile: (file, content) => fs.writeFile(file, content, "utf-8"),
+  });
 }
 
 async function handleLoginCallback(url: string) {
