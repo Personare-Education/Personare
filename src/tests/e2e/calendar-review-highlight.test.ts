@@ -132,6 +132,8 @@ test("walks from a calendar event to the pulsing module and activity", async () 
   await quizRow.click();
   const runner = page.getByRole("dialog", { name: quizName });
   await runner.getByRole("radio").nth(1).click();
+  // Each answer is confirmed first (docs/specs/quiz-immediate-feedback.md).
+  await runner.getByRole("button", { name: "Check answer" }).click();
   await runner.getByRole("button", { name: "Finish quiz" }).click();
   await runner.getByRole("button", { name: "Close" }).click();
   // An activity is rated on its own scale (docs/specs/rating-clarity.md).
