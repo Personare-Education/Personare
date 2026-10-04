@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Regression test for Issue #60: `/programs/$programId/modules/$moduleId`
@@ -62,7 +63,7 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   await expect(
     page.getByRole("heading", { exact: true, name: "Today" })
   ).toBeVisible();
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await expect(
     page.getByRole("heading", { exact: true, name: "Programs" })
   ).toBeVisible();

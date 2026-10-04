@@ -9,6 +9,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Spec: docs/specs/pdf-activity-dropzone.md -- creating a PDF activity is
@@ -53,7 +54,7 @@ test("creates a PDF activity through the file step's drop-zone", async () => {
 
   // The app opens on Today; programs live under "Programs"
   // (docs/specs/today-review-queue.md).
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();

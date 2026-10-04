@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Regression test for Issue #122: the Quiz result screen showed the times but
@@ -45,7 +46,7 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
 
   // The app opens on Today; programs live under "Programs"
   // (docs/specs/today-review-queue.md).
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();

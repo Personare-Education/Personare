@@ -10,6 +10,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Spec: docs/specs/calendar-module-review-highlight.md -- the calendar shows
@@ -100,7 +101,7 @@ test("walks from a calendar event to the pulsing module and activity", async () 
   // Program > module > quiz, pushing a level deeper each time.
   // The app opens on Today; programs live under "Programs"
   // (docs/specs/today-review-queue.md).
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();
@@ -188,7 +189,7 @@ test("walks from a calendar event to the pulsing module and activity", async () 
 
   // Days later, still not done: overdue, red, with a clock beside the row.
   await page.clock.setFixedTime(new Date(dueNoon.getTime() + 3 * DAY_MS));
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await page.getByRole("button", { name: new RegExp(programName) }).click();
   await expect(moduleRow).toHaveAttribute("data-review-highlight", "overdue");
   await expect(

@@ -10,6 +10,7 @@ import {
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
+import { sidebarLink } from "./sidebar-link";
 
 /**
  * Spec: docs/specs/quiz-ai-import.md -- create a Quiz by importing a Markdown
@@ -92,7 +93,7 @@ async function openImportStep(quizName: string) {
   // Start from the Programs page, whatever a previous test left open.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("link", { exact: true, name: "Programs" }).click();
+  await sidebarLink(page, "Programs").click();
   await page.getByRole("button", { name: "New program" }).click();
   await page.getByLabel("Name").fill(programName);
   await page.getByRole("button", { name: "Save" }).click();
