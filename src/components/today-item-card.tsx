@@ -54,11 +54,6 @@ export default function TodayItemCard({
     onSelect?.(item);
   }, [item, onSelect]);
 
-  const urgency =
-    item.urgency === "overdue"
-      ? t("todayUrgencyOverdue", { count: item.overdueDays })
-      : t("todayUrgencyToday");
-
   const content = (
     <>
       {/* Foreground, not gray, on the program's tint (docs/specs/audit-a11y.md AC-2). */}
@@ -81,16 +76,13 @@ export default function TodayItemCard({
       </span>
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground/70 text-xs">
         <span>{item.moduleName}</span>
-        <span
-          className={cn(
-            "rounded-full px-2 py-0.5 font-medium",
-            item.urgency === "overdue"
-              ? "bg-destructive/10 text-destructive-text"
-              : "bg-foreground/5 text-foreground"
-          )}
-        >
-          {urgency}
-        </span>
+        {/* Everything here is for today; only being late is news
+            (docs/specs/today-layout.md AC-3). */}
+        {item.urgency === "overdue" ? (
+          <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive-text">
+            {t("todayUrgencyOverdue", { count: item.overdueDays })}
+          </span>
+        ) : null}
       </span>
     </>
   );

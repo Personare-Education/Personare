@@ -364,4 +364,61 @@ describe("TodayPage", () => {
       screen.queryByText(i18n.t("todayUpcomingTitle"))
     ).not.toBeInTheDocument();
   });
+
+  /** docs/specs/today-layout.md AC-1, AC-4 */
+  it("puts Start right under the summary, with a readable overdue chip", async () => {
+    vi.mocked(listSchedule).mockResolvedValue(DUE_ROWS);
+    renderPage();
+
+    const summary = await screen.findByText(
+      i18n.t("todayDueSummary", { count: 3 })
+    );
+    const block = summary.closest("[data-slot='today-summary']");
+    expect(block).not.toBeNull();
+    expect(
+      within(block as HTMLElement).getByRole("button", {
+        name: i18n.t("todayStartAction"),
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("todayOverdueSummary", { count: 1 }))
+    ).toHaveClass("text-destructive-text");
+  });
+
+  /** docs/specs/today-layout.md AC-2 */
+  it("starts the day's session with Enter", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listSchedule).mockResolvedValue(DUE_ROWS);
+    renderPage();
+    const start = await screen.findByRole("button", {
+      name: i18n.t("todayStartAction"),
+    });
+    expect(start).toHaveAttribute("aria-keyshortcuts", "Enter");
+    expect(start.querySelector("[data-slot='key-hint']")).toHaveTextContent(
+      i18n.t("keyEnterLabel")
+    );
+
+    await user.keyboard("{Enter}");
+
+    expect(
+      within(await screen.findByRole("dialog")).getByText(
+        i18n.t("todaySessionProgress", { current: 1, total: 3 })
+      )
+    ).toBeInTheDocument();
+  });
+
+  /** docs/specs/today-layout.md AC-3 */
+  it("marks only the overdue items", async () => {
+    vi.mocked(listSchedule).mockResolvedValue(DUE_ROWS);
+    renderPage();
+
+    // "Today" is also the page's title: look in the cards only.
+    const calculus = await screen.findByRole("region", { name: "Cálculo I" });
+    expect(
+      within(calculus).queryByText(i18n.t("todayUrgencyToday"))
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("todayUrgencyOverdue", { count: 1 }))
+    ).toBeInTheDocument();
+  });
 });
