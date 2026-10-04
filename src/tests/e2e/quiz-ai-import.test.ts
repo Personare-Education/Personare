@@ -244,6 +244,7 @@ By the Pigeonhole Principle, what is the minimum number of people in a group so 
       return;
     }
     await runner.getByRole("radio").first().click();
+    await runner.getByRole("button", { name: "Check answer" }).click();
     await runner
       .getByRole("button", {
         name: remaining === 1 ? "Finish quiz" : "Next question",

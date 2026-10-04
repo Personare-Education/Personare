@@ -113,6 +113,8 @@ const RUNNER_QUESTIONS = [
  */
 const QUIZ_COUNT_UP_MS = 1600;
 
+const PREVIOUS_ACTION = /previous|anterior/i;
+
 async function waitForCountUps() {
   await act(() => vi.advanceTimersByTimeAsync(QUIZ_COUNT_UP_MS * 2));
 }
@@ -131,6 +133,25 @@ function renderRunner(activity: Activity | null = QUIZ_ACTIVITY) {
   );
 
   return { onFinished, onOpenChange };
+}
+
+type User = ReturnType<typeof userEvent.setup>;
+
+function checkButton() {
+  return screen.getByRole("button", { name: i18n.t("quizCheckAnswerAction") });
+}
+
+/** Picks an alternative of the current question and confirms it. */
+async function answer(user: User, option: number) {
+  await user.click(
+    (screen.getAllByRole("radio") as HTMLInputElement[])[option]
+  );
+  await user.click(checkButton());
+}
+
+/** The alternative's box, where its right/wrong mark goes. */
+function choiceOf(radio: HTMLElement) {
+  return radio.closest("[data-slot='questionnaire-choice']") as HTMLElement;
 }
 
 beforeEach(() => {
@@ -222,6 +243,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     renderRunner();
     await screen.findByText(RUNNER_QUESTIONS[0].text);
 
+    await answer(user, 0);
     expect(
       screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
     ).toBeInTheDocument();
@@ -231,6 +253,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     );
     expect(screen.getByText(RUNNER_QUESTIONS[1].text)).toBeVisible();
 
+    await answer(user, 0);
     expect(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     ).toBeInTheDocument();
@@ -250,6 +273,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
 
     const firstRadios = screen.getAllByRole("radio") as HTMLInputElement[];
     await user.click(firstRadios[1]);
+    await user.click(checkButton());
     await user.click(
       screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
     );
@@ -269,6 +293,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     await act(() => vi.advanceTimersByTimeAsync(5000));
     const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
     await user.click(q1Radios[1]); // Brasilia (correct)
+    await user.click(checkButton());
     await user.click(
       screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
     );
@@ -277,6 +302,7 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     await act(() => vi.advanceTimersByTimeAsync(15_000));
     const q2Radios = screen.getAllByRole("radio") as HTMLInputElement[];
     await user.click(q2Radios[1]); // 4 (correct)
+    await user.click(checkButton());
     await user.click(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
@@ -328,12 +354,14 @@ describe("QuizRunnerDialog (Issue #95)", () => {
 
     const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
     await user.click(q1Radios[1]);
+    await user.click(checkButton());
     await user.click(
       screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
     );
     await screen.findByText(RUNNER_QUESTIONS[1].text);
     const q2Radios = screen.getAllByRole("radio") as HTMLInputElement[];
     await user.click(q2Radios[1]);
+    await user.click(checkButton());
     await user.click(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
@@ -395,10 +423,12 @@ describe("QuizRunnerDialog (Issue #95)", () => {
 
     const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
     await user.click(q1Radios[1]);
+    await user.click(checkButton());
     await user.click(
       screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
     );
     await screen.findByText(RUNNER_QUESTIONS[1].text);
+    await answer(user, 1);
     await user.click(
       screen.getByRole("button", { name: i18n.t("finishQuizAction") })
     );
@@ -423,47 +453,20 @@ describe("QuizRunnerDialog (Issue #95)", () => {
     expect(onFinished).not.toHaveBeenCalled();
   });
 
-  it("counts an unanswered question as incorrect when the finish action is triggered", async () => {
-    const user = userEvent.setup({
-      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
-    });
-    renderRunner();
-    await screen.findByText(RUNNER_QUESTIONS[0].text);
-
-    const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
-    await user.click(q1Radios[1]); // Brasilia (correct)
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
-    );
-    await screen.findByText(RUNNER_QUESTIONS[1].text);
-    // q2 left unanswered
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
-    );
-
-    await waitForCountUps();
-    expect(screen.getByText("500")).toBeInTheDocument();
-    expect(
-      screen.getByText(i18n.t("quizResultMessage", { correct: 1, total: 2 }))
-    ).toBeInTheDocument();
-  });
-
   describe("per-question review list", () => {
     async function finishWithAnswers(
       user: ReturnType<typeof userEvent.setup>,
-      { q1, q2 }: { q1: 0 | 1; q2: 0 | 1 | null }
+      { q1, q2 }: { q1: 0 | 1; q2: 0 | 1 }
     ) {
       await screen.findByText(RUNNER_QUESTIONS[0].text);
       const q1Radios = screen.getAllByRole("radio") as HTMLInputElement[];
       await user.click(q1Radios[q1]);
+      await user.click(checkButton());
       await user.click(
         screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
       );
       await screen.findByText(RUNNER_QUESTIONS[1].text);
-      if (q2 !== null) {
-        const q2Radios = screen.getAllByRole("radio") as HTMLInputElement[];
-        await user.click(q2Radios[q2]);
-      }
+      await answer(user, q2);
       await user.click(
         screen.getByRole("button", { name: i18n.t("finishQuizAction") })
       );
@@ -537,24 +540,6 @@ describe("QuizRunnerDialog (Issue #95)", () => {
       ).toBeInTheDocument();
       expect(review.getByText("Brasilia")).toBeInTheDocument();
     });
-
-    it("shows a no-answer label and the correct answer for a question left unanswered", async () => {
-      const user = userEvent.setup({
-        advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
-      });
-      renderRunner();
-
-      await finishWithAnswers(user, { q1: 1, q2: null });
-      const review = await findReview();
-
-      expect(
-        review.getByText(i18n.t("quizReviewNoAnswerLabel"))
-      ).toBeInTheDocument();
-      expect(
-        review.getByText(i18n.t("quizReviewCorrectAnswerLabel"))
-      ).toBeInTheDocument();
-      expect(review.getByText("4")).toBeInTheDocument();
-    });
   });
 });
 
@@ -572,42 +557,6 @@ describe("QuizRunnerDialog safety net", () => {
   function radios() {
     return screen.getAllByRole("radio") as HTMLInputElement[];
   }
-
-  it("goes back to the previous question, keeping its answer", async () => {
-    const user = setupUser();
-    renderRunner();
-    await screen.findByText(RUNNER_QUESTIONS[0].text);
-    expect(
-      screen.queryByRole("button", {
-        name: i18n.t("quizPreviousQuestionAction"),
-      })
-    ).not.toBeInTheDocument();
-
-    await user.click(radios()[1]);
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
-    );
-    await user.click(
-      screen.getByRole("button", { name: i18n.t("quizPreviousQuestionAction") })
-    );
-
-    expect(screen.getByText(RUNNER_QUESTIONS[0].text)).toBeInTheDocument();
-    expect(radios()[1].checked).toBe(true);
-  });
-
-  it("flags a question that has no answer yet, until one is chosen", async () => {
-    const user = setupUser();
-    renderRunner();
-    await screen.findByText(RUNNER_QUESTIONS[0].text);
-
-    expect(screen.getByText(i18n.t("quizUnansweredHint"))).toBeInTheDocument();
-
-    await user.click(radios()[0]);
-
-    expect(
-      screen.queryByText(i18n.t("quizUnansweredHint"))
-    ).not.toBeInTheDocument();
-  });
 
   it("asks before abandoning a quiz with answers, and stays when told to", async () => {
     const user = setupUser();
@@ -659,5 +608,120 @@ describe("QuizRunnerDialog safety net", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * RED phase (docs/specs/quiz-immediate-feedback.md): each question is
+ * confirmed, then says right away whether it was right, with no way back.
+ */
+describe("QuizRunnerDialog immediate feedback", () => {
+  function setupUser() {
+    return userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+  }
+
+  it("asks for a choice before it can be confirmed (AC-1)", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    expect(checkButton()).toBeDisabled();
+    expect(screen.getByText(i18n.t("quizUnansweredHint"))).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("radio")[0]);
+
+    expect(checkButton()).toBeEnabled();
+    expect(
+      screen.queryByText(i18n.t("quizUnansweredHint"))
+    ).not.toBeInTheDocument();
+  });
+
+  it("says a right answer is right, and locks the question (AC-2)", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    const radios = screen.getAllByRole("radio");
+
+    await answer(user, 1);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      i18n.t("quizFeedbackCorrectMessage")
+    );
+    expect(choiceOf(radios[1])).toHaveAttribute("data-feedback", "correct");
+    expect(choiceOf(radios[0])).not.toHaveAttribute("data-feedback");
+    for (const radio of radios) {
+      expect(radio).toBeDisabled();
+    }
+  });
+
+  it("says a wrong answer is wrong and shows the right one (AC-2)", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    const radios = screen.getAllByRole("radio");
+
+    await answer(user, 0);
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent(i18n.t("quizFeedbackIncorrectMessage"));
+    expect(status).toHaveTextContent("Brasilia");
+    expect(choiceOf(radios[0])).toHaveAttribute("data-feedback", "incorrect");
+    expect(choiceOf(radios[1])).toHaveAttribute("data-feedback", "correct");
+  });
+
+  it("keeps focus on the button, then puts it on the next question (AC-3)", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    await user.click(screen.getAllByRole("radio")[1]);
+    const button = checkButton();
+    await user.click(button);
+
+    expect(button).toHaveFocus();
+    expect(button).toHaveAccessibleName(i18n.t("nextQuestionAction"));
+
+    await user.click(button);
+
+    await screen.findByText(RUNNER_QUESTIONS[1].text);
+    expect(screen.getAllByRole("radio")[0]).toHaveFocus();
+  });
+
+  it("has no way back to an answered question (AC-4)", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    await answer(user, 1);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+
+    expect(
+      screen.queryByRole("button", { name: PREVIOUS_ACTION })
+    ).not.toBeInTheDocument();
+  });
+
+  it("scores the confirmed answers (AC-5)", async () => {
+    const user = setupUser();
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    await answer(user, 0);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await screen.findByText(RUNNER_QUESTIONS[1].text);
+    await answer(user, 1);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
+    );
+
+    await waitForCountUps();
+    expect(
+      screen.getByText(i18n.t("quizResultMessage", { correct: 1, total: 2 }))
+    ).toBeInTheDocument();
   });
 });

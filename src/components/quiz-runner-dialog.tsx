@@ -72,10 +72,43 @@ interface QuizRunnerDialogProps {
 }
 
 interface QuizRunnerQuestionStepProps {
+  /** The alternative confirmed for this question, once it is. */
+  confirmedOptionId: string | undefined;
   question: QuizRunnerQuestion;
 }
 
-function QuizRunnerQuestionStep({ question }: QuizRunnerQuestionStepProps) {
+type ChoiceFeedback = "correct" | "incorrect";
+
+/**
+ * How a confirmed question marks an alternative
+ * (docs/specs/quiz-immediate-feedback.md AC-2): the right one, and the
+ * chosen one when it was wrong. The rest stay unmarked.
+ */
+function choiceFeedback(
+  option: QuizRunnerOption,
+  confirmedOptionId: string | undefined
+): ChoiceFeedback | undefined {
+  if (confirmedOptionId === undefined) {
+    return;
+  }
+  if (option.isCorrect) {
+    return "correct";
+  }
+  return option.id === confirmedOptionId ? "incorrect" : undefined;
+}
+
+// The radio's dot takes the tone too, so a marked choice shows one color.
+const CHOICE_FEEDBACK_CLASSES: Record<ChoiceFeedback, string> = {
+  correct:
+    "data-disabled:opacity-100 border-success/60 bg-success/10 data-checked:border-success/60 data-checked:bg-success/10 [&_[data-slot=questionnaire-choice-indicator]]:!border-success data-checked:[&_[data-slot=questionnaire-choice-indicator]]:!bg-success",
+  incorrect:
+    "data-disabled:opacity-100 border-destructive/60 bg-destructive/10 data-checked:border-destructive/60 data-checked:bg-destructive/10 [&_[data-slot=questionnaire-choice-indicator]]:!border-destructive data-checked:[&_[data-slot=questionnaire-choice-indicator]]:!bg-destructive",
+};
+
+function QuizRunnerQuestionStep({
+  confirmedOptionId,
+  question,
+}: QuizRunnerQuestionStepProps) {
   return (
     <QuestionnaireItem name={question.id}>
       <QuestionnaireTitle className="flex items-center gap-2">
@@ -83,16 +116,96 @@ function QuizRunnerQuestionStep({ question }: QuizRunnerQuestionStepProps) {
         <ImageAttachmentViewer fileName={question.imagePath} />
       </QuestionnaireTitle>
       <QuestionnaireChoices>
-        {question.options.map((option) => (
-          <div className="flex items-center gap-2" key={option.id}>
-            <QuestionnaireChoice className="flex-1" value={option.id}>
-              <MarkdownContent content={option.text} />
-            </QuestionnaireChoice>
-            <ImageAttachmentViewer fileName={option.imagePath} />
-          </div>
-        ))}
+        {question.options.map((option) => {
+          const feedback = choiceFeedback(option, confirmedOptionId);
+          return (
+            <div className="flex items-center gap-2" key={option.id}>
+              <QuestionnaireChoice
+                className={cn(
+                  "flex-1",
+                  feedback
+                    ? CHOICE_FEEDBACK_CLASSES[feedback]
+                    : "data-disabled:opacity-60"
+                )}
+                data-feedback={feedback}
+                // Confirmed, the answer is final: the choices lock, but stay
+                // shown (docs/specs/quiz-immediate-feedback.md AC-2, AC-4).
+                // A disabled item would be skipped and hidden instead.
+                disabled={confirmedOptionId !== undefined}
+                value={option.id}
+              >
+                <span className="flex items-start gap-2">
+                  <MarkdownContent className="flex-1" content={option.text} />
+                  {feedback === "correct" ? (
+                    <CheckCircle2
+                      aria-hidden="true"
+                      className="mt-0.5 size-4 shrink-0 text-success-text"
+                    />
+                  ) : null}
+                  {feedback === "incorrect" ? (
+                    <XCircle
+                      aria-hidden="true"
+                      className="mt-0.5 size-4 shrink-0 text-destructive-text"
+                    />
+                  ) : null}
+                </span>
+              </QuestionnaireChoice>
+              <ImageAttachmentViewer fileName={option.imagePath} />
+            </div>
+          );
+        })}
       </QuestionnaireChoices>
+      <QuizAnswerFeedback
+        confirmedOptionId={confirmedOptionId}
+        question={question}
+      />
     </QuestionnaireItem>
+  );
+}
+
+interface QuizAnswerFeedbackProps {
+  confirmedOptionId: string | undefined;
+  question: QuizRunnerQuestion;
+}
+
+/**
+ * Right or wrong, said as soon as the answer is confirmed, with the right
+ * answer when it was wrong (docs/specs/quiz-immediate-feedback.md AC-2). The
+ * live region is there before the answer, so screen readers announce it. A
+ * future exam mode leaves this out.
+ */
+function QuizAnswerFeedback({
+  confirmedOptionId,
+  question,
+}: QuizAnswerFeedbackProps) {
+  const { t } = useTranslation();
+  const correctOption = question.options.find((option) => option.isCorrect);
+  const isCorrect = correctOption?.id === confirmedOptionId;
+
+  let content: React.ReactNode = null;
+  if (confirmedOptionId !== undefined) {
+    content = isCorrect ? (
+      <p className="flex items-center gap-2 font-medium text-success-text">
+        <CheckCircle2 aria-hidden="true" className="size-4 shrink-0" />
+        {t("quizFeedbackCorrectMessage")}
+      </p>
+    ) : (
+      <div className="flex flex-col gap-1">
+        <p className="flex items-center gap-2 font-medium text-destructive-text">
+          <XCircle aria-hidden="true" className="size-4 shrink-0" />
+          {t("quizFeedbackIncorrectMessage")}
+        </p>
+        {correctOption ? (
+          <MarkdownContent className="ps-6" content={correctOption.text} />
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-sm" role="status">
+      {content}
+    </div>
   );
 }
 
@@ -349,23 +462,27 @@ export default function QuizRunnerDialog({
   const { t } = useTranslation();
   const formRef = useRef<HTMLFormElement>(null);
   const [questions, setQuestions] = useState<QuizRunnerQuestion[]>([]);
+  // What is chosen on each question, and what was confirmed: a confirmed
+  // answer is final (docs/specs/quiz-immediate-feedback.md AC-2, AC-4).
+  const [choices, setChoices] = useState<QuizAnswers>({});
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [result, setResult] = useState<QuizScore | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [finishedAt, setFinishedAt] = useState<number | null>(null);
-  // Which questions already have a choice (docs/specs/safety-net.md AC-6/7).
-  const [answeredIds, setAnsweredIds] = useState<Set<string>>(new Set());
   const [isConfirmingLeave, setIsConfirmingLeave] = useState(false);
+  // Set on "Next question", so the next question's first choice takes focus
+  // (AC-3) -- not when the quiz opens, where the dialog places focus.
+  const focusQuestionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (open) {
+      setChoices({});
       setAnswers({});
       setCurrentIndex(0);
       setResult(null);
       setStartedAt(Date.now());
       setFinishedAt(null);
-      setAnsweredIds(new Set());
       setIsConfirmingLeave(false);
     }
   }, [open]);
@@ -374,15 +491,11 @@ export default function QuizRunnerDialog({
     (event: React.FormEvent<HTMLFormElement>) => {
       const input = event.target as HTMLInputElement;
       if (input.type === "radio" && input.name) {
-        setAnsweredIds((prev) => new Set(prev).add(input.name));
+        setChoices((prev) => ({ ...prev, [input.name]: input.value }));
       }
     },
     []
   );
-
-  const handlePreviousClick = useCallback(() => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  }, []);
 
   useEffect(() => {
     if (activity) {
@@ -402,30 +515,44 @@ export default function QuizRunnerDialog({
 
   const isLastQuestion =
     questions.length > 0 && currentIndex >= questions.length - 1;
+  const currentQuestion = questions[currentIndex] ?? null;
+  const currentChoice = currentQuestion
+    ? choices[currentQuestion.id]
+    : undefined;
+  const isCurrentConfirmed =
+    currentQuestion !== null && answers[currentQuestion.id] !== undefined;
+
+  const handleCheckClick = useCallback(() => {
+    if (currentQuestion && currentChoice) {
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: currentChoice }));
+    }
+  }, [currentChoice, currentQuestion]);
 
   const handleAdvanceClick = useCallback(() => {
     if (!isLastQuestion) {
+      focusQuestionIdRef.current = questions.at(currentIndex + 1)?.id ?? null;
       setCurrentIndex((prev) => prev + 1);
       return;
     }
 
-    const formElement = formRef.current;
-    if (!formElement) {
+    setResult(calculateQuizScore(questions, answers));
+    setFinishedAt(Date.now());
+  }, [answers, currentIndex, isLastQuestion, questions]);
+
+  // The button the student just pressed turns into "Check answer", still
+  // unavailable: focus moves on to the new question's first choice (AC-3).
+  useEffect(() => {
+    const questionId = focusQuestionIdRef.current;
+    if (questionId === null || questions.at(currentIndex)?.id !== questionId) {
       return;
     }
-
-    const formData = new FormData(formElement);
-    const submittedAnswers: QuizAnswers = {};
-    for (const question of questions) {
-      submittedAnswers[question.id] = String(formData.get(question.id) ?? "");
-    }
-
-    setAnswers(submittedAnswers);
-    setResult(calculateQuizScore(questions, submittedAnswers));
-    setFinishedAt(Date.now());
-  }, [isLastQuestion, questions]);
-
-  const currentQuestion = questions[currentIndex] ?? null;
+    focusQuestionIdRef.current = null;
+    formRef.current
+      ?.querySelector<HTMLInputElement>(
+        `input[name="${CSS.escape(questionId)}"]`
+      )
+      ?.focus();
+  }, [currentIndex, questions]);
   const totalTimeMs =
     startedAt !== null && finishedAt !== null ? finishedAt - startedAt : 0;
   const averageTimeMs =
@@ -442,7 +569,7 @@ export default function QuizRunnerDialog({
   const handleDialogOpenChange = useCallback(
     (nextOpen: boolean) => {
       // Abandoning answers asks first (docs/specs/safety-net.md AC-7).
-      if (!(nextOpen || result) && answeredIds.size > 0) {
+      if (!(nextOpen || result) && Object.keys(choices).length > 0) {
         setIsConfirmingLeave(true);
         return;
       }
@@ -451,7 +578,7 @@ export default function QuizRunnerDialog({
       }
       onOpenChange(nextOpen);
     },
-    [activity, answeredIds, onFinished, onOpenChange, result]
+    [activity, choices, onFinished, onOpenChange, result]
   );
 
   const handleLeaveConfirmOpenChange = useCallback((nextOpen: boolean) => {
@@ -539,32 +666,41 @@ export default function QuizRunnerDialog({
               <div className="flex flex-col gap-4 py-4">
                 {questions.map((question) => (
                   <QuizRunnerQuestionStep
+                    confirmedOptionId={answers[question.id]}
                     key={question.id}
                     question={question}
                   />
                 ))}
               </div>
             </Questionnaire>
-            {currentQuestion && !answeredIds.has(currentQuestion.id) ? (
+            {currentQuestion && !currentChoice ? (
               <p className="text-muted-foreground text-xs">
                 {t("quizUnansweredHint")}
               </p>
             ) : null}
             <DialogFooter>
-              {currentIndex > 0 ? (
+              {/* One button, so focus stays on it from "Check answer" to
+                  "Next question" (docs/specs/quiz-immediate-feedback.md AC-3). */}
+              {isCurrentConfirmed ? (
                 <Button
-                  onClick={handlePreviousClick}
+                  key="advance"
+                  onClick={handleAdvanceClick}
                   type="button"
-                  variant="outline"
                 >
-                  {t("quizPreviousQuestionAction")}
+                  {isLastQuestion
+                    ? t("finishQuizAction")
+                    : t("nextQuestionAction")}
                 </Button>
-              ) : null}
-              <Button onClick={handleAdvanceClick} type="button">
-                {isLastQuestion
-                  ? t("finishQuizAction")
-                  : t("nextQuestionAction")}
-              </Button>
+              ) : (
+                <Button
+                  disabled={!currentChoice}
+                  key="advance"
+                  onClick={handleCheckClick}
+                  type="button"
+                >
+                  {t("quizCheckAnswerAction")}
+                </Button>
+              )}
             </DialogFooter>
           </>
         )}
