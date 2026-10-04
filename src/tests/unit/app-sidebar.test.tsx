@@ -5,7 +5,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -55,6 +55,10 @@ function renderSidebarAt(initialPath: string) {
     getParentRoute: () => rootRoute,
     path: "/programs",
   });
+  const programRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/programs/$programId",
+  });
   const calendarioRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/calendario",
@@ -66,6 +70,7 @@ function renderSidebarAt(initialPath: string) {
   const routeTree = rootRoute.addChildren([
     indexRoute,
     programsRoute,
+    programRoute,
     calendarioRoute,
     calendarRoute,
   ]);
@@ -209,4 +214,25 @@ test("opens Settings from the sidebar, not only from the account menu", async ()
   expect(
     await screen.findByRole("dialog", { name: i18n.t("settingsPageTitle") })
   ).toBeInTheDocument();
+});
+
+/** docs/specs/sidebar-current-page.md AC-1, AC-2 */
+test.each([
+  ["/", "navToday"],
+  ["/programs", "navPrograms"],
+  ["/programs/p1", "navPrograms"],
+  ["/calendar", "navCalendar"],
+])("marks only the current page's item at %s", async (path, key) => {
+  renderSidebarAt(path);
+
+  const current = await screen.findByRole("link", { name: i18n.t(key) });
+  await waitFor(() => expect(current).toHaveAttribute("data-active", "true"));
+  const others = ["navToday", "navPrograms", "navCalendar"].filter(
+    (other) => other !== key
+  );
+  for (const other of others) {
+    expect(
+      screen.getByRole("link", { name: i18n.t(other) })
+    ).not.toHaveAttribute("data-active", "true");
+  }
 });
