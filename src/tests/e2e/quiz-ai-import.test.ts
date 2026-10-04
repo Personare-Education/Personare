@@ -9,6 +9,7 @@ import {
   test,
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import { freshProfileArg } from "./fresh-profile";
 
 /**
  * Spec: docs/specs/quiz-ai-import.md -- create a Quiz by importing a Markdown
@@ -61,7 +62,9 @@ test.beforeAll(async () => {
   );
   fs.writeFileSync(quizFile, QUIZ_MARKDOWN);
 
-  electronApp = await electron.launch({ args: [appInfo.main] });
+  electronApp = await electron.launch({
+    args: [appInfo.main, freshProfileArg()],
+  });
   page = await electronApp.firstWindow();
 
   // Record instead of opening a real browser.

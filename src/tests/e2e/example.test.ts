@@ -6,6 +6,7 @@ import {
   test,
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import { freshProfileArg } from "./fresh-profile";
 
 /*
  * Using Playwright with Electron:
@@ -20,7 +21,7 @@ test.beforeAll(async () => {
   process.env.CI = "e2e";
 
   electronApp = await electron.launch({
-    args: [appInfo.main],
+    args: [appInfo.main, freshProfileArg()],
   });
   electronApp.on("window", (page) => {
     const filename = page.url()?.split("/").pop();

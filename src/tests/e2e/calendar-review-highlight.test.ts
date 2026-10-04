@@ -9,6 +9,7 @@ import {
   test,
 } from "@playwright/test";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import { freshProfileArg } from "./fresh-profile";
 
 /**
  * Spec: docs/specs/calendar-module-review-highlight.md -- the calendar shows
@@ -52,7 +53,9 @@ test.beforeAll(async () => {
   );
   fs.writeFileSync(quizFile, QUIZ_MARKDOWN);
 
-  electronApp = await electron.launch({ args: [appInfo.main] });
+  electronApp = await electron.launch({
+    args: [appInfo.main, freshProfileArg()],
+  });
   page = await electronApp.firstWindow();
   await electronApp.evaluate(({ shell }) => {
     shell.openExternal = () => Promise.resolve();
