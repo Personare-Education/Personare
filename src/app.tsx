@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import { updateAppLanguage } from "./actions/language";
+import { applySavedTextSize } from "./actions/text-size";
 import { syncWithLocalTheme } from "./actions/theme";
 import { router } from "./utils/routes";
 import { installStackContentReveal } from "./utils/stack-content-reveal";
@@ -13,6 +14,7 @@ export default function App() {
 
   useEffect(() => {
     syncWithLocalTheme();
+    applySavedTextSize();
     updateAppLanguage(i18n);
   }, [i18n]);
 

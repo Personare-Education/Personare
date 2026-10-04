@@ -9,6 +9,7 @@ import BetaActivationSection from "@/components/beta-activation-section";
 import DriveBackupDialog from "@/components/drive-backup-dialog";
 import DriveRestoreDialog from "@/components/drive-restore-dialog";
 import LangToggle from "@/components/lang-toggle";
+import TextSizeToggle from "@/components/text-size-toggle";
 import ToggleTheme from "@/components/toggle-theme";
 import { Button } from "@/components/ui/button";
 import {
@@ -151,6 +152,12 @@ export default function SettingsDialog({
                       {t("languageLabel")}
                     </h3>
                     <LangToggle />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <h3 className="font-semibold text-sm">
+                      {t("textSizeLabel")}
+                    </h3>
+                    <TextSizeToggle />
                   </div>
                   <div className="flex flex-col gap-2">
                     <h3 className="font-semibold text-sm">{t("themeLabel")}</h3>
