@@ -1,4 +1,4 @@
-export type ActivityFollowUp = "flashcards" | "quizQuestions";
+export type ActivityFollowUp = "flashcards" | "quizQuestions" | "sequence";
 
 /**
  * What to open right after an activity is created
@@ -15,6 +15,11 @@ export function followUpForCreatedActivity(
   }
   if (type === "flashcard_deck") {
     return "flashcards";
+  }
+  // A new sequence opens its manager, to add what goes in it
+  // (docs/specs/sequences-and-locks.md §3 AC-1).
+  if (type === "group") {
+    return "sequence";
   }
   return null;
 }

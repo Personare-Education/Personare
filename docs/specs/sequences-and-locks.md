@@ -92,3 +92,18 @@ Cada PR tem a sua seção de critérios abaixo, escrita antes do código dele.
 5. `review.listLocks` devolve o estado de todos os módulos e atividades bloqueados, com o que falta.
 6. `listSchedule` (Hoje, selos, calendário, sincronização do calendário, destaques) e a contagem da bandeja
    (`countDueReviews`) deixam de fora as atividades bloqueadas.
+
+## 3. Grupos e ordem na tela — critérios de aceite
+
+1. O formulário de atividade tem o tipo **Sequência** (ícone de lista numerada), sem link nem arquivo. Criar uma
+   sequência abre o gerenciador dela, como criar um quiz abre as perguntas.
+2. O **gerenciador da sequência** lista as atividades dela na ordem, numeradas, com o ícone e o tipo de cada
+   uma; cada uma sobe, desce, é editada ou excluída (com desfazer), e um quiz abre as suas perguntas.
+   **Adicionar atividade** abre o formulário só com PDF, link e quiz (incluindo importar um quiz de IA), e a
+   nova entra no fim. Sem nenhuma, ele diz o que cabe numa sequência.
+3. Na tabela, a sequência aparece como **Sequência**, com quantas atividades tem ao lado do título, e a ação
+   principal **Ver sequência** abre o gerenciador.
+4. Atividades e módulos ganham **Mover para cima** e **Mover para baixo** em Mais ações (e no menu do botão
+   direito); o primeiro não sobe, o último não desce. Enquanto a busca de atividades filtra a lista, mover
+   fica de fora.
+5. Um quiz importado de IA entra no fim da lista (ou da sequência), como os outros.

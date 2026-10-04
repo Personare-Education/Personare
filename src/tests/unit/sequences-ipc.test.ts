@@ -17,6 +17,7 @@ import { setDatabaseClient } from "@/ipc/database/state";
 import { flashcards as flashcardsNamespace } from "@/ipc/flashcards";
 import { modules as modulesNamespace } from "@/ipc/modules";
 import { programs as programsNamespace } from "@/ipc/programs";
+import { quiz as quizNamespace } from "@/ipc/quiz";
 import { review as reviewNamespace } from "@/ipc/review";
 import { countDueReviews } from "@/main/due-reviews";
 import { collectBackupData, restoreBackupData } from "@/utils/backup-data";
@@ -33,6 +34,7 @@ function createClients() {
     flashcards: createRouterClient(flashcardsNamespace),
     modules: createRouterClient(modulesNamespace),
     programs: createRouterClient(programsNamespace),
+    quiz: createRouterClient(quizNamespace),
     review: createRouterClient(reviewNamespace),
   };
 }
@@ -500,6 +502,57 @@ describe("sequences and locks: data (sequences-and-locks.md §1)", () => {
       expect(
         (await clients.review.listSchedule()).map((row) => row.activityId)
       ).toContain(second.id);
+    });
+  });
+
+  describe("imported quizzes (§3 AC-5)", () => {
+    const QUESTIONS = [
+      {
+        options: [
+          { isCorrect: true, text: "Fêmur" },
+          { isCorrect: false, text: "Tíbia" },
+        ],
+        text: "Maior osso?",
+      },
+    ];
+
+    it("puts an imported quiz at the end, or inside a sequence", async () => {
+      const pdf = await clients.activities.create({
+        moduleId,
+        title: "Capítulo",
+        type: "pdf",
+      });
+      const group = await clients.activities.create({
+        moduleId,
+        title: "Sequência",
+        type: "group",
+      });
+
+      const loose = await clients.quiz.createWithQuestions({
+        moduleId,
+        questions: QUESTIONS,
+        title: "Quiz solto",
+      });
+      const inside = await clients.quiz.createWithQuestions({
+        moduleId,
+        parentActivityId: group.id,
+        questions: QUESTIONS,
+        title: "Quiz da sequência",
+      });
+
+      expect(ids(await clients.activities.list({ moduleId }))).toEqual([
+        pdf.id,
+        group.id,
+        loose.id,
+      ]);
+      expect(
+        ids(
+          await clients.activities.list({
+            moduleId,
+            parentActivityId: group.id,
+          })
+        )
+      ).toEqual([inside.id]);
     });
   });
 });

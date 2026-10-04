@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import {
   createModule,
   listModules,
+  reorderModules,
   restoreModule,
   softDeleteModule,
   updateModule,
@@ -160,6 +161,22 @@ function ProgramModulesPage() {
     });
   }, [modulePendingDelete, refreshModules, t, undoDelete]);
 
+  // One step up or down, saved as the program's new order
+  // (docs/specs/sequences-and-locks.md §3 AC-4).
+  const handleMove = useCallback(
+    (module: Module, direction: -1 | 1) => {
+      const ids = modules.map((row) => row.id);
+      const from = ids.indexOf(module.id);
+      const to = from + direction;
+      if (from === -1 || to < 0 || to >= ids.length) {
+        return;
+      }
+      [ids[from], ids[to]] = [ids[to], ids[from]];
+      reorderModules(programId, ids).then(refreshModules);
+    },
+    [modules, programId, refreshModules]
+  );
+
   const isEmpty = hasLoaded && modules.length === 0;
 
   return (
@@ -189,6 +206,7 @@ function ProgramModulesPage() {
           highlightByModuleId={highlightByModuleId}
           modules={modules}
           onEdit={handleEdit}
+          onMove={handleMove}
           onNavigateToActivities={handleNavigateToActivities}
           onRequestDelete={handleRequestDelete}
         />

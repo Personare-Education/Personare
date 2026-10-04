@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { describe, expect, it, vi } from "vitest";
@@ -307,5 +307,35 @@ describe("ModulesDataTable review highlight", () => {
     const row = screen.getByRole("row", { name: MODULE_3_ROW_NAME });
 
     expect(row).not.toHaveAttribute("data-review-highlight");
+  });
+});
+
+/** docs/specs/sequences-and-locks.md §3 AC-4 */
+describe("ModulesDataTable order", () => {
+  it("moves a module up, and the last one cannot go down", async () => {
+    const user = userEvent.setup();
+    const onMove = vi.fn();
+    render(
+      <ModulesDataTable
+        modules={MODULES}
+        onEdit={vi.fn()}
+        onMove={onMove}
+        onNavigateToActivities={vi.fn()}
+        onRequestDelete={vi.fn()}
+      />
+    );
+    const row = screen.getByText(MODULES[1].name).closest("tr") as HTMLElement;
+
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("moreActionsAction") })
+    );
+    expect(
+      screen.queryByRole("menuitem", { name: i18n.t("moveDownAction") })
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("moveUpAction") })
+    );
+
+    expect(onMove).toHaveBeenCalledWith(MODULES[1], -1);
   });
 });

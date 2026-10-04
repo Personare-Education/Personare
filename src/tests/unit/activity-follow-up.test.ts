@@ -21,3 +21,10 @@ describe("followUpForCreatedActivity", () => {
     expect(followUpForCreatedActivity("pdf")).toBeNull();
   });
 });
+
+describe("followUpForCreatedActivity, sequences", () => {
+  /** docs/specs/sequences-and-locks.md §3 AC-1 */
+  it("opens the sequence's manager for a new sequence", () => {
+    expect(followUpForCreatedActivity("group")).toBe("sequence");
+  });
+});

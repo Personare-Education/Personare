@@ -32,6 +32,7 @@ i18n.use(initReactI18next).init({
         activityReviewStateColumnLabel: "Last rating",
         activityTitleLabel: "Title",
         activityTypeFlashcardDeck: "Flashcards",
+        activityTypeGroup: "Sequence",
         activityTypeLabel: "Type",
         activityTypeLink: "Link",
         activityTypePdf: "PDF",
@@ -40,6 +41,7 @@ i18n.use(initReactI18next).init({
         addFlashcardAction: "Add flashcard",
         addQuizOptionAction: "Add alternative",
         addQuizQuestionAction: "Add question",
+        addSequenceStepAction: "Add activity",
         appName: "Personare",
         attachImageAction: "Attach image",
         autoStartDescription:
@@ -254,6 +256,8 @@ i18n.use(initReactI18next).init({
         modulesPageTitle: "Modules",
         modulesTableEmptyMessage: "No modules found.",
         moreActionsAction: "More actions",
+        moveDownAction: "Move down",
+        moveUpAction: "Move up",
         navCalendar: "Calendar",
         navPlatformSectionLabel: "Menu",
         navPrograms: "Programs",
@@ -382,6 +386,12 @@ i18n.use(initReactI18next).init({
         saveAndAddAnotherQuestionAction: "Save and add another",
         searchActivityPlaceholder: "Search activity",
         selectPdfFileAction: "Select PDF file",
+        sequenceEmptyMessage:
+          "A sequence holds PDFs, links and quizzes, done in the order you set. Add the first one.",
+        sequenceManagerDescription:
+          "Done in this order, and reviewed together.",
+        sequenceStepCount_one: "{{count}} activity",
+        sequenceStepCount_other: "{{count}} activities",
         settingsGeneralCategoryLabel: "General",
         settingsPageTitle: "Settings",
         startReviewAction: "Start review",
@@ -467,6 +477,7 @@ i18n.use(initReactI18next).init({
         viewActivitiesAction: "View activities",
         viewImageAction: "View image",
         viewPdfAction: "View PDF",
+        viewSequenceAction: "View sequence",
         waitingForCalendarConnectMessage:
           "Waiting for you to finish connecting Google Calendar in your browser...",
         waitingForDriveConnectMessage:
@@ -504,6 +515,7 @@ i18n.use(initReactI18next).init({
         activityReviewStateColumnLabel: "Última avaliação",
         activityTitleLabel: "Título",
         activityTypeFlashcardDeck: "Flashcards",
+        activityTypeGroup: "Sequência",
         activityTypeLabel: "Tipo",
         activityTypeLink: "Link",
         activityTypePdf: "PDF",
@@ -512,6 +524,7 @@ i18n.use(initReactI18next).init({
         addFlashcardAction: "Adicionar flashcard",
         addQuizOptionAction: "Adicionar alternativa",
         addQuizQuestionAction: "Adicionar pergunta",
+        addSequenceStepAction: "Adicionar atividade",
         appName: "Personare",
         attachImageAction: "Anexar imagem",
         autoStartDescription:
@@ -727,6 +740,8 @@ i18n.use(initReactI18next).init({
         modulesPageTitle: "Módulos",
         modulesTableEmptyMessage: "Nenhum módulo encontrado.",
         moreActionsAction: "Mais ações",
+        moveDownAction: "Mover para baixo",
+        moveUpAction: "Mover para cima",
         navCalendar: "Calendário",
         navPlatformSectionLabel: "Menu",
         navPrograms: "Programas",
@@ -856,6 +871,11 @@ i18n.use(initReactI18next).init({
         saveAndAddAnotherQuestionAction: "Salvar e criar outra",
         searchActivityPlaceholder: "Procurar atividade",
         selectPdfFileAction: "Selecionar arquivo PDF",
+        sequenceEmptyMessage:
+          "Uma sequência reúne PDFs, links e quizzes, feitos na ordem que você definir. Adicione o primeiro.",
+        sequenceManagerDescription: "Feitas nesta ordem, e revisadas juntas.",
+        sequenceStepCount_one: "{{count}} atividade",
+        sequenceStepCount_other: "{{count}} atividades",
         settingsGeneralCategoryLabel: "Geral",
         settingsPageTitle: "Configurações",
         startReviewAction: "Iniciar revisão",
@@ -942,6 +962,7 @@ i18n.use(initReactI18next).init({
         viewActivitiesAction: "Ver atividades",
         viewImageAction: "Ver imagem",
         viewPdfAction: "Ver PDF",
+        viewSequenceAction: "Ver sequência",
         waitingForCalendarConnectMessage:
           "Aguardando você concluir a conexão do Google Calendar no navegador...",
         waitingForDriveConnectMessage:

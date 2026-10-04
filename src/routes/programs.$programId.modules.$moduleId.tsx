@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import {
   createActivity,
   listActivities,
+  reorderActivities,
   restoreActivity,
   softDeleteActivity,
   updateActivity,
@@ -36,6 +37,7 @@ import OrganizeHeader from "@/components/organize-header";
 import QuizQuestionManagerDialog from "@/components/quiz-question-manager-dialog";
 import QuizRunnerDialog from "@/components/quiz-runner-dialog";
 import ReviewSessionDialog from "@/components/review-session-dialog";
+import SequenceManagerDialog from "@/components/sequence-manager-dialog";
 import {
   BreadcrumbItem,
   BreadcrumbLink,
@@ -92,6 +94,13 @@ function ModuleActivitiesPage() {
   // form for the first item already up.
   const [startingFollowUp, setStartingFollowUp] =
     useState<ActivityFollowUp | null>(null);
+  // A sequence's manager, and how many activities each sequence holds
+  // (docs/specs/sequences-and-locks.md §3).
+  const [sequenceBeingManaged, setSequenceBeingManaged] =
+    useState<Activity | null>(null);
+  const [stepCountByGroupId, setStepCountByGroupId] = useState<
+    Record<string, number | undefined>
+  >({});
   const [activityInReview, setActivityInReview] = useState<Activity | null>(
     null
   );
@@ -101,14 +110,32 @@ function ModuleActivitiesPage() {
     setActivityMarkingDifficulty
   );
 
+  // How many activities each sequence holds, beside its name (§3 AC-3).
+  const refreshStepCounts = useCallback(
+    (loaded: Activity[]) => {
+      const groups = loaded.filter((activity) => activity.type === "group");
+      Promise.all(
+        groups.map((group) => listActivities(moduleId, group.id))
+      ).then((stepsByGroup) => {
+        setStepCountByGroupId(
+          Object.fromEntries(
+            groups.map((group, index) => [group.id, stepsByGroup[index].length])
+          )
+        );
+      });
+    },
+    [moduleId]
+  );
+
   const refreshActivities = useCallback(() => {
     startTransition(() => {
       listActivities(moduleId).then((loaded) => {
         setActivities(loaded);
         setHasLoaded(true);
+        refreshStepCounts(loaded);
       });
     });
-  }, [moduleId]);
+  }, [moduleId, refreshStepCounts]);
 
   const refreshReviewState = useCallback(() => {
     listActivityReviewState(moduleId).then((rows) => {
@@ -165,6 +192,40 @@ function ModuleActivitiesPage() {
     setActivityBeingManaged(activity);
   }, []);
 
+  const handleManageSequence = useCallback((activity: Activity) => {
+    setSequenceBeingManaged(activity);
+  }, []);
+
+  const handleSequenceManagerOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setSequenceBeingManaged(null);
+    }
+  }, []);
+
+  // A quiz in a sequence; a new one opens on its first question.
+  const handleManageSequenceQuiz = useCallback(
+    (quiz: Activity, isNew: boolean) => {
+      setStartingFollowUp(isNew ? "quizQuestions" : null);
+      setActivityBeingManaged(quiz);
+    },
+    []
+  );
+
+  // One step up or down, saved as the module's new order (§3 AC-4).
+  const handleMove = useCallback(
+    (activity: Activity, direction: -1 | 1) => {
+      const ids = activities.map((row) => row.id);
+      const from = ids.indexOf(activity.id);
+      const to = from + direction;
+      if (from === -1 || to < 0 || to >= ids.length) {
+        return;
+      }
+      [ids[from], ids[to]] = [ids[to], ids[from]];
+      reorderActivities(moduleId, null, ids).then(refreshActivities);
+    },
+    [activities, moduleId, refreshActivities]
+  );
+
   const handleTakeQuiz = useCallback((activity: Activity) => {
     setActivityTakingQuiz(activity);
   }, []);
@@ -213,6 +274,8 @@ function ModuleActivitiesPage() {
           setActivityBeingManaged(created);
         } else if (followUp === "flashcards") {
           setActivityBeingManagedFlashcards(created);
+        } else if (followUp === "sequence") {
+          setSequenceBeingManaged(created);
         }
       });
     },
@@ -398,15 +461,26 @@ function ModuleActivitiesPage() {
             onEdit={handleEdit}
             onManageFlashcards={handleManageFlashcards}
             onManageQuiz={handleManageQuiz}
+            onManageSequence={handleManageSequence}
+            // Moving a filtered list would be guesswork (§3 AC-4).
+            onMove={searchTerm.trim() ? undefined : handleMove}
             onOpenLink={armRatingOnReturn}
             onRequestDelete={handleRequestDelete}
             onStartReview={handleStartReview}
             onTakeQuiz={handleTakeQuiz}
             onViewPdf={openPdf}
             reviewStateByActivityId={reviewStateByActivityId}
+            stepCountByGroupId={stepCountByGroupId}
           />
         </>
       )}
+      <SequenceManagerDialog
+        group={sequenceBeingManaged}
+        onChanged={refreshActivities}
+        onManageQuiz={handleManageSequenceQuiz}
+        onOpenChange={handleSequenceManagerOpenChange}
+        open={sequenceBeingManaged !== null}
+      />
       <ActivityFormDialog
         activity={formActivity}
         onImportQuiz={handleImportQuiz}

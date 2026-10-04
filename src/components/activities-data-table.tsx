@@ -1,9 +1,12 @@
 import { format } from "date-fns";
 import {
+  ArrowDown,
+  ArrowUp,
   ExternalLink,
   FileText,
   Layers,
   ListChecks,
+  ListOrdered,
   Pencil,
   Play,
   Repeat,
@@ -55,6 +58,7 @@ export interface ActivityReviewState {
 
 const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<string, string> = {
   flashcard_deck: "activityTypeFlashcardDeck",
+  group: "activityTypeGroup",
   link: "activityTypeLink",
   pdf: "activityTypePdf",
   quiz: "activityTypeQuiz",
@@ -85,40 +89,56 @@ interface ActivitiesDataTableProps {
   onEdit: (activity: Activity) => void;
   onManageFlashcards: (activity: Activity) => void;
   onManageQuiz: (activity: Activity) => void;
+  /** A sequence's manager (docs/specs/sequences-and-locks.md §3 AC-3). */
+  onManageSequence?: (activity: Activity) => void;
+  /** Moves a row up (-1) or down (1); left out while a search filters (AC-4). */
+  onMove?: (activity: Activity, direction: -1 | 1) => void;
   onOpenLink: (activity: Activity) => void;
   onRequestDelete: (activity: Activity) => void;
   onStartReview: (activity: Activity) => void;
   onTakeQuiz: (activity: Activity) => void;
   onViewPdf: (activity: Activity) => void;
   reviewStateByActivityId: Record<string, ActivityReviewState | undefined>;
+  /** How many activities each sequence holds. */
+  stepCountByGroupId?: Record<string, number | undefined>;
 }
 
 interface ActivityRowProps {
   activity: Activity;
   highlight: ReviewHighlight | undefined;
+  isFirst: boolean;
+  isLast: boolean;
   onEdit: (activity: Activity) => void;
   onManageFlashcards: (activity: Activity) => void;
   onManageQuiz: (activity: Activity) => void;
+  onManageSequence?: (activity: Activity) => void;
+  onMove?: (activity: Activity, direction: -1 | 1) => void;
   onOpenLink: (activity: Activity) => void;
   onRequestDelete: (activity: Activity) => void;
   onStartReview: (activity: Activity) => void;
   onTakeQuiz: (activity: Activity) => void;
   onViewPdf: (activity: Activity) => void;
   reviewState: ActivityReviewState | undefined;
+  stepCount: number | undefined;
 }
 
 function ActivityRow({
   activity,
   highlight,
+  isFirst,
+  isLast,
   onEdit,
   onManageFlashcards,
   onManageQuiz,
+  onManageSequence,
+  onMove,
   onOpenLink,
   onRequestDelete,
   onStartReview,
   onTakeQuiz,
   onViewPdf,
   reviewState,
+  stepCount,
 }: ActivityRowProps) {
   const { i18n, t } = useTranslation();
   const locale = resolveEventCalendarLocale(i18n.language);
@@ -138,6 +158,14 @@ function ActivityRow({
           key: "manage-flashcards",
           label: t("manageFlashcardsAction"),
           onSelect: () => onManageFlashcards(activity),
+        },
+      ],
+      group: [
+        {
+          icon: <ListOrdered />,
+          key: "view-sequence",
+          label: t("viewSequenceAction"),
+          onSelect: () => onManageSequence?.(activity),
         },
       ],
       link: [
@@ -177,6 +205,25 @@ function ActivityRow({
       ],
     };
 
+    // Up and down, but not past the ends (§3 AC-4).
+    const moveActions: RowAction[] = [];
+    if (onMove && !isFirst) {
+      moveActions.push({
+        icon: <ArrowUp />,
+        key: "move-up",
+        label: t("moveUpAction"),
+        onSelect: () => onMove(activity, -1),
+      });
+    }
+    if (onMove && !isLast) {
+      moveActions.push({
+        icon: <ArrowDown />,
+        key: "move-down",
+        label: t("moveDownAction"),
+        onSelect: () => onMove(activity, 1),
+      });
+    }
+
     return [
       ...(typeActions[activity.type] ?? []),
       {
@@ -185,6 +232,7 @@ function ActivityRow({
         label: t("editActivityAction"),
         onSelect: () => onEdit(activity),
       },
+      ...moveActions,
       {
         destructive: true,
         icon: <Trash2 />,
@@ -195,9 +243,13 @@ function ActivityRow({
     ];
   }, [
     activity,
+    isFirst,
+    isLast,
     onEdit,
     onManageFlashcards,
     onManageQuiz,
+    onManageSequence,
+    onMove,
     onOpenLink,
     onRequestDelete,
     onStartReview,
@@ -216,7 +268,17 @@ function ActivityRow({
       onOpen={actions[0].onSelect}
       rowId={activity.id}
     >
-      <TableCell className="font-medium">{activity.title}</TableCell>
+      <TableCell className="font-medium">
+        <span className="flex items-baseline gap-2">
+          {activity.title}
+          {/* What a sequence holds, beside its name (§3 AC-3). */}
+          {activity.type === "group" ? (
+            <span className="font-normal text-muted-foreground text-xs tabular-nums">
+              {t("sequenceStepCount", { count: stepCount ?? 0 })}
+            </span>
+          ) : null}
+        </span>
+      </TableCell>
       <TableCell>
         <Badge variant="outline">{t(typeTranslationKey)}</Badge>
       </TableCell>
@@ -247,6 +309,7 @@ function ActivityRow({
 }
 
 const NO_HIGHLIGHTS: Record<string, ReviewHighlight | undefined> = {};
+const NO_COUNTS: Record<string, number | undefined> = {};
 
 export default function ActivitiesDataTable({
   activities,
@@ -254,12 +317,15 @@ export default function ActivitiesDataTable({
   onEdit,
   onManageFlashcards,
   onManageQuiz,
+  onManageSequence,
+  onMove,
   onOpenLink,
   onRequestDelete,
   onStartReview,
   onTakeQuiz,
   onViewPdf,
   reviewStateByActivityId,
+  stepCountByGroupId = NO_COUNTS,
 }: ActivitiesDataTableProps) {
   const { t } = useTranslation();
 
@@ -281,20 +347,25 @@ export default function ActivitiesDataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {activities.map((activity) => (
+            {activities.map((activity, index) => (
               <ActivityRow
                 activity={activity}
                 highlight={highlightByActivityId[activity.id]}
+                isFirst={index === 0}
+                isLast={index === activities.length - 1}
                 key={activity.id}
                 onEdit={onEdit}
                 onManageFlashcards={onManageFlashcards}
                 onManageQuiz={onManageQuiz}
+                onManageSequence={onManageSequence}
+                onMove={onMove}
                 onOpenLink={onOpenLink}
                 onRequestDelete={onRequestDelete}
                 onStartReview={onStartReview}
                 onTakeQuiz={onTakeQuiz}
                 onViewPdf={onViewPdf}
                 reviewState={reviewStateByActivityId[activity.id]}
+                stepCount={stepCountByGroupId[activity.id]}
               />
             ))}
           </TableBody>
