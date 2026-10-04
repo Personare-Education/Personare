@@ -8,7 +8,9 @@ import {
   quizOptions,
   quizQuestions,
   reviewItems,
+  unlockRequirements,
 } from "@/database/schema";
+import { backfillSequenceData } from "@/database/sequence-backfill";
 import type { BackupData } from "@/utils/backup-codec";
 
 export function collectBackupData(
@@ -23,6 +25,7 @@ export function collectBackupData(
     quizOptions: db.select().from(quizOptions).all(),
     quizQuestions: db.select().from(quizQuestions).all(),
     reviewItems: db.select().from(reviewItems).all(),
+    unlockRequirements: db.select().from(unlockRequirements).all(),
   };
 }
 
@@ -31,6 +34,7 @@ export function restoreBackupData(
   data: Omit<BackupData, "exportedAt" | "version">
 ): void {
   db.transaction((tx) => {
+    tx.delete(unlockRequirements).run();
     tx.delete(reviewItems).run();
     tx.delete(quizOptions).run();
     tx.delete(quizQuestions).run();
@@ -64,5 +68,14 @@ export function restoreBackupData(
     if (data.appSettings.length > 0) {
       tx.insert(appSettings).values(data.appSettings).run();
     }
+    if (data.unlockRequirements && data.unlockRequirements.length > 0) {
+      tx.insert(unlockRequirements).values(data.unlockRequirements).run();
+    }
   });
+  // A backup from before sequences and locks lacks their order and
+  // completion; fill them as the migration did
+  // (docs/specs/sequences-and-locks.md §1 AC-8).
+  if (!data.unlockRequirements) {
+    backfillSequenceData(db);
+  }
 }

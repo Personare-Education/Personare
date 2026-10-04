@@ -7,8 +7,18 @@ import {
   cascadeSoftDeleteActivity,
 } from "@/ipc/shared/cascade-soft-delete";
 import {
+  assertCanHoldActivity,
+  markActivityCompleted,
+  nextActivityPosition,
+  reorderRows,
+  setUnlockRule as saveUnlockRule,
+} from "@/ipc/shared/sequences";
+import {
+  completeActivityInputSchema,
   createActivityInputSchema,
   listActivitiesInputSchema,
+  reorderActivitiesInputSchema,
+  setUnlockRuleInputSchema,
   softDeleteActivityInputSchema,
   updateActivityInputSchema,
 } from "./schemas";
@@ -26,17 +36,23 @@ function requireDatabaseClient() {
 export const list = os.input(listActivitiesInputSchema).handler(({ input }) => {
   const db = requireDatabaseClient();
 
-  return db
-    .select()
-    .from(activitiesTable)
-    .where(
-      and(
-        eq(activitiesTable.moduleId, input.moduleId),
-        isNull(activitiesTable.deletedAt)
+  return (
+    db
+      .select()
+      .from(activitiesTable)
+      .where(
+        and(
+          eq(activitiesTable.moduleId, input.moduleId),
+          input.parentActivityId
+            ? eq(activitiesTable.parentActivityId, input.parentActivityId)
+            : isNull(activitiesTable.parentActivityId),
+          isNull(activitiesTable.deletedAt)
+        )
       )
-    )
-    .orderBy(asc(activitiesTable.createdAt))
-    .all();
+      // Their own order, then creation (docs/specs/sequences-and-locks.md §1).
+      .orderBy(asc(activitiesTable.position), asc(activitiesTable.createdAt))
+      .all()
+  );
 });
 
 export const create = os
@@ -44,6 +60,10 @@ export const create = os
   .handler(({ input }) => {
     const db = requireDatabaseClient();
     const now = new Date();
+    const parentActivityId = input.parentActivityId ?? null;
+    if (parentActivityId) {
+      assertCanHoldActivity(db, input.moduleId, parentActivityId, input.type);
+    }
 
     return db
       .insert(activitiesTable)
@@ -51,6 +71,9 @@ export const create = os
         createdAt: now,
         filePath: input.filePath ?? null,
         moduleId: input.moduleId,
+        parentActivityId,
+        // New ones go at the end of their list (§1 AC-2).
+        position: nextActivityPosition(db, input.moduleId, parentActivityId),
         title: input.title,
         type: input.type,
         updatedAt: now,
@@ -113,4 +136,42 @@ export const softDelete = os
       .run();
 
     cascadeSoftDeleteActivity(db, input.id, now);
+  });
+
+/** Saves a module's (or a group's) new order (§1 AC-3). */
+export const reorder = os
+  .input(reorderActivitiesInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    reorderRows(
+      db,
+      activitiesTable,
+      and(
+        eq(activitiesTable.moduleId, input.moduleId),
+        input.parentActivityId
+          ? eq(activitiesTable.parentActivityId, input.parentActivityId)
+          : isNull(activitiesTable.parentActivityId)
+      ),
+      input.ids
+    );
+  });
+
+/** Replaces the activity's unlock rule (§1 AC-5). */
+export const setUnlockRule = os
+  .input(setUnlockRuleInputSchema)
+  .handler(({ input }) => {
+    saveUnlockRule(
+      requireDatabaseClient(),
+      "activity",
+      input.id,
+      input.mode,
+      input.requiredIds
+    );
+  });
+
+/** A sub-activity done inside its group (§1 AC-6). */
+export const complete = os
+  .input(completeActivityInputSchema)
+  .handler(({ input }) => {
+    markActivityCompleted(requireDatabaseClient(), input.id, new Date());
   });

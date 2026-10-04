@@ -7,6 +7,7 @@ import type {
   quizOptions,
   quizQuestions,
   reviewItems,
+  unlockRequirements,
 } from "@/database/schema";
 
 export interface BackupData {
@@ -19,6 +20,8 @@ export interface BackupData {
   quizOptions: (typeof quizOptions.$inferSelect)[];
   quizQuestions: (typeof quizQuestions.$inferSelect)[];
   reviewItems: (typeof reviewItems.$inferSelect)[];
+  /** Missing in backups made before sequences and locks: all free then. */
+  unlockRequirements?: (typeof unlockRequirements.$inferSelect)[];
   version: 1;
 }
 
