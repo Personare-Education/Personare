@@ -102,13 +102,15 @@ describe("modules IPC namespace (Issue #9)", () => {
       expect(list.map((module) => module.name)).toContain("Modulo 1");
     });
 
-    it("orders modules by name", async () => {
+    // Modules keep their own order now, new ones at the end
+    // (docs/specs/sequences-and-locks.md §1 AC-1, AC-2).
+    it("orders modules as they were added", async () => {
       await modulesClient.create({ name: "Zeta", programId });
       await modulesClient.create({ name: "Alfa", programId });
 
       const list = await modulesClient.list({ programId });
 
-      expect(list.map((module) => module.name)).toEqual(["Alfa", "Zeta"]);
+      expect(list.map((module) => module.name)).toEqual(["Zeta", "Alfa"]);
     });
 
     it("only returns modules belonging to the given program", async () => {

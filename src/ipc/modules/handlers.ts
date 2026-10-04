@@ -7,8 +7,15 @@ import {
   cascadeSoftDeleteModule,
 } from "@/ipc/shared/cascade-soft-delete";
 import {
+  nextModulePosition,
+  reorderRows,
+  setUnlockRule as saveUnlockRule,
+} from "@/ipc/shared/sequences";
+import {
   createModuleInputSchema,
   listModulesInputSchema,
+  reorderModulesInputSchema,
+  setModuleUnlockRuleInputSchema,
   softDeleteModuleInputSchema,
   updateModuleInputSchema,
 } from "./schemas";
@@ -26,17 +33,21 @@ function requireDatabaseClient() {
 export const list = os.input(listModulesInputSchema).handler(({ input }) => {
   const db = requireDatabaseClient();
 
-  return db
-    .select()
-    .from(modulesTable)
-    .where(
-      and(
-        eq(modulesTable.programId, input.programId),
-        isNull(modulesTable.deletedAt)
+  return (
+    db
+      .select()
+      .from(modulesTable)
+      .where(
+        and(
+          eq(modulesTable.programId, input.programId),
+          isNull(modulesTable.deletedAt)
+        )
       )
-    )
-    .orderBy(asc(modulesTable.name))
-    .all();
+      // Their own order (docs/specs/sequences-and-locks.md §1); migrated
+      // programs start from the name order they had.
+      .orderBy(asc(modulesTable.position), asc(modulesTable.createdAt))
+      .all()
+  );
 });
 
 export const create = os.input(createModuleInputSchema).handler(({ input }) => {
@@ -48,6 +59,7 @@ export const create = os.input(createModuleInputSchema).handler(({ input }) => {
     .values({
       createdAt: now,
       name: input.name,
+      position: nextModulePosition(db, input.programId),
       programId: input.programId,
       updatedAt: now,
     })
@@ -100,4 +112,30 @@ export const softDelete = os
       .run();
 
     cascadeSoftDeleteModule(db, input.id, now);
+  });
+
+/** Saves the program's new module order (§1 AC-3). */
+export const reorder = os
+  .input(reorderModulesInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    reorderRows(
+      db,
+      modulesTable,
+      eq(modulesTable.programId, input.programId),
+      input.ids
+    );
+  });
+
+/** Replaces the module's unlock rule (§1 AC-5). */
+export const setUnlockRule = os
+  .input(setModuleUnlockRuleInputSchema)
+  .handler(({ input }) => {
+    saveUnlockRule(
+      requireDatabaseClient(),
+      "module",
+      input.id,
+      input.mode,
+      input.requiredIds
+    );
   });

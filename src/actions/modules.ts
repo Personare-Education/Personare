@@ -20,3 +20,16 @@ export function restoreModule(id: string) {
 export function softDeleteModule(id: string) {
   return ipc.client.modules.softDelete({ id });
 }
+
+/** Saves a program's module order (docs/specs/sequences-and-locks.md). */
+export function reorderModules(programId: string, ids: string[]) {
+  return ipc.client.modules.reorder({ ids, programId });
+}
+
+export function setModuleUnlockRule(
+  id: string,
+  mode: "none" | "previous" | "any" | "all",
+  requiredIds: string[]
+) {
+  return ipc.client.modules.setUnlockRule({ id, mode, requiredIds });
+}

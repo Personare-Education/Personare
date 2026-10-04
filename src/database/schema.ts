@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  type AnySQLiteColumn,
+  integer,
+  real,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
 export const healthCheck = sqliteTable("health_check", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -24,9 +30,13 @@ export const modules = sqliteTable("modules", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  /** Its place in the program's list (docs/specs/sequences-and-locks.md). */
+  position: integer("position").notNull().default(0),
   programId: text("program_id")
     .notNull()
     .references(() => programs.id),
+  /** none | previous | any | all; the lists live in unlock_requirements. */
+  unlockMode: text("unlock_mode").notNull().default("none"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
@@ -36,6 +46,12 @@ export const modules = sqliteTable("modules", {
  * Activity types must not require a destructive migration (Plan.md 1.1).
  */
 export const activities = sqliteTable("activities", {
+  /**
+   * The first time it was done: its first rating, or -- for a sub-activity
+   * -- doing it inside its group. What unlock rules check
+   * (docs/specs/sequences-and-locks.md).
+   */
+  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   filePath: text("file_path"),
@@ -45,10 +61,34 @@ export const activities = sqliteTable("activities", {
   moduleId: text("module_id")
     .notNull()
     .references(() => modules.id),
+  /** The group (type "group") a sub-activity belongs to, if any. */
+  parentActivityId: text("parent_activity_id").references(
+    (): AnySQLiteColumn => activities.id
+  ),
+  /** Its place in its module's list, or in its group's. */
+  position: integer("position").notNull().default(0),
   title: text("title").notNull(),
   type: text("type").notNull(),
+  /** none | previous | any | all; the lists live in unlock_requirements. */
+  unlockMode: text("unlock_mode").notNull().default("none"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   url: text("url"),
+});
+
+/**
+ * The list behind an "any" or "all" unlock rule: what `subjectId` (an
+ * activity or a module, per `subjectKind`) requires done first. Rows that
+ * point at something deleted are ignored when the rule is checked
+ * (docs/specs/sequences-and-locks.md).
+ */
+export const unlockRequirements = sqliteTable("unlock_requirements", {
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  requiredId: text("required_id").notNull(),
+  subjectId: text("subject_id").notNull(),
+  subjectKind: text("subject_kind").notNull(),
 });
 
 /**

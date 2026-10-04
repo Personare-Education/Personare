@@ -14,6 +14,10 @@ import {
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
 import {
+  activityOfFlashcard,
+  markActivityCompleted,
+} from "@/ipc/shared/sequences";
+import {
   applyRating,
   createInitialReviewItemFields,
   fromFsrsCard,
@@ -305,7 +309,17 @@ export const submitRating = os
       throw new Error("Review item not found");
     }
 
-    return applyRatingToReviewItem(db, row, input.rating, new Date());
+    const now = new Date();
+    const rated = applyRatingToReviewItem(db, row, input.rating, now);
+    // A deck is done once its first card is rated
+    // (docs/specs/sequences-and-locks.md §1 AC-6).
+    const deckId = row.flashcardId
+      ? activityOfFlashcard(db, row.flashcardId)
+      : row.activityId;
+    if (deckId) {
+      markActivityCompleted(db, deckId, now);
+    }
+    return rated;
   });
 
 /**
@@ -352,9 +366,11 @@ export const markActivityDifficulty = os
         .get();
     }
 
-    return applyRatingToReviewItem(db, row, input.rating, now, {
+    const rated = applyRatingToReviewItem(db, row, input.rating, now, {
       shortTermEnabled: false,
     });
+    markActivityCompleted(db, input.activityId, now);
+    return rated;
   });
 
 function toLocalDateKey(date: Date): string {

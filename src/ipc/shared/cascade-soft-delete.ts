@@ -37,6 +37,29 @@ export function cascadeSoftDeleteActivity(
   activityId: string,
   now: Date
 ) {
+  // A group's sub-activities go with it (docs/specs/sequences-and-locks.md
+  // §1 AC-7).
+  const childIds = db
+    .select({ id: activitiesTable.id })
+    .from(activitiesTable)
+    .where(
+      and(
+        eq(activitiesTable.parentActivityId, activityId),
+        isNull(activitiesTable.deletedAt)
+      )
+    )
+    .all()
+    .map((row) => row.id);
+  if (childIds.length > 0) {
+    db.update(activitiesTable)
+      .set({ deletedAt: now })
+      .where(inArray(activitiesTable.id, childIds))
+      .run();
+    for (const childId of childIds) {
+      cascadeSoftDeleteActivity(db, childId, now);
+    }
+  }
+
   db.update(flashcardsTable)
     .set({ deletedAt: now })
     .where(
@@ -132,6 +155,27 @@ export function cascadeRestoreActivity(
   activityId: string,
   deletedAt: Date
 ) {
+  const childIds = db
+    .select({ id: activitiesTable.id })
+    .from(activitiesTable)
+    .where(
+      and(
+        eq(activitiesTable.parentActivityId, activityId),
+        eq(activitiesTable.deletedAt, deletedAt)
+      )
+    )
+    .all()
+    .map((row) => row.id);
+  if (childIds.length > 0) {
+    db.update(activitiesTable)
+      .set({ deletedAt: null })
+      .where(inArray(activitiesTable.id, childIds))
+      .run();
+    for (const childId of childIds) {
+      cascadeRestoreActivity(db, childId, deletedAt);
+    }
+  }
+
   db.update(flashcardsTable)
     .set({ deletedAt: null })
     .where(
