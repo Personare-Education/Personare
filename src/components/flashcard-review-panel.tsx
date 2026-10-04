@@ -8,6 +8,7 @@ import {
 } from "@/actions/review";
 import FlipCard from "@/components/flip-card";
 import ImageAttachmentViewer from "@/components/image-attachment-viewer";
+import KeyHint from "@/components/key-hint";
 import MarkdownContent from "@/components/markdown-content";
 import {
   isTypingTarget,
@@ -217,6 +218,8 @@ export default function FlashcardReviewPanel({
             ) : (
               <Button aria-keyshortcuts="Space" onClick={reveal}>
                 {t("revealAnswerAction")}
+                {/* docs/specs/key-hints.md AC-2 */}
+                <KeyHint>{t("keySpaceLabel")}</KeyHint>
               </Button>
             )}
           </div>
