@@ -2,7 +2,11 @@ import i18n from "i18next";
 import { describe, expect, it } from "vitest";
 import "@/localization/i18n";
 import { previewRatings } from "@/utils/fsrs";
-import { formatInterval, formatRelativeDue } from "@/utils/review-time";
+import {
+  formatInterval,
+  formatRelativeDue,
+  returnsThisSession,
+} from "@/utils/review-time";
 
 /**
  * RED phase (docs/specs/rating-clarity.md AC-1, AC-3): what each rating
@@ -85,5 +89,21 @@ describe("formatRelativeDue", () => {
     expect(formatRelativeDue(new Date(2026, 8, 30, 8, 0), NOW, t)).toBe(
       i18n.t("todayUrgencyOverdue", { count: 2 })
     );
+  });
+});
+
+describe("returnsThisSession (docs/specs/relearn-in-session.md AC-1, AC-2)", () => {
+  const now = new Date("2026-10-04T12:00:00Z");
+  const minutes = (n: number) => new Date(now.getTime() + n * 60 * 1000);
+
+  it("is true for the short learning steps", () => {
+    expect(returnsThisSession(minutes(1), now)).toBe(true);
+    expect(returnsThisSession(minutes(10), now)).toBe(true);
+    expect(returnsThisSession(minutes(20), now)).toBe(true);
+  });
+
+  it("is false past 20 minutes", () => {
+    expect(returnsThisSession(minutes(21), now)).toBe(false);
+    expect(returnsThisSession(minutes(60 * 24), now)).toBe(false);
   });
 });

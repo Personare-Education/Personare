@@ -100,6 +100,13 @@ function renderSession(activity: Activity | null = REVIEW_ACTIVITY) {
 
 const DAY = 24 * 60 * 60 * 1000;
 
+/** What submitRating resolves with: the item, rescheduled. */
+function rescheduled(inMs: number) {
+  return { dueDate: new Date(Date.now() + inMs) } as Awaited<
+    ReturnType<typeof submitRating>
+  >;
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(previewItemRatings).mockResolvedValue({
@@ -394,5 +401,70 @@ describe("ReviewSessionDialog (Issue #16)", () => {
     expect(await screen.findByText(DUE_ITEMS[1].front)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(submitRating).toHaveBeenCalledTimes(2);
+  });
+
+  /** docs/specs/relearn-in-session.md AC-1, AC-4, AC-5 */
+  it("brings a card due within minutes back at the end of the session", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitRating)
+      .mockResolvedValueOnce(rescheduled(60 * 1000))
+      .mockResolvedValue(rescheduled(2 * DAY));
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.keyboard(" ");
+    await user.keyboard("1");
+    await screen.findByText(DUE_ITEMS[1].front);
+    await user.keyboard(" ");
+    await user.keyboard("3");
+
+    expect(await screen.findByText(DUE_ITEMS[0].front)).toBeInTheDocument();
+    await user.keyboard(" ");
+    await user.keyboard("3");
+
+    expect(
+      await screen.findByText(i18n.t("reviewSessionCompleteMessage"))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("reviewSessionCompleteCount", { count: 2 }))
+    ).toBeInTheDocument();
+    expect(submitRating).toHaveBeenCalledTimes(3);
+  });
+
+  /** docs/specs/relearn-in-session.md AC-2 */
+  it("lets a card due in days leave the session", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitRating).mockResolvedValue(rescheduled(2 * DAY));
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    await user.keyboard(" ");
+    await user.keyboard("3");
+    await screen.findByText(DUE_ITEMS[1].front);
+    await user.keyboard(" ");
+    await user.keyboard("3");
+
+    expect(
+      await screen.findByText(i18n.t("reviewSessionCompleteMessage"))
+    ).toBeInTheDocument();
+    expect(submitRating).toHaveBeenCalledTimes(2);
+  });
+
+  /** docs/specs/relearn-in-session.md AC-3 */
+  it("says how many cards are left, counting the ones that came back", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitRating).mockResolvedValueOnce(rescheduled(60 * 1000));
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+    expect(
+      screen.getByText(i18n.t("reviewCardsLeftLabel", { count: 2 }))
+    ).toBeInTheDocument();
+
+    await user.keyboard(" ");
+    await user.keyboard("1");
+
+    expect(
+      await screen.findByText(i18n.t("reviewCardsLeftLabel", { count: 2 }))
+    ).toBeInTheDocument();
   });
 });
