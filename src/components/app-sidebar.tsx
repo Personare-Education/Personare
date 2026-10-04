@@ -3,6 +3,7 @@ import { BookOpen, CalendarDays, Sunrise } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AccountMenu from "@/components/account-menu";
 import PersonareLogo from "@/components/personare-logo";
+import SettingsSidebarItem from "@/components/settings-sidebar-item";
 import { StreakWidget } from "@/components/streak-widget";
 import {
   Sidebar,
@@ -81,6 +82,7 @@ export default function AppSidebar() {
         </TooltipProvider>
       </SidebarContent>
       <SidebarFooter>
+        <SettingsSidebarItem />
         <StreakWidget />
         <AccountMenu />
       </SidebarFooter>

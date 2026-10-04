@@ -11,6 +11,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Tamanho do texto:** Configurações → Geral → **Tamanho do texto** (Pequeno, Padrão, Grande, Maior)
   muda o texto do app inteiro na hora, junto com os espaçamentos, e a escolha vale ao abrir o app de
   novo.
+- **Configurações na barra lateral:** um item com a engrenagem no rodapé, além do menu da conta.
+- **Dicas de tecla na revisão:** cada avaliação mostra a sua tecla (1 a 4), e **Revelar resposta** mostra
+  **Espaço**.
+
+### Changed
+
+- **Botão principal no azul da marca:** azul com texto branco no tema claro, e azul claro com texto
+  escuro no escuro, onde antes era um cinza que parecia desabilitado.
+- **Uma ação principal por linha, com texto:** em Atividades e Módulos, "Iniciar revisão", "Responder
+  quiz", "Ver PDF", "Abrir link" ou "Ver atividades" aparecem como botão; gerenciar, editar e excluir
+  ficam em **Mais ações**.
 
 ## [0.1.0-alpha.9] - 2026-10-03
 
