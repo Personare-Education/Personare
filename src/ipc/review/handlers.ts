@@ -13,6 +13,7 @@ import {
   reviewItems as reviewItemsTable,
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
+import { loadLocks } from "@/ipc/shared/locks";
 import {
   activityOfFlashcard,
   markActivityCompleted,
@@ -24,6 +25,7 @@ import {
   previewRatings as previewFsrsRatings,
   type ReviewItemRow,
 } from "@/utils/fsrs";
+import { lockedActivityIds } from "@/utils/unlock";
 import {
   activityIdInputSchema,
   ensureReviewItemsInputSchema,
@@ -255,8 +257,16 @@ export const listSchedule = os.handler(() => {
     .innerJoin(programsTable, eq(modulesTable.programId, programsTable.id))
     .where(isNull(activitiesTable.deletedAt));
 
-  return unionAll(viaFlashcard, viaActivity).all();
+  // What is locked waits until it unlocks: off Today, the badges and the
+  // calendar (docs/specs/sequences-and-locks.md §2 AC-6).
+  const locked = lockedActivityIds(loadLocks(db));
+  return unionAll(viaFlashcard, viaActivity)
+    .all()
+    .filter((row) => !locked.has(row.activityId));
 });
+
+/** What is locked, and what each still needs (§2 AC-5). */
+export const listLocks = os.handler(() => loadLocks(requireDatabaseClient()));
 
 /**
  * What each rating would schedule (docs/specs/rating-clarity.md AC-1): a

@@ -76,3 +76,19 @@ Cada PR tem a sua seção de critérios abaixo, escrita antes do código dele.
    muda a data. `completeActivity(id)` grava a conclusão de uma sub-atividade.
 7. Excluir um grupo exclui as sub-atividades junto; desfazer traz todas de volta.
 8. O backup leva as regras de desbloqueio; um backup antigo, sem elas, ainda restaura (tudo fica livre).
+
+## 2. Bloqueios — critérios de aceite
+
+1. `computeLocks` (`src/utils/unlock.ts`, sem acesso ao banco) recebe módulos, atividades e listas e diz, para
+   cada módulo e atividade, se está bloqueado e **o que falta**: os itens exigidos ainda não concluídos, na
+   ordem em que aparecem.
+2. Regras de um módulo: `none` livre; `previous` exige concluídos todos os módulos antes dele no programa;
+   `any` exige um da lista concluído; `all`, todos. Um módulo está concluído quando tem atividades (do primeiro
+   nível) e todas estão concluídas.
+3. Regras de uma atividade: as mesmas, sobre atividades; `previous` olha as anteriores no mesmo nível (no
+   módulo, ou dentro do grupo). Uma atividade também fica bloqueada quando o seu módulo ou o seu grupo está
+   bloqueado; aí o que falta é o desbloqueio dele.
+4. Exigências que apontam para algo excluído são ignoradas; uma lista que fica vazia não bloqueia.
+5. `review.listLocks` devolve o estado de todos os módulos e atividades bloqueados, com o que falta.
+6. `listSchedule` (Hoje, selos, calendário, sincronização do calendário, destaques) e a contagem da bandeja
+   (`countDueReviews`) deixam de fora as atividades bloqueadas.

@@ -57,3 +57,8 @@ export function clearPendingActivityRating(activityId: string) {
 export function getPendingActivityRating() {
   return ipc.client.review.getPendingActivityRating();
 }
+
+/** What is locked, and what each still needs (docs/specs/sequences-and-locks.md). */
+export function listLocks() {
+  return ipc.client.review.listLocks();
+}

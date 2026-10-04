@@ -18,6 +18,7 @@ import { flashcards as flashcardsNamespace } from "@/ipc/flashcards";
 import { modules as modulesNamespace } from "@/ipc/modules";
 import { programs as programsNamespace } from "@/ipc/programs";
 import { review as reviewNamespace } from "@/ipc/review";
+import { countDueReviews } from "@/main/due-reviews";
 import { collectBackupData, restoreBackupData } from "@/utils/backup-data";
 
 /**
@@ -451,6 +452,54 @@ describe("sequences and locks: data (sequences-and-locks.md §1)", () => {
       expect(ids(list)).toEqual([first.id, second.id]);
       expect(list[0].completedAt).toBeNull();
       expect(list[1].completedAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe("locks in the schedule (§2 AC-5, AC-6)", () => {
+    it("says what is locked and leaves it out of the schedule and the tray count", async () => {
+      const first = await clients.activities.create({
+        moduleId,
+        title: "Capítulo",
+        type: "pdf",
+      });
+      const second = await clients.activities.create({
+        moduleId,
+        title: "Quiz",
+        type: "quiz",
+      });
+      await clients.review.markActivityDifficulty({
+        activityId: second.id,
+        rating: "again",
+      });
+      const inTwoDays = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+      expect(countDueReviews(db, inTwoDays)).toBe(1);
+
+      await clients.activities.setUnlockRule({
+        id: second.id,
+        mode: "all",
+        requiredIds: [first.id],
+      });
+
+      const locks = await clients.review.listLocks();
+      expect(locks.activities[second.id]).toEqual({
+        locked: true,
+        missing: [{ id: first.id, kind: "activity" }],
+      });
+      expect(
+        (await clients.review.listSchedule()).map((row) => row.activityId)
+      ).not.toContain(second.id);
+      expect(countDueReviews(db, inTwoDays)).toBe(0);
+
+      await clients.review.markActivityDifficulty({
+        activityId: first.id,
+        rating: "good",
+      });
+      expect((await clients.review.listLocks()).activities[second.id]).toBe(
+        undefined
+      );
+      expect(
+        (await clients.review.listSchedule()).map((row) => row.activityId)
+      ).toContain(second.id);
     });
   });
 });
