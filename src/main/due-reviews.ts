@@ -5,6 +5,8 @@ import {
   flashcards as flashcardsTable,
   reviewItems as reviewItemsTable,
 } from "@/database/schema";
+import { loadLocks } from "@/ipc/shared/locks";
+import { lockedActivityIds } from "@/utils/unlock";
 
 /**
  * Activities with a review due until the end of `now`'s local day, a deck
@@ -47,6 +49,12 @@ export function countDueReviews(db: DatabaseClient, now: Date): number {
     )
     .all();
 
-  return new Set([...viaFlashcard, ...viaActivity].map((row) => row.activityId))
-    .size;
+  // Locked activities are not due yet (docs/specs/sequences-and-locks.md
+  // §2 AC-6), the same as on Today.
+  const locked = lockedActivityIds(loadLocks(db));
+  return new Set(
+    [...viaFlashcard, ...viaActivity]
+      .map((row) => row.activityId)
+      .filter((activityId) => !locked.has(activityId))
+  ).size;
 }
