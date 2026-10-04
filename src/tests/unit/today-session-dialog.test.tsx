@@ -55,6 +55,23 @@ vi.mock("@/components/quiz-runner-dialog", () => ({
     ) : null,
 }));
 
+// The sequence's own walk is tested in sequence-runner.test.tsx; here it
+// only needs to hand back its one rating.
+vi.mock("@/components/sequence-runner", () => ({
+  default: ({
+    group,
+    onRate,
+  }: {
+    group: { title: string };
+    onRate: (rating: string) => void;
+  }) => (
+    // biome-ignore lint/performance/noJsxPropsBind: a test stand-in.
+    <button onClick={() => onRate("good")} type="button">
+      {`sequence-runner ${group.title}`}
+    </button>
+  ),
+}));
+
 const { listDue, markActivityDifficulty, submitRating } = await import(
   "@/actions/review"
 );
@@ -212,6 +229,22 @@ describe("TodaySessionDialog", () => {
 
     expect(await screen.findByText(PDF.activityTitle)).toBeInTheDocument();
     expect(markActivityDifficulty).not.toHaveBeenCalled();
+  });
+
+  /** docs/specs/sequences-and-locks.md §5 AC-5 */
+  it("does a sequence in place and rates it once, then moves on", async () => {
+    const user = userEvent.setup();
+    const sequence = item({
+      activityId: "sequence",
+      activityTitle: "Revisão de anatomia",
+      activityType: "group",
+    });
+    renderSession([sequence, PDF]);
+
+    await user.click(button("sequence-runner Revisão de anatomia"));
+
+    expect(markActivityDifficulty).toHaveBeenCalledWith("sequence", "good");
+    expect(await screen.findByText(PDF.activityTitle)).toBeInTheDocument();
   });
 
   it("reviews a deck's due cards in place, then moves on", async () => {

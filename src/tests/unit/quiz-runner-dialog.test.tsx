@@ -756,3 +756,41 @@ describe("QuizRunnerDialog result as the rating step", () => {
     ).toHaveClass("text-destructive-text");
   });
 });
+
+/** docs/specs/sequences-and-locks.md §5 AC-3 */
+describe("QuizRunnerDialog as a sequence step", () => {
+  it("ends on Continue, without its own rating", async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+    const onFinished = vi.fn();
+    render(
+      <QuizRunnerDialog
+        activity={QUIZ_ACTIVITY}
+        asStep
+        onFinished={onFinished}
+        onOpenChange={vi.fn()}
+        open
+      />
+    );
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+    await answer(user, 1);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await screen.findByText(RUNNER_QUESTIONS[1].text);
+    await answer(user, 1);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
+    );
+
+    expect(
+      screen.queryByRole("button", { name: i18n.t("activityRatingGoodAction") })
+    ).not.toBeInTheDocument();
+    expect(armPendingActivityRating).not.toHaveBeenCalled();
+    await user.click(
+      await screen.findByRole("button", { name: i18n.t("continueAction") })
+    );
+    expect(onFinished).toHaveBeenCalledWith(QUIZ_ACTIVITY);
+  });
+});

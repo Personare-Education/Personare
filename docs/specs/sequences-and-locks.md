@@ -124,3 +124,18 @@ Cada PR tem a sua seção de critérios abaixo, escrita antes do código dele.
    atividades dela (a primeira fica livre; as outras, "depois de tudo o que vem antes" ou livres). Cada
    atividade da sequência mostra o cadeado e tem a sua regra.
 5. Depois de salvar uma regra (ou de concluir algo), os cadeados se atualizam.
+
+## 5. Fazer uma sequência — critérios de aceite
+
+1. Na tabela, a ação principal de uma sequência livre é **Fazer sequência**; **Ver sequência** vai para Mais
+   ações. Uma sequência sem atividades não tem o que fazer: só **Ver sequência**.
+2. Fazer uma sequência (pela tabela, ou em Hoje quando ela vence) percorre as atividades **na ordem**, uma por
+   vez, com "Etapa 2 de 3". Cada etapa se abre como de costume (PDF, link ou quiz) e, aberta, mostra
+   **Concluir etapa**, que a marca como concluída (`completeActivity`) e passa à próxima.
+3. Um quiz dentro da sequência não pede avaliação própria: o resultado mostra as respostas e **Continuar**,
+   que conclui a etapa.
+4. Uma etapa bloqueada (por uma regra dela) mostra o cadeado e o que falta, e pode ser **pulada**; ela não
+   conta como concluída.
+5. Depois da última etapa vem **uma avaliação só**, da sequência inteira, com os intervalos de cada nota; ela
+   agenda a próxima revisão da sequência. Em Hoje, a sequência conta como um item revisado.
+6. Em Hoje, a sequência aparece com o ícone e o nome do tipo **Sequência**.

@@ -59,6 +59,11 @@ import { cn } from "@/utils/tailwind";
 
 interface QuizRunnerDialogProps {
   activity: Activity | null;
+  /**
+   * A step of a sequence (docs/specs/sequences-and-locks.md §5 AC-3): the
+   * sequence is rated as a whole, so the result ends on Continue.
+   */
+  asStep?: boolean;
   /** Finished but closed without rating: the caller asks for the rating. */
   onFinished: (activity: Activity) => void;
   onOpenChange: (open: boolean) => void;
@@ -305,8 +310,65 @@ function QuizRatingResult({
   );
 }
 
+interface QuizStepResultProps {
+  answers: QuizAnswers;
+  onContinue: () => void;
+  questions: QuizRunnerQuestion[];
+  result: QuizScore;
+}
+
+/** A sequence step's result: how many were right, the answers, Continue. */
+function QuizStepResult({
+  answers,
+  onContinue,
+  questions,
+  result,
+}: QuizStepResultProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="grid min-h-0 gap-6 py-4 sm:grid-cols-[minmax(0,1fr)_17rem]">
+      <div className="flex flex-col gap-4 sm:order-last">
+        <p className="font-medium font-serif text-3xl tracking-[-0.02em]">
+          {t("quizResultMessage", {
+            correct: result.correct,
+            total: result.total,
+          })}
+        </p>
+        <Button autoFocus className="self-start" onClick={onContinue}>
+          {t("continueAction")}
+        </Button>
+      </div>
+      <QuizAnswerReview answers={answers} questions={questions} />
+    </div>
+  );
+}
+
+interface QuizResultProps extends QuizRatingResultProps {
+  asStep: boolean;
+  onContinue: () => void;
+}
+
+/**
+ * The end of a quiz: rated here, or -- as a sequence's step -- just
+ * Continue (docs/specs/sequences-and-locks.md §5 AC-3).
+ */
+function QuizResult({ asStep, onContinue, ...props }: QuizResultProps) {
+  return asStep ? (
+    <QuizStepResult
+      answers={props.answers}
+      onContinue={onContinue}
+      questions={props.questions}
+      result={props.result}
+    />
+  ) : (
+    <QuizRatingResult {...props} />
+  );
+}
+
 export default function QuizRunnerDialog({
   activity,
+  asStep = false,
   onFinished,
   onOpenChange,
   onRated,
@@ -391,10 +453,10 @@ export default function QuizRunnerDialog({
 
     setResult(calculateQuizScore(questions, answers));
     // Taken but not rated yet: asked again on launch until it is (AC-5).
-    if (activity) {
+    if (activity && !asStep) {
       armPendingActivityRating(activity.id);
     }
-  }, [activity, answers, currentIndex, isLastQuestion, questions]);
+  }, [activity, answers, asStep, currentIndex, isLastQuestion, questions]);
 
   // The button the student just pressed turns into "Check answer", still
   // unavailable: focus moves on to the new question's first choice (AC-3).
@@ -465,6 +527,11 @@ export default function QuizRunnerDialog({
     [activity, onOpenChange, onRated]
   );
 
+  // A step's Continue: the sequence moves on, as closing the result does.
+  const handleContinueClick = useCallback(() => {
+    handleDialogOpenChange(false);
+  }, [handleDialogOpenChange]);
+
   // A click outside the quiz is most likely a slip: rather than throwing
   // the quiz away, the dialog stays open and shakes softly.
   const {
@@ -490,10 +557,12 @@ export default function QuizRunnerDialog({
           <DialogTitle>{activity?.title}</DialogTitle>
         </DialogHeader>
         {result ? (
-          <QuizRatingResult
+          <QuizResult
             activityId={activity?.id ?? null}
             answers={answers}
+            asStep={asStep}
             isSaving={isSaving}
+            onContinue={handleContinueClick}
             onRate={handleRate}
             questions={questions}
             result={result}

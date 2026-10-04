@@ -101,6 +101,8 @@ interface ActivitiesDataTableProps {
   onMove?: (activity: Activity, direction: -1 | 1) => void;
   onOpenLink: (activity: Activity) => void;
   onRequestDelete: (activity: Activity) => void;
+  /** Does a sequence, step by step (docs/specs/sequences-and-locks.md §5). */
+  onRunSequence?: (activity: Activity) => void;
   onStartReview: (activity: Activity) => void;
   onTakeQuiz: (activity: Activity) => void;
   /** Opens an activity's unlock rule (docs/specs/sequences-and-locks.md §4). */
@@ -124,6 +126,7 @@ interface ActivityRowProps {
   onMove?: (activity: Activity, direction: -1 | 1) => void;
   onOpenLink: (activity: Activity) => void;
   onRequestDelete: (activity: Activity) => void;
+  onRunSequence?: (activity: Activity) => void;
   onStartReview: (activity: Activity) => void;
   onTakeQuiz: (activity: Activity) => void;
   onUnlockRule?: (activity: Activity) => void;
@@ -145,6 +148,7 @@ function ActivityRow({
   onMove,
   onOpenLink,
   onRequestDelete,
+  onRunSequence,
   onStartReview,
   onTakeQuiz,
   onUnlockRule,
@@ -173,6 +177,17 @@ function ActivityRow({
         },
       ],
       group: [
+        // Something to do first, when there is (§5 AC-1).
+        ...(stepCount && onRunSequence
+          ? [
+              {
+                icon: <Play />,
+                key: "run-sequence",
+                label: t("runSequenceAction"),
+                onSelect: () => onRunSequence(activity),
+              },
+            ]
+          : []),
         {
           icon: <ListOrdered />,
           key: "view-sequence",
@@ -279,10 +294,12 @@ function ActivityRow({
     onMove,
     onOpenLink,
     onRequestDelete,
+    onRunSequence,
     onStartReview,
     onTakeQuiz,
     onUnlockRule,
     onViewPdf,
+    stepCount,
     t,
   ]);
 
@@ -352,6 +369,7 @@ export default function ActivitiesDataTable({
   onMove,
   onOpenLink,
   onRequestDelete,
+  onRunSequence,
   onStartReview,
   onTakeQuiz,
   onUnlockRule,
@@ -394,6 +412,7 @@ export default function ActivitiesDataTable({
                 onMove={onMove}
                 onOpenLink={onOpenLink}
                 onRequestDelete={onRequestDelete}
+                onRunSequence={onRunSequence}
                 onStartReview={onStartReview}
                 onTakeQuiz={onTakeQuiz}
                 onUnlockRule={onUnlockRule}

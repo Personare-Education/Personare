@@ -903,3 +903,61 @@ describe("ActivitiesDataTable locks", () => {
     expect(onUnlockRule).toHaveBeenCalledWith(ACTIVITIES[0]);
   });
 });
+
+/** docs/specs/sequences-and-locks.md §5 AC-1 */
+describe("ActivitiesDataTable doing a sequence", () => {
+  const SEQUENCE: Activity = {
+    createdAt: new Date("2026-01-05"),
+    filePath: null,
+    id: "88888888-8888-8888-8888-888888888888",
+    moduleId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    title: "Revisão de anatomia",
+    type: "group",
+    updatedAt: new Date("2026-01-05"),
+    url: null,
+  };
+
+  function renderSequence(stepCount: number) {
+    const onRunSequence = vi.fn();
+    render(
+      <ActivitiesDataTable
+        activities={[SEQUENCE]}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onManageSequence={vi.fn()}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onRunSequence={onRunSequence}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onViewPdf={vi.fn()}
+        reviewStateByActivityId={{}}
+        stepCountByGroupId={{ [SEQUENCE.id]: stepCount }}
+      />
+    );
+    return { onRunSequence };
+  }
+
+  it("does a sequence from its main action", async () => {
+    const user = userEvent.setup();
+    const { onRunSequence } = renderSequence(3);
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("runSequenceAction") })
+    );
+
+    expect(onRunSequence).toHaveBeenCalledWith(SEQUENCE);
+  });
+
+  it("only views an empty sequence", () => {
+    renderSequence(0);
+
+    expect(
+      screen.queryByRole("button", { name: i18n.t("runSequenceAction") })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: i18n.t("viewSequenceAction") })
+    ).toBeInTheDocument();
+  });
+});
