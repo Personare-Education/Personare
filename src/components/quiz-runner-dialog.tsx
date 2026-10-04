@@ -97,11 +97,12 @@ function choiceFeedback(
   return option.id === confirmedOptionId ? "incorrect" : undefined;
 }
 
+// The radio's dot takes the tone too, so a marked choice shows one color.
 const CHOICE_FEEDBACK_CLASSES: Record<ChoiceFeedback, string> = {
   correct:
-    "data-disabled:opacity-100 border-success/60 bg-success/10 data-checked:border-success/60 data-checked:bg-success/10",
+    "data-disabled:opacity-100 border-success/60 bg-success/10 data-checked:border-success/60 data-checked:bg-success/10 [&_[data-slot=questionnaire-choice-indicator]]:!border-success data-checked:[&_[data-slot=questionnaire-choice-indicator]]:!bg-success",
   incorrect:
-    "data-disabled:opacity-100 border-destructive/60 bg-destructive/10 data-checked:border-destructive/60 data-checked:bg-destructive/10",
+    "data-disabled:opacity-100 border-destructive/60 bg-destructive/10 data-checked:border-destructive/60 data-checked:bg-destructive/10 [&_[data-slot=questionnaire-choice-indicator]]:!border-destructive data-checked:[&_[data-slot=questionnaire-choice-indicator]]:!bg-destructive",
 };
 
 function QuizRunnerQuestionStep({
