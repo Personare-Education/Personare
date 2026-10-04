@@ -200,6 +200,11 @@ function ReviewedByProgram({ items }: { items: TodayItem[] }) {
 }
 
 interface TodaySessionDialogProps {
+  /**
+   * The session is the whole day: end it by closing onto the day's screen,
+   * not on its own summary (docs/specs/day-done-peak.md AC-1).
+   */
+  closeWhenDone?: boolean;
   items: TodayItem[];
   onOpenChange: (open: boolean) => void;
   open: boolean;
@@ -211,6 +216,7 @@ interface TodaySessionDialogProps {
  * rating is saved as it happens, so closing halfway loses nothing.
  */
 export default function TodaySessionDialog({
+  closeWhenDone = false,
   items,
   onOpenChange,
   open,
@@ -240,6 +246,12 @@ export default function TodaySessionDialog({
 
   const current = queue[index] ?? null;
   const isDone = queue.length > 0 && index >= queue.length;
+
+  useEffect(() => {
+    if (open && isDone && closeWhenDone) {
+      onOpenChange(false);
+    }
+  }, [closeWhenDone, isDone, onOpenChange, open]);
 
   const advance = useCallback(() => {
     setSaveFailed(false);
@@ -341,7 +353,7 @@ export default function TodaySessionDialog({
             </DialogFooter>
           </>
         ) : null}
-        {isDone ? (
+        {isDone && !closeWhenDone ? (
           <div className="flex flex-col gap-4">
             <SessionEndCard
               color="var(--brand)"
