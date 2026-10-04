@@ -3,6 +3,7 @@ import {
   Layers,
   Link,
   ListChecks,
+  ListOrdered,
   type LucideIcon,
   PencilLine,
   Sparkles,
@@ -27,23 +28,29 @@ import { Label } from "@/components/ui/label";
 import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
 import { cn } from "@/utils/tailwind";
 
-const MVP_ACTIVITY_TYPES = ["link", "quiz", "pdf", "flashcard_deck"] as const;
+// A sequence ("group") holds other activities in order
+// (docs/specs/sequences-and-locks.md §3 AC-1).
+const MVP_ACTIVITY_TYPES = [
+  "link",
+  "quiz",
+  "pdf",
+  "flashcard_deck",
+  "group",
+] as const;
 
-const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<
-  (typeof MVP_ACTIVITY_TYPES)[number],
-  string
-> = {
+export type ActivityTypeOption = (typeof MVP_ACTIVITY_TYPES)[number];
+
+const ACTIVITY_TYPE_TRANSLATION_KEYS: Record<ActivityTypeOption, string> = {
   flashcard_deck: "activityTypeFlashcardDeck",
+  group: "activityTypeGroup",
   link: "activityTypeLink",
   pdf: "activityTypePdf",
   quiz: "activityTypeQuiz",
 };
 
-const ACTIVITY_TYPE_ICONS: Record<
-  (typeof MVP_ACTIVITY_TYPES)[number],
-  LucideIcon
-> = {
+const ACTIVITY_TYPE_ICONS: Record<ActivityTypeOption, LucideIcon> = {
   flashcard_deck: Layers,
+  group: ListOrdered,
   link: Link,
   pdf: FileText,
   quiz: ListChecks,
@@ -137,6 +144,8 @@ function stepCountFor(
 
 interface ActivityFormDialogProps {
   activity: Activity | null;
+  /** The types offered; inside a sequence, only PDF, link and quiz (§3 AC-2). */
+  allowedTypes?: readonly ActivityTypeOption[];
   onImportQuiz: (title: string, questions: ParsedQuizQuestion[]) => void;
   onOpenChange: (open: boolean) => void;
   onSubmit: (
@@ -150,6 +159,7 @@ interface ActivityFormDialogProps {
 
 export default function ActivityFormDialog({
   activity,
+  allowedTypes = MVP_ACTIVITY_TYPES,
   onImportQuiz,
   onOpenChange,
   onSubmit,
@@ -157,9 +167,7 @@ export default function ActivityFormDialog({
 }: ActivityFormDialogProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState(activity?.title ?? "");
-  const [type, setType] = useState<string>(
-    activity?.type ?? MVP_ACTIVITY_TYPES[0]
-  );
+  const [type, setType] = useState<string>(activity?.type ?? allowedTypes[0]);
   const [url, setUrl] = useState(activity?.url ?? "");
   const [filePath, setFilePath] = useState(activity?.filePath ?? null);
   const [step, setStep] = useState<Step>("details");
@@ -172,14 +180,14 @@ export default function ActivityFormDialog({
   useEffect(() => {
     if (open) {
       setTitle(activity?.title ?? "");
-      setType(activity?.type ?? MVP_ACTIVITY_TYPES[0]);
+      setType(activity?.type ?? allowedTypes[0]);
       setUrl(activity?.url ?? "");
       setFilePath(activity?.filePath ?? null);
       setStep("details");
       setQuizSource(null);
       setImportedQuestions(null);
     }
-  }, [open, activity]);
+  }, [open, activity, allowedTypes]);
 
   const isQuizCreation = !activity && type === "quiz";
   const isPdfCreation = !activity && type === "pdf";
@@ -278,6 +286,7 @@ export default function ActivityFormDialog({
           >
             {step === "details" ? (
               <ActivityDetailsFields
+                allowedTypes={allowedTypes}
                 filePath={filePath}
                 isCreating={!activity}
                 onFilePathChange={setFilePath}
@@ -324,6 +333,7 @@ export default function ActivityFormDialog({
 }
 
 interface ActivityDetailsFieldsProps {
+  allowedTypes: readonly ActivityTypeOption[];
   filePath: string | null;
   /** Creating a PDF picks its file in the next step, not here. */
   isCreating: boolean;
@@ -337,6 +347,7 @@ interface ActivityDetailsFieldsProps {
 }
 
 function ActivityDetailsFields({
+  allowedTypes,
   filePath,
   isCreating,
   onFilePathChange,
@@ -389,11 +400,11 @@ function ActivityDetailsFields({
         <Label id={typeLabelId}>{t("activityTypeLabel")}</Label>
         <RadioGroupPrimitive.Root
           aria-labelledby={typeLabelId}
-          className="grid grid-cols-2 gap-2"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3"
           onValueChange={onTypeChange}
           value={type}
         >
-          {MVP_ACTIVITY_TYPES.map((activityType) => {
+          {allowedTypes.map((activityType) => {
             const Icon = ACTIVITY_TYPE_ICONS[activityType];
             return (
               <RadioGroupPrimitive.Item

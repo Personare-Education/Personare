@@ -1,4 +1,4 @@
-import { ListChecks, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ListChecks, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ActionableTableRow, {
@@ -30,30 +30,56 @@ interface ModulesDataTableProps {
   highlightByModuleId?: Record<string, ReviewHighlight | undefined>;
   modules: Module[];
   onEdit: (module: Module) => void;
+  /** Moves a module up (-1) or down (1) (docs/specs/sequences-and-locks.md §3 AC-4). */
+  onMove?: (module: Module, direction: -1 | 1) => void;
   onNavigateToActivities: (module: Module) => void;
   onRequestDelete: (module: Module) => void;
 }
 
 interface ModuleRowProps {
   highlight: ReviewHighlight | undefined;
+  isFirst: boolean;
+  isLast: boolean;
   module: Module;
   onEdit: (module: Module) => void;
+  onMove?: (module: Module, direction: -1 | 1) => void;
   onNavigateToActivities: (module: Module) => void;
   onRequestDelete: (module: Module) => void;
 }
 
 function ModuleRow({
   highlight,
+  isFirst,
+  isLast,
   module,
   onEdit,
+  onMove,
   onNavigateToActivities,
   onRequestDelete,
 }: ModuleRowProps) {
   const { t } = useTranslation();
 
   // The first action is what clicking the row does.
-  const actions = useMemo<RowAction[]>(
-    () => [
+  const actions = useMemo<RowAction[]>(() => {
+    // Up and down, but not past the ends.
+    const moveActions: RowAction[] = [];
+    if (onMove && !isFirst) {
+      moveActions.push({
+        icon: <ArrowUp />,
+        key: "move-up",
+        label: t("moveUpAction"),
+        onSelect: () => onMove(module, -1),
+      });
+    }
+    if (onMove && !isLast) {
+      moveActions.push({
+        icon: <ArrowDown />,
+        key: "move-down",
+        label: t("moveDownAction"),
+        onSelect: () => onMove(module, 1),
+      });
+    }
+    return [
       {
         icon: <ListChecks />,
         key: "view-activities",
@@ -66,6 +92,7 @@ function ModuleRow({
         label: t("editModuleAction"),
         onSelect: () => onEdit(module),
       },
+      ...moveActions,
       {
         destructive: true,
         icon: <Trash2 />,
@@ -73,9 +100,17 @@ function ModuleRow({
         label: t("deleteModuleAction"),
         onSelect: () => onRequestDelete(module),
       },
-    ],
-    [module, onEdit, onNavigateToActivities, onRequestDelete, t]
-  );
+    ];
+  }, [
+    isFirst,
+    isLast,
+    module,
+    onEdit,
+    onMove,
+    onNavigateToActivities,
+    onRequestDelete,
+    t,
+  ]);
 
   return (
     <ActionableTableRow
@@ -101,6 +136,7 @@ export default function ModulesDataTable({
   highlightByModuleId = NO_HIGHLIGHTS,
   modules,
   onEdit,
+  onMove,
   onNavigateToActivities,
   onRequestDelete,
 }: ModulesDataTableProps) {
@@ -121,12 +157,15 @@ export default function ModulesDataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {modules.map((module) => (
+            {modules.map((module, index) => (
               <ModuleRow
                 highlight={highlightByModuleId[module.id]}
+                isFirst={index === 0}
+                isLast={index === modules.length - 1}
                 key={module.id}
                 module={module}
                 onEdit={onEdit}
+                onMove={onMove}
                 onNavigateToActivities={onNavigateToActivities}
                 onRequestDelete={onRequestDelete}
               />

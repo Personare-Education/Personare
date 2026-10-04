@@ -44,6 +44,8 @@ export const softDeleteOptionInputSchema = z.object({
 
 export const createWithQuestionsInputSchema = z.object({
   moduleId: z.string(),
+  /** Inside a sequence (docs/specs/sequences-and-locks.md §3 AC-5). */
+  parentActivityId: z.string().nullish(),
   questions: z
     .array(
       z.object({

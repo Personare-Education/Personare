@@ -7,6 +7,10 @@ import {
   cascadeSoftDeleteQuizQuestion,
 } from "@/ipc/shared/cascade-soft-delete";
 import {
+  assertCanHoldActivity,
+  nextActivityPosition,
+} from "@/ipc/shared/sequences";
+import {
   createOptionInputSchema,
   createQuestionInputSchema,
   createWithQuestionsInputSchema,
@@ -203,6 +207,14 @@ export const createWithQuestions = os
       return new Date(start + tick);
     };
 
+    const parentActivityId = input.parentActivityId ?? null;
+    if (parentActivityId) {
+      assertCanHoldActivity(db, input.moduleId, parentActivityId, "quiz");
+    }
+    // At the end of its list, like any new activity
+    // (docs/specs/sequences-and-locks.md §3 AC-5).
+    const position = nextActivityPosition(db, input.moduleId, parentActivityId);
+
     return db.transaction((tx) => {
       const createdAt = nextTimestamp();
       const activity = tx
@@ -210,6 +222,8 @@ export const createWithQuestions = os
         .values({
           createdAt,
           moduleId: input.moduleId,
+          parentActivityId,
+          position,
           title: input.title,
           type: "quiz",
           updatedAt: createdAt,

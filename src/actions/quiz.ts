@@ -88,7 +88,13 @@ export async function listQuizQuestionsWithOptions(activityId: string) {
 export function createQuizWithQuestions(
   moduleId: string,
   title: string,
-  questions: ParsedQuizQuestion[]
+  questions: ParsedQuizQuestion[],
+  parentActivityId: string | null = null
 ) {
-  return ipc.client.quiz.createWithQuestions({ moduleId, questions, title });
+  return ipc.client.quiz.createWithQuestions({
+    moduleId,
+    parentActivityId,
+    questions,
+    title,
+  });
 }

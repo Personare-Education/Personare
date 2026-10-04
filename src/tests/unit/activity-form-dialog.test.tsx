@@ -280,6 +280,7 @@ describe("ActivityFormDialog type cards", () => {
     i18n.t("activityTypeQuiz"),
     i18n.t("activityTypePdf"),
     i18n.t("activityTypeFlashcardDeck"),
+    i18n.t("activityTypeGroup"),
   ];
 
   it("picks the type from a radio group of cards labeled by the type field, not a combo box", () => {
@@ -636,5 +637,55 @@ describe("ActivityFormDialog PDF creation steps", () => {
     expect(
       screen.getByRole("radio", { name: i18n.t("activityTypePdf") })
     ).toBeChecked();
+  });
+});
+
+/** docs/specs/sequences-and-locks.md §3 AC-1, AC-2 */
+describe("ActivityFormDialog sequences", () => {
+  it("creates a sequence with no link or file", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderDialog();
+
+    await user.type(
+      screen.getByLabelText(i18n.t("activityTitleLabel")),
+      "Revisão de anatomia"
+    );
+    await user.click(
+      screen.getByRole("radio", { name: i18n.t("activityTypeGroup") })
+    );
+    expect(
+      screen.queryByLabelText(i18n.t("activityUrlLabel"))
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    );
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      "Revisão de anatomia",
+      "group",
+      null,
+      null
+    );
+  });
+
+  it("offers only PDF, link and quiz inside a sequence", () => {
+    render(
+      <ActivityFormDialog
+        activity={null}
+        allowedTypes={["link", "quiz", "pdf"]}
+        onImportQuiz={vi.fn()}
+        onOpenChange={vi.fn()}
+        onSubmit={vi.fn()}
+        open
+      />
+    );
+
+    expect(
+      screen.getAllByRole("radio").map((card) => card.textContent)
+    ).toEqual([
+      i18n.t("activityTypeLink"),
+      i18n.t("activityTypeQuiz"),
+      i18n.t("activityTypePdf"),
+    ]);
   });
 });

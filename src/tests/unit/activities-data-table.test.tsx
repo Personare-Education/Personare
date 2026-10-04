@@ -760,3 +760,77 @@ describe("ActivitiesDataTable primary action", () => {
     }
   });
 });
+
+/** docs/specs/sequences-and-locks.md §3 AC-3, AC-4 */
+describe("ActivitiesDataTable sequences and order", () => {
+  const SEQUENCE: Activity = {
+    createdAt: new Date("2026-01-05"),
+    filePath: null,
+    id: "99999999-9999-9999-9999-999999999999",
+    moduleId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    title: "Revisão de anatomia",
+    type: "group",
+    updatedAt: new Date("2026-01-05"),
+    url: null,
+  };
+
+  it("shows a sequence with its size, and opens it from its main action", async () => {
+    const user = userEvent.setup();
+    const onManageSequence = vi.fn();
+    render(
+      <ActivitiesDataTable
+        activities={[SEQUENCE]}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onManageSequence={onManageSequence}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onViewPdf={vi.fn()}
+        reviewStateByActivityId={{}}
+        stepCountByGroupId={{ [SEQUENCE.id]: 3 }}
+      />
+    );
+
+    expect(screen.getByText(i18n.t("activityTypeGroup"))).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t("sequenceStepCount", { count: 3 }))
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("viewSequenceAction") })
+    );
+    expect(onManageSequence).toHaveBeenCalledWith(SEQUENCE);
+  });
+
+  it("moves a row up or down, but not past the ends", async () => {
+    const user = userEvent.setup();
+    const onMove = vi.fn();
+    render(
+      <ActivitiesDataTable
+        activities={ACTIVITIES.slice(0, 2)}
+        onEdit={vi.fn()}
+        onManageFlashcards={vi.fn()}
+        onManageQuiz={vi.fn()}
+        onMove={onMove}
+        onOpenLink={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onStartReview={vi.fn()}
+        onTakeQuiz={vi.fn()}
+        onViewPdf={vi.fn()}
+        reviewStateByActivityId={{}}
+      />
+    );
+
+    await openRowMenu(user, ACTIVITIES[0].title);
+    expect(
+      screen.queryByRole("menuitem", { name: i18n.t("moveUpAction") })
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("moveDownAction") })
+    );
+
+    expect(onMove).toHaveBeenCalledWith(ACTIVITIES[0], 1);
+  });
+});
