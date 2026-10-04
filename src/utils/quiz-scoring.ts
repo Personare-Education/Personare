@@ -46,3 +46,25 @@ export function calculateQuizScore(
 
   return { correct, total: questions.length };
 }
+
+/**
+ * The activity rating a quiz's score points to, shown as a suggestion on
+ * its result (docs/specs/quiz-result-rating.md AC-2): under half right
+ * "again", under 80% "hard", under all "good", all right "easy".
+ */
+export function suggestQuizRating({
+  correct,
+  total,
+}: QuizScore): "again" | "hard" | "good" | "easy" {
+  if (total === 0) {
+    return "good";
+  }
+  const ratio = correct / total;
+  if (ratio < 0.5) {
+    return "again";
+  }
+  if (ratio < 0.8) {
+    return "hard";
+  }
+  return ratio < 1 ? "good" : "easy";
+}

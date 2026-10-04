@@ -48,6 +48,8 @@ interface ActivityStepProps {
   isSaving: boolean;
   item: TodayItem;
   onRate: (rating: RatingValue) => void;
+  /** A quiz rated on its own result (docs/specs/quiz-result-rating.md AC-3). */
+  onRated: () => void;
   saveFailed: boolean;
 }
 
@@ -59,6 +61,7 @@ function ActivityStepPanel({
   isSaving,
   item,
   onRate,
+  onRated,
   saveFailed,
 }: ActivityStepProps) {
   const { t } = useTranslation();
@@ -139,6 +142,7 @@ function ActivityStepPanel({
           activity={isQuizOpen ? toActivity(item) : null}
           onFinished={handleQuizFinished}
           onOpenChange={handleQuizOpenChange}
+          onRated={onRated}
           open={isQuizOpen}
         />
       ) : null}
@@ -263,6 +267,14 @@ export default function TodaySessionDialog({
     [advance, current]
   );
 
+  // Already saved by the quiz's result: it counts, and the session moves on.
+  const handleQuizRated = useCallback(() => {
+    if (current) {
+      setReviewed((prev) => [...prev, current]);
+    }
+    advance();
+  }, [advance, current]);
+
   const handleDeckDone = useCallback(
     (ratedCount: number) => {
       if (ratedCount > 0 && current) {
@@ -317,6 +329,7 @@ export default function TodaySessionDialog({
                   item={current}
                   key={current.activityId}
                   onRate={handleActivityRate}
+                  onRated={handleQuizRated}
                   saveFailed={saveFailed}
                 />
               )}

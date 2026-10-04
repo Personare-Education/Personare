@@ -136,9 +136,9 @@ test("walks from a calendar event to the pulsing module and activity", async () 
   // Each answer is confirmed first (docs/specs/quiz-immediate-feedback.md).
   await runner.getByRole("button", { name: "Check answer" }).click();
   await runner.getByRole("button", { name: "Finish quiz" }).click();
-  await runner.getByRole("button", { name: "Close" }).click();
-  // An activity is rated on its own scale (docs/specs/rating-clarity.md).
-  await page.getByRole("button", { name: "Didn't get it" }).click();
+  // Rated right on the result, on the activity's own scale
+  // (docs/specs/quiz-result-rating.md, docs/specs/rating-clarity.md).
+  await runner.getByRole("button", { name: "Didn't get it" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   // The cell reads "In N days"; its <time> carries the exact day

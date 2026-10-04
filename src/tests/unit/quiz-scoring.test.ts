@@ -3,6 +3,7 @@ import {
   calculateQuizScore,
   formatQuizDuration,
   type QuizScoringQuestion,
+  suggestQuizRating,
 } from "@/utils/quiz-scoring";
 
 /**
@@ -114,5 +115,23 @@ describe("formatQuizDuration (Issue #93)", () => {
 
   it("formats exactly zero as 0s", () => {
     expect(formatQuizDuration(0)).toBe("0s");
+  });
+});
+
+describe("suggestQuizRating (docs/specs/quiz-result-rating.md AC-2)", () => {
+  it.each([
+    [0, 2, "again"],
+    [1, 3, "again"],
+    [1, 2, "hard"],
+    [3, 4, "hard"],
+    [4, 5, "good"],
+    [9, 10, "good"],
+    [2, 2, "easy"],
+  ] as const)("%i of %i right suggests %s", (correct, total, rating) => {
+    expect(suggestQuizRating({ correct, total })).toBe(rating);
+  });
+
+  it("suggests nothing harsh for an empty quiz", () => {
+    expect(suggestQuizRating({ correct: 0, total: 0 })).toBe("good");
   });
 });

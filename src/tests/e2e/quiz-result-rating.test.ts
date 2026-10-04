@@ -10,11 +10,11 @@ import { freshProfileArg } from "./fresh-profile";
 import { sidebarLink } from "./sidebar-link";
 
 /**
- * Regression test for Issue #122: the Quiz result screen showed the times but
- * no radial chart. The chart sat in a `flex-col items-center` parent
- * with no width of its own, so it shrank to its content -- Recharts'
- * ResponsiveContainer, which sizes itself from that same parent -- and ended
- * up 0x0. jsdom has no layout engine, so only a real render catches this.
+ * A quiz ends on its rating (docs/specs/quiz-result-rating.md): how many
+ * were right, a mark per question, the ratings with one suggested by the
+ * score, and rating there closes the quiz and schedules it. The radial
+ * chart this file once guarded (Issue #122) now lives in QuizScoreResult,
+ * kept for the future exam type.
  */
 
 let electronApp: ElectronApplication;
@@ -38,7 +38,7 @@ test.afterAll(async () => {
   await electronApp.evaluate(({ app }) => app.exit());
 });
 
-test("finishing a quiz shows the stacked radial chart with a visible size", async () => {
+test("finishing a quiz rates it right on its result", async () => {
   const uniqueSuffix = Date.now();
   const programName = `E2E Quiz Program ${uniqueSuffix}`;
   const moduleName = `E2E Quiz Module ${uniqueSuffix}`;
@@ -120,23 +120,18 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
   await runner.getByRole("button", { name: "Check answer" }).click();
   await runner.getByRole("button", { name: "Finish quiz" }).click();
 
-  await expect(runner.getByText("500", { exact: true })).toBeVisible();
+  // One right, one wrong: "Struggled" is the suggestion, and focus starts there.
+  await expect(runner.getByText("1 of 2 correct")).toBeVisible();
+  await expect(
+    runner.getByText("Suggested by your score: Struggled")
+  ).toBeVisible();
+  const struggled = runner.getByRole("button", { name: "Struggled" });
+  await expect(struggled).toBeFocused();
+  await expect(
+    runner.getByRole("button", { name: "Complete quiz" })
+  ).toHaveCount(0);
 
-  const chart = runner.locator('[data-slot="chart"]');
-  await expect(chart).toBeVisible();
-  await expect(runner.locator(".recharts-surface")).toBeVisible();
-  const sections = runner.locator(".recharts-radial-bar-sectors");
-  await expect(sections).toHaveCount(2);
-  // Both halves drawn: a section pushed off the angle scale has no size.
-  await Promise.all(
-    (await sections.all()).map((section) =>
-      expect
-        .poll(async () => (await section.boundingBox())?.width ?? 0)
-        .toBeGreaterThan(50)
-    )
-  );
-
-  const box = await chart.boundingBox();
-  expect(box?.width).toBeGreaterThan(100);
-  expect(box?.height).toBeGreaterThan(100);
+  await struggled.click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(quizRow.getByText("Struggled")).toBeVisible();
 });
