@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   markActivityDifficulty,
@@ -8,7 +8,11 @@ import { openActivityFile, openExternalLink } from "@/actions/shell";
 import type { Activity } from "@/components/activities-data-table";
 import FlashcardReviewPanel from "@/components/flashcard-review-panel";
 import QuizRunnerDialog from "@/components/quiz-runner-dialog";
-import { RatingButtons, type RatingValue } from "@/components/rating-buttons";
+import {
+  RatingButtons,
+  RatingSaveError,
+  type RatingValue,
+} from "@/components/rating-buttons";
 import SessionEndCard from "@/components/session-end-card";
 import TodayItemCard from "@/components/today-item-card";
 import { Button } from "@/components/ui/button";
@@ -41,15 +45,22 @@ function toActivity(item: TodayItem): Activity {
 }
 
 interface ActivityStepProps {
+  isSaving: boolean;
   item: TodayItem;
   onRate: (rating: RatingValue) => void;
+  saveFailed: boolean;
 }
 
 /**
  * A PDF, a link or a quiz in the session (AC-5): opened from here, then
  * rated right here once the student is back.
  */
-function ActivityStepPanel({ item, onRate }: ActivityStepProps) {
+function ActivityStepPanel({
+  isSaving,
+  item,
+  onRate,
+  saveFailed,
+}: ActivityStepProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<ActivityStep>("open");
   const [isQuizOpen, setIsQuizOpen] = useState(false);
@@ -105,8 +116,13 @@ function ActivityStepPanel({ item, onRate }: ActivityStepProps) {
           <p className="text-muted-foreground text-sm">
             {t("todayRatePrompt")}
           </p>
+          {saveFailed ? <RatingSaveError /> : null}
           <div className="flex flex-wrap justify-end gap-2">
+            {/* Focus follows the step, off the open button that just went
+                (docs/specs/review-focus-errors.md AC-2). */}
             <RatingButtons
+              autoFocus
+              disabled={isSaving}
               intervals={intervals}
               onRate={onRate}
               scale="activity"
@@ -201,6 +217,11 @@ export default function TodaySessionDialog({
   const [queue, setQueue] = useState<TodayItem[]>(items);
   const [index, setIndex] = useState(0);
   const [reviewed, setReviewed] = useState<TodayItem[]>([]);
+  // One activity rating in flight; a failed save keeps the item
+  // (docs/specs/review-focus-errors.md AC-3, AC-4).
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const isSavingRef = useRef(false);
 
   // Only when the session (re)opens: later updates of `items` are the
   // screen refreshing behind it.
@@ -217,18 +238,27 @@ export default function TodaySessionDialog({
   const isDone = queue.length > 0 && index >= queue.length;
 
   const advance = useCallback(() => {
+    setSaveFailed(false);
     setIndex((prev) => prev + 1);
   }, []);
 
   const handleActivityRate = useCallback(
     (rating: RatingValue) => {
-      if (!current) {
+      if (!current || isSavingRef.current) {
         return;
       }
-      markActivityDifficulty(current.activityId, rating).then(() => {
-        setReviewed((prev) => [...prev, current]);
-        advance();
-      });
+      isSavingRef.current = true;
+      setIsSaving(true);
+      Promise.resolve(markActivityDifficulty(current.activityId, rating))
+        .then(() => {
+          setReviewed((prev) => [...prev, current]);
+          advance();
+        })
+        .catch(() => setSaveFailed(true))
+        .finally(() => {
+          isSavingRef.current = false;
+          setIsSaving(false);
+        });
     },
     [advance, current]
   );
@@ -283,9 +313,11 @@ export default function TodaySessionDialog({
                 </div>
               ) : (
                 <ActivityStepPanel
+                  isSaving={isSaving}
                   item={current}
                   key={current.activityId}
                   onRate={handleActivityRate}
+                  saveFailed={saveFailed}
                 />
               )}
             </div>

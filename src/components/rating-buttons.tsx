@@ -1,4 +1,10 @@
-import { type CSSProperties, useCallback, useEffect, useId } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+} from "react";
 import { useTranslation } from "react-i18next";
 import KeyHint from "@/components/key-hint";
 import { Button } from "@/components/ui/button";
@@ -63,6 +69,8 @@ export function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 interface RatingButtonProps {
+  autoFocus: boolean;
+  disabled: boolean;
   interval: Date | undefined;
   label: string;
   onClick: (rating: RatingValue) => void;
@@ -71,6 +79,8 @@ interface RatingButtonProps {
 }
 
 function RatingButton({
+  autoFocus,
+  disabled,
   interval,
   label,
   onClick,
@@ -78,16 +88,29 @@ function RatingButton({
   shortcut,
 }: RatingButtonProps) {
   const intervalId = useId();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  // Focus lands on the rating once the answer shows, instead of falling to
+  // the page when the reveal button goes (docs/specs/review-focus-errors.md AC-1).
+  useEffect(() => {
+    if (autoFocus) {
+      buttonRef.current?.focus();
+    }
+  }, [autoFocus]);
   const handleClick = useCallback(() => {
-    onClick(rating);
-  }, [onClick, rating]);
+    if (!disabled) {
+      onClick(rating);
+    }
+  }, [disabled, onClick, rating]);
 
   return (
     <Button
       aria-describedby={interval ? intervalId : undefined}
+      // aria-disabled, not disabled: the button keeps focus while saving.
+      aria-disabled={disabled || undefined}
       aria-keyshortcuts={shortcut}
       className="!border-[color-mix(in_srgb,var(--tone)_45%,transparent)] !bg-[color-mix(in_srgb,var(--tone)_12%,transparent)] hover:!bg-[color-mix(in_srgb,var(--tone)_22%,transparent)] h-auto min-h-7 flex-col gap-0 py-1 text-foreground leading-tight"
       onClick={handleClick}
+      ref={buttonRef}
       style={{ "--tone": RATING_TONES[rating] } as CSSProperties}
       variant="outline"
     >
@@ -112,6 +135,10 @@ function RatingButton({
 }
 
 interface RatingButtonsProps {
+  /** Focus "good", the usual answer, when the buttons show up. */
+  autoFocus?: boolean;
+  /** While a rating is being saved: no clicks, no keys (AC-4). */
+  disabled?: boolean;
   /** When the next review would be for each rating, if known. */
   intervals?: Partial<Record<RatingValue, Date>>;
   onRate: (rating: RatingValue) => void;
@@ -124,6 +151,8 @@ interface RatingButtonsProps {
  * activity rating and the "Today" session.
  */
 export function RatingButtons({
+  autoFocus = false,
+  disabled = false,
   intervals,
   onRate,
   scale = "flashcard",
@@ -135,6 +164,7 @@ export function RatingButtons({
       const rating = RATING_BY_KEY[event.key];
       if (
         !rating ||
+        disabled ||
         event.defaultPrevented ||
         event.repeat ||
         event.altKey ||
@@ -149,12 +179,14 @@ export function RatingButtons({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onRate]);
+  }, [disabled, onRate]);
 
   return (
     <>
       {RATINGS.map((rating, index) => (
         <RatingButton
+          autoFocus={autoFocus && rating === "good"}
+          disabled={disabled}
           interval={intervals?.[rating]}
           key={rating}
           label={t(RATING_LABEL_KEYS[scale][rating])}
@@ -164,5 +196,18 @@ export function RatingButtons({
         />
       ))}
     </>
+  );
+}
+
+/**
+ * Said beside the buttons when a rating could not be saved; the item stays,
+ * so rating again retries (docs/specs/review-focus-errors.md AC-3).
+ */
+export function RatingSaveError() {
+  const { t } = useTranslation();
+  return (
+    <p className="text-destructive-text text-sm" role="alert">
+      {t("ratingSaveErrorMessage")}
+    </p>
   );
 }

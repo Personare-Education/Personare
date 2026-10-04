@@ -143,4 +143,22 @@ describe("ActivityDifficultyDialog (Issue #103)", () => {
     expect(grid).toHaveClass("grid", "grid-cols-2", "sm:grid-cols-4");
     expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-lg");
   });
+
+  /** docs/specs/review-focus-errors.md AC-3 */
+  it("stays open and says so when the rating fails to save", async () => {
+    const user = userEvent.setup();
+    vi.mocked(markActivityDifficulty).mockRejectedValueOnce(new Error("x"));
+    const { onOpenChange, onRated } = renderDialog();
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("activityRatingGoodAction") })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      i18n.t("ratingSaveErrorMessage")
+    );
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onRated).not.toHaveBeenCalled();
+    expect(clearPendingActivityRating).not.toHaveBeenCalled();
+  });
 });
