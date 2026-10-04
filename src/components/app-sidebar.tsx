@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { BookOpen, CalendarDays, Sunrise } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AccountMenu from "@/components/account-menu";
@@ -28,10 +28,24 @@ const NAV_ITEMS = [
   { icon: CalendarDays, labelKey: "navCalendar", to: "/calendar" },
 ] as const;
 
+/**
+ * Whether a nav item is the current page (docs/specs/sidebar-current-page.md):
+ * Today only at "/", the others at their path and anything below it.
+ */
+export function isCurrentNavItem(to: string, pathname: string): boolean {
+  if (to === "/") {
+    return pathname === "/";
+  }
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 export default function AppSidebar() {
   const { t } = useTranslation();
   const { toggleSidebar } = useSidebar();
   const dueCount = useDueCount();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -63,7 +77,11 @@ export default function AppSidebar() {
               <SidebarMenu>
                 {NAV_ITEMS.map((item) => (
                   <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild tooltip={t(item.labelKey)}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isCurrentNavItem(item.to, pathname)}
+                      tooltip={t(item.labelKey)}
+                    >
                       <Link to={item.to}>
                         <item.icon />
                         <span>{t(item.labelKey)}</span>
