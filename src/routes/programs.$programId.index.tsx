@@ -20,12 +20,8 @@ import DeleteModuleDialog from "@/components/delete-module-dialog";
 import ModuleFormDialog from "@/components/module-form-dialog";
 import ModulesDataTable, { type Module } from "@/components/modules-data-table";
 import { ModulesEmptyState } from "@/components/onboarding-empty-states";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
+import OrganizeHeader from "@/components/organize-header";
+import { BreadcrumbItem, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { useFocusedModuleRedirect } from "@/hooks/use-focused-module-redirect";
 import { useReviewSchedule } from "@/hooks/use-review-schedule";
@@ -50,6 +46,9 @@ function ProgramModulesPage() {
   // The empty state waits for the first load, so it does not flash by.
   const [hasLoaded, setHasLoaded] = useState(false);
   const [programName, setProgramName] = useState("");
+  // The program's look, for the header (docs/specs/organize-identity.md).
+  const [programColor, setProgramColor] = useState<string | null>(null);
+  const [programIcon, setProgramIcon] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const [formModule, setFormModule] = useState<Module | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -74,6 +73,8 @@ function ProgramModulesPage() {
     listPrograms().then((programs) => {
       const program = programs.find((item) => item.id === programId);
       setProgramName(program?.name ?? "");
+      setProgramColor(program?.color ?? null);
+      setProgramIcon(program?.icon ?? null);
     });
   }, [programId]);
 
@@ -163,24 +164,24 @@ function ProgramModulesPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-2">
-      <div className="flex items-center justify-between">
-        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
-          {t("modulesPageTitle")}
-        </h1>
-        {/* One create button per area (docs/specs/onboard-empty-states.md AC-6). */}
-        {isEmpty ? null : (
-          <Button onClick={handleCreateClick}>{t("createModuleAction")}</Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>{programName}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+      <OrganizeHeader
+        action={
+          // One create button per area (docs/specs/onboard-empty-states.md AC-6).
+          isEmpty ? null : (
+            <Button onClick={handleCreateClick}>
+              {t("createModuleAction")}
+            </Button>
+          )
+        }
+        color={programColor}
+        crumbs={
+          <BreadcrumbItem>
+            <BreadcrumbPage>{programName}</BreadcrumbPage>
+          </BreadcrumbItem>
+        }
+        icon={programIcon}
+        title={programName}
+      />
       {isEmpty ? (
         <ModulesEmptyState onCreate={handleCreateClick} />
       ) : (

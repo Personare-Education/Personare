@@ -32,14 +32,13 @@ import ActivityFormDialog from "@/components/activity-form-dialog";
 import DeleteActivityDialog from "@/components/delete-activity-dialog";
 import FlashcardManagerDialog from "@/components/flashcard-manager-dialog";
 import { ActivitiesEmptyState } from "@/components/onboarding-empty-states";
+import OrganizeHeader from "@/components/organize-header";
 import QuizQuestionManagerDialog from "@/components/quiz-question-manager-dialog";
 import QuizRunnerDialog from "@/components/quiz-runner-dialog";
 import ReviewSessionDialog from "@/components/review-session-dialog";
 import {
-  Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
@@ -72,6 +71,7 @@ function ModuleActivitiesPage() {
   const [programName, setProgramName] = useState("");
   // The program's color, for the flashcards (editor and review).
   const [programColor, setProgramColor] = useState<string | null>(null);
+  const [programIcon, setProgramIcon] = useState<string | null>(null);
   const [moduleName, setModuleName] = useState("");
   const [reviewStateByActivityId, setReviewStateByActivityId] = useState<
     Record<string, ActivityReviewState | undefined>
@@ -135,6 +135,7 @@ function ModuleActivitiesPage() {
       const program = programs.find((item) => item.id === programId);
       setProgramName(program?.name ?? "");
       setProgramColor(program?.color ?? null);
+      setProgramIcon(program?.icon ?? null);
     });
   }, [programId]);
 
@@ -347,20 +348,20 @@ function ModuleActivitiesPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-2">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="font-medium font-serif text-3xl tracking-[-0.02em]">
-          {t("activitiesPageTitle")}
-        </h1>
-        {/* One create button per area (docs/specs/onboard-empty-states.md AC-6). */}
-        {isEmpty ? null : (
-          <Button onClick={handleCreateClick}>
-            {t("createActivityAction")}
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <Breadcrumb>
-          <BreadcrumbList>
+      {/* The module's name over the program's tile
+          (docs/specs/organize-identity.md). */}
+      <OrganizeHeader
+        action={
+          // One create button per area (docs/specs/onboard-empty-states.md AC-6).
+          isEmpty ? null : (
+            <Button onClick={handleCreateClick}>
+              {t("createActivityAction")}
+            </Button>
+          )
+        }
+        color={programColor}
+        crumbs={
+          <>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link params={{ programId }} to="/programs/$programId">
@@ -372,9 +373,11 @@ function ModuleActivitiesPage() {
             <BreadcrumbItem>
               <BreadcrumbPage>{moduleName}</BreadcrumbPage>
             </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+          </>
+        }
+        icon={programIcon}
+        title={moduleName}
+      />
       {isEmpty ? (
         <ActivitiesEmptyState onCreate={handleCreateClick} />
       ) : (

@@ -73,8 +73,9 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   // Issue #99: Programs is now a card grid, each card a single button that
   // both shows the name and navigates -- no more "View modules" row/icon.
   await page.getByRole("button", { name: new RegExp(programName) }).click();
+  // The program's own name heads its screen (docs/specs/organize-identity.md).
   await expect(
-    page.getByRole("heading", { exact: true, name: "Modules" })
+    page.getByRole("heading", { exact: true, name: programName })
   ).toBeVisible();
 
   await page.getByRole("button", { name: "New module" }).click();
@@ -89,7 +90,7 @@ test("navigating Programs -> Modules -> Activities renders each page", async () 
   // The regression: this heading, and everything below it, never appeared
   // before the Outlet fix -- the app silently stayed on the Modules page.
   await expect(
-    page.getByRole("heading", { exact: true, name: "Activities" })
+    page.getByRole("heading", { exact: true, name: moduleName })
   ).toBeVisible();
 
   await page.getByRole("button", { name: "New activity" }).click();
