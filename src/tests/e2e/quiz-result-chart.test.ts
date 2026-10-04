@@ -113,8 +113,10 @@ test("finishing a quiz shows the stacked radial chart with a visible size", asyn
   const runner = page.getByRole("dialog", { name: quizName });
   // One right, one wrong: both chart sections must show up.
   await runner.getByRole("radio").first().click();
+  await runner.getByRole("button", { name: "Check answer" }).click();
   await runner.getByRole("button", { name: "Next question" }).click();
   await runner.getByRole("radio").last().click();
+  await runner.getByRole("button", { name: "Check answer" }).click();
   await runner.getByRole("button", { name: "Finish quiz" }).click();
 
   await expect(runner.getByText("500", { exact: true })).toBeVisible();
