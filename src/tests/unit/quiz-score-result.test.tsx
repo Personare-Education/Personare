@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import i18n from "i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@/localization/i18n";
@@ -79,6 +79,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // Recharts schedules its animation frames on the fake clock; unmount and
+  // drop them here, or one fires after jsdom is gone ("cancelAnimationFrame
+  // is not defined", an unhandled error that fails the run in CI).
+  cleanup();
+  vi.clearAllTimers();
   vi.useRealTimers();
 });
 
