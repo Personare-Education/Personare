@@ -1,7 +1,9 @@
 import {
   complete,
   create,
+  getUnlockRule,
   list,
+  listByProgram,
   reorder,
   restore,
   setUnlockRule,
@@ -12,7 +14,9 @@ import {
 export const activities = {
   complete,
   create,
+  getUnlockRule,
   list,
+  listByProgram,
   reorder,
   restore,
   setUnlockRule,

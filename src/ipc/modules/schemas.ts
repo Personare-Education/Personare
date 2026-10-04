@@ -26,6 +26,10 @@ export const setModuleUnlockRuleInputSchema = z.object({
   requiredIds: z.array(z.string()),
 });
 
+export const getModuleUnlockRuleInputSchema = z.object({
+  id: z.string(),
+});
+
 export const softDeleteModuleInputSchema = z.object({
   id: z.string(),
 });

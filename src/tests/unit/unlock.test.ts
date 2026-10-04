@@ -169,6 +169,7 @@ describe("computeLocks", () => {
       expect(locks.activities.inside).toEqual({
         locked: true,
         missing: [{ id: "group", kind: "activity" }],
+        waiting: true,
       });
     });
   });
@@ -196,6 +197,7 @@ describe("computeLocks", () => {
       expect(locks.activities.c).toEqual({
         locked: true,
         missing: [{ id: "m2", kind: "module" }],
+        waiting: true,
       });
     });
 

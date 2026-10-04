@@ -339,3 +339,32 @@ describe("ModulesDataTable order", () => {
     expect(onMove).toHaveBeenCalledWith(MODULES[1], -1);
   });
 });
+
+/** docs/specs/sequences-and-locks.md §4 AC-1, AC-2 */
+describe("ModulesDataTable locks", () => {
+  it("shows a locked module's padlock, and opens its rule", async () => {
+    const user = userEvent.setup();
+    const onUnlockRule = vi.fn();
+    render(
+      <ModulesDataTable
+        lockLabelById={{ [MODULES[1].id]: "Unlocks after Modulo 1" }}
+        modules={MODULES}
+        onEdit={vi.fn()}
+        onNavigateToActivities={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onUnlockRule={onUnlockRule}
+      />
+    );
+
+    expect(screen.getByText("Unlocks after Modulo 1")).toBeInTheDocument();
+    const row = screen.getByText(MODULES[1].name).closest("tr") as HTMLElement;
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("moreActionsAction") })
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("unlockRuleAction") })
+    );
+
+    expect(onUnlockRule).toHaveBeenCalledWith(MODULES[1]);
+  });
+});

@@ -7,6 +7,7 @@ import {
   Layers,
   ListChecks,
   ListOrdered,
+  Lock,
   Pencil,
   Play,
   Repeat,
@@ -18,6 +19,7 @@ import { openExternalLink } from "@/actions/shell";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
+import LockLabel from "@/components/lock-label";
 import {
   RATING_LABEL_KEYS,
   RATING_TONES,
@@ -46,6 +48,8 @@ export interface Activity {
   moduleId: string;
   title: string;
   type: string;
+  /** How it unlocks (docs/specs/sequences-and-locks.md); "none" when free. */
+  unlockMode?: string;
   updatedAt: Date;
   url: string | null;
 }
@@ -86,6 +90,8 @@ interface ActivitiesDataTableProps {
   activities: Activity[];
   /** Pending-review highlight per activity (docs/specs/calendar-module-review-highlight.md). */
   highlightByActivityId?: Record<string, ReviewHighlight | undefined>;
+  /** What each locked activity is missing; absent means free (§4 AC-2). */
+  lockLabelById?: Record<string, string | undefined>;
   onEdit: (activity: Activity) => void;
   onManageFlashcards: (activity: Activity) => void;
   onManageQuiz: (activity: Activity) => void;
@@ -97,6 +103,8 @@ interface ActivitiesDataTableProps {
   onRequestDelete: (activity: Activity) => void;
   onStartReview: (activity: Activity) => void;
   onTakeQuiz: (activity: Activity) => void;
+  /** Opens an activity's unlock rule (docs/specs/sequences-and-locks.md §4). */
+  onUnlockRule?: (activity: Activity) => void;
   onViewPdf: (activity: Activity) => void;
   reviewStateByActivityId: Record<string, ActivityReviewState | undefined>;
   /** How many activities each sequence holds. */
@@ -108,6 +116,7 @@ interface ActivityRowProps {
   highlight: ReviewHighlight | undefined;
   isFirst: boolean;
   isLast: boolean;
+  lockLabel: string | undefined;
   onEdit: (activity: Activity) => void;
   onManageFlashcards: (activity: Activity) => void;
   onManageQuiz: (activity: Activity) => void;
@@ -117,6 +126,7 @@ interface ActivityRowProps {
   onRequestDelete: (activity: Activity) => void;
   onStartReview: (activity: Activity) => void;
   onTakeQuiz: (activity: Activity) => void;
+  onUnlockRule?: (activity: Activity) => void;
   onViewPdf: (activity: Activity) => void;
   reviewState: ActivityReviewState | undefined;
   stepCount: number | undefined;
@@ -127,6 +137,7 @@ function ActivityRow({
   highlight,
   isFirst,
   isLast,
+  lockLabel,
   onEdit,
   onManageFlashcards,
   onManageQuiz,
@@ -136,6 +147,7 @@ function ActivityRow({
   onRequestDelete,
   onStartReview,
   onTakeQuiz,
+  onUnlockRule,
   onViewPdf,
   reviewState,
   stepCount,
@@ -224,14 +236,28 @@ function ActivityRow({
       });
     }
 
+    const unlockRuleAction: RowAction[] = onUnlockRule
+      ? [
+          {
+            icon: <Lock />,
+            key: "unlock-rule",
+            label: t("unlockRuleAction"),
+            onSelect: () => onUnlockRule(activity),
+          },
+        ]
+      : [];
+
     return [
-      ...(typeActions[activity.type] ?? []),
+      // A locked activity does not open: its rule leads instead (§4 AC-3).
+      ...(lockLabel ? [] : (typeActions[activity.type] ?? [])),
+      ...(lockLabel ? unlockRuleAction : []),
       {
         icon: <Pencil />,
         key: "edit",
         label: t("editActivityAction"),
         onSelect: () => onEdit(activity),
       },
+      ...(lockLabel ? [] : unlockRuleAction),
       ...moveActions,
       {
         destructive: true,
@@ -245,6 +271,7 @@ function ActivityRow({
     activity,
     isFirst,
     isLast,
+    lockLabel,
     onEdit,
     onManageFlashcards,
     onManageQuiz,
@@ -254,6 +281,7 @@ function ActivityRow({
     onRequestDelete,
     onStartReview,
     onTakeQuiz,
+    onUnlockRule,
     onViewPdf,
     t,
   ]);
@@ -269,7 +297,7 @@ function ActivityRow({
       rowId={activity.id}
     >
       <TableCell className="font-medium">
-        <span className="flex items-baseline gap-2">
+        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           {activity.title}
           {/* What a sequence holds, beside its name (§3 AC-3). */}
           {activity.type === "group" ? (
@@ -277,6 +305,7 @@ function ActivityRow({
               {t("sequenceStepCount", { count: stepCount ?? 0 })}
             </span>
           ) : null}
+          {lockLabel ? <LockLabel label={lockLabel} /> : null}
         </span>
       </TableCell>
       <TableCell>
@@ -310,10 +339,12 @@ function ActivityRow({
 
 const NO_HIGHLIGHTS: Record<string, ReviewHighlight | undefined> = {};
 const NO_COUNTS: Record<string, number | undefined> = {};
+const NO_LOCKS: Record<string, string | undefined> = {};
 
 export default function ActivitiesDataTable({
   activities,
   highlightByActivityId = NO_HIGHLIGHTS,
+  lockLabelById = NO_LOCKS,
   onEdit,
   onManageFlashcards,
   onManageQuiz,
@@ -323,6 +354,7 @@ export default function ActivitiesDataTable({
   onRequestDelete,
   onStartReview,
   onTakeQuiz,
+  onUnlockRule,
   onViewPdf,
   reviewStateByActivityId,
   stepCountByGroupId = NO_COUNTS,
@@ -354,6 +386,7 @@ export default function ActivitiesDataTable({
                 isFirst={index === 0}
                 isLast={index === activities.length - 1}
                 key={activity.id}
+                lockLabel={lockLabelById[activity.id]}
                 onEdit={onEdit}
                 onManageFlashcards={onManageFlashcards}
                 onManageQuiz={onManageQuiz}
@@ -363,6 +396,7 @@ export default function ActivitiesDataTable({
                 onRequestDelete={onRequestDelete}
                 onStartReview={onStartReview}
                 onTakeQuiz={onTakeQuiz}
+                onUnlockRule={onUnlockRule}
                 onViewPdf={onViewPdf}
                 reviewState={reviewStateByActivityId[activity.id]}
                 stepCount={stepCountByGroupId[activity.id]}

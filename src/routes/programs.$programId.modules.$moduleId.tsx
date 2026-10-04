@@ -11,9 +11,12 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   createActivity,
+  getActivityUnlockRule,
   listActivities,
+  listProgramActivities,
   reorderActivities,
   restoreActivity,
+  setActivityUnlockRule,
   softDeleteActivity,
   updateActivity,
 } from "@/actions/activities";
@@ -46,12 +49,17 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import UnlockRuleDialog, {
+  type UnlockCandidateGroup,
+} from "@/components/unlock-rule-dialog";
+import { useLocks } from "@/hooks/use-locks";
 import { useRateOnReturn } from "@/hooks/use-rate-on-return";
 import { useReviewSchedule } from "@/hooks/use-review-schedule";
 import {
   type ActivityFollowUp,
   followUpForCreatedActivity,
 } from "@/utils/activity-follow-up";
+import { describeLock } from "@/utils/lock-text";
 import type { ParsedQuizQuestion } from "@/utils/quiz-markdown";
 import {
   getFocusedActivityIds,
@@ -60,9 +68,12 @@ import {
   toReviewHighlight,
 } from "@/utils/review-highlight";
 import { showUndoToast } from "@/utils/undo-toast";
+import type { UnlockMode } from "@/utils/unlock";
+
+const NO_IDS: string[] = [];
 
 function ModuleActivitiesPage() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { moduleId, programId } = Route.useParams();
   const { focusDate } = Route.useSearch();
   const { refresh: refreshSchedule, rows: scheduleRows } = useReviewSchedule();
@@ -101,6 +112,20 @@ function ModuleActivitiesPage() {
   const [stepCountByGroupId, setStepCountByGroupId] = useState<
     Record<string, number | undefined>
   >({});
+  // Locks and the rules behind them (docs/specs/sequences-and-locks.md §4).
+  const { locks, refresh: refreshLocks } = useLocks();
+  const [programActivities, setProgramActivities] = useState<
+    Awaited<ReturnType<typeof listProgramActivities>>
+  >([]);
+  const [programModules, setProgramModules] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [ruleSubject, setRuleSubject] = useState<{
+    id: string;
+    mode: string;
+    requiredIds: string[];
+    title: string;
+  } | null>(null);
   const [activityInReview, setActivityInReview] = useState<Activity | null>(
     null
   );
@@ -170,6 +195,7 @@ function ModuleActivitiesPage() {
     listModules(programId).then((modules) => {
       const module = modules.find((item) => item.id === moduleId);
       setModuleName(module?.name ?? "");
+      setProgramModules(modules);
     });
   }, [programId, moduleId]);
 
@@ -226,6 +252,105 @@ function ModuleActivitiesPage() {
     [activities, moduleId, refreshActivities]
   );
 
+  const refreshProgramActivities = useCallback(() => {
+    listProgramActivities(programId).then(setProgramActivities);
+  }, [programId]);
+
+  useEffect(() => {
+    refreshProgramActivities();
+  }, [refreshProgramActivities]);
+
+  // What each locked activity is missing, in words (§4 AC-2).
+  const lockLabelById = useMemo(() => {
+    const names: Record<string, string> = Object.fromEntries([
+      ...programActivities.map((row) => [row.id, row.title]),
+      ...programModules.map((row) => [row.id, row.name]),
+    ]);
+    const modeById = Object.fromEntries(
+      programActivities.map((row) => [row.id, row.unlockMode])
+    );
+    return Object.fromEntries(
+      Object.entries(locks.activities).flatMap(([id, lock]) =>
+        lock
+          ? [
+              [
+                id,
+                describeLock(
+                  t,
+                  i18n.language,
+                  lock,
+                  modeById[id] ?? "none",
+                  names
+                ),
+              ],
+            ]
+          : []
+      )
+    ) as Record<string, string | undefined>;
+  }, [i18n.language, locks, programActivities, programModules, t]);
+
+  // What a rule can require: the program's other activities, by module.
+  const ruleCandidates = useMemo<UnlockCandidateGroup[]>(() => {
+    const groups = new Map<string, UnlockCandidateGroup>();
+    for (const row of programActivities) {
+      if (row.id === ruleSubject?.id) {
+        continue;
+      }
+      const group = groups.get(row.moduleId) ?? {
+        items: [],
+        label: row.moduleName,
+      };
+      group.items.push({
+        id: row.id,
+        nested: row.parentActivityId !== null,
+        title: row.title,
+      });
+      groups.set(row.moduleId, group);
+    }
+    return [...groups.values()];
+  }, [programActivities, ruleSubject]);
+
+  const handleUnlockRule = useCallback((activity: Activity) => {
+    getActivityUnlockRule(activity.id).then((rule) => {
+      setRuleSubject({ ...rule, id: activity.id, title: activity.title });
+    });
+  }, []);
+
+  const handleRuleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setRuleSubject(null);
+    }
+  }, []);
+
+  const handleRuleSave = useCallback(
+    (mode: UnlockMode, requiredIds: string[]) => {
+      if (!ruleSubject) {
+        return;
+      }
+      setActivityUnlockRule(ruleSubject.id, mode, requiredIds).then(() => {
+        setRuleSubject(null);
+        refreshLocks();
+        refreshActivities();
+        refreshProgramActivities();
+        refreshSchedule();
+      });
+    },
+    [
+      refreshActivities,
+      refreshLocks,
+      refreshProgramActivities,
+      refreshSchedule,
+      ruleSubject,
+    ]
+  );
+
+  // A sequence changed: its steps, order or rules.
+  const handleSequenceChanged = useCallback(() => {
+    refreshActivities();
+    refreshProgramActivities();
+    refreshLocks();
+  }, [refreshActivities, refreshLocks, refreshProgramActivities]);
+
   const handleTakeQuiz = useCallback((activity: Activity) => {
     setActivityTakingQuiz(activity);
   }, []);
@@ -266,6 +391,7 @@ function ModuleActivitiesPage() {
       createActivity(moduleId, title, type, url, filePath).then((created) => {
         setIsFormOpen(false);
         refreshActivities();
+        refreshProgramActivities();
 
         // docs/specs/flashcard-editor-and-creation-flow.md AC-1..3
         const followUp = followUpForCreatedActivity(type);
@@ -279,7 +405,7 @@ function ModuleActivitiesPage() {
         }
       });
     },
-    [formActivity, moduleId, refreshActivities]
+    [formActivity, moduleId, refreshActivities, refreshProgramActivities]
   );
 
   const handleImportQuiz = useCallback(
@@ -458,6 +584,7 @@ function ModuleActivitiesPage() {
           <ActivitiesDataTable
             activities={visibleActivities}
             highlightByActivityId={highlightByActivityId}
+            lockLabelById={lockLabelById}
             onEdit={handleEdit}
             onManageFlashcards={handleManageFlashcards}
             onManageQuiz={handleManageQuiz}
@@ -468,6 +595,7 @@ function ModuleActivitiesPage() {
             onRequestDelete={handleRequestDelete}
             onStartReview={handleStartReview}
             onTakeQuiz={handleTakeQuiz}
+            onUnlockRule={handleUnlockRule}
             onViewPdf={openPdf}
             reviewStateByActivityId={reviewStateByActivityId}
             stepCountByGroupId={stepCountByGroupId}
@@ -476,10 +604,21 @@ function ModuleActivitiesPage() {
       )}
       <SequenceManagerDialog
         group={sequenceBeingManaged}
-        onChanged={refreshActivities}
+        lockLabelById={lockLabelById}
+        onChanged={handleSequenceChanged}
         onManageQuiz={handleManageSequenceQuiz}
         onOpenChange={handleSequenceManagerOpenChange}
+        onUnlockRule={handleUnlockRule}
         open={sequenceBeingManaged !== null}
+      />
+      <UnlockRuleDialog
+        candidates={ruleCandidates}
+        mode={ruleSubject?.mode ?? "none"}
+        onOpenChange={handleRuleOpenChange}
+        onSave={handleRuleSave}
+        open={ruleSubject !== null}
+        requiredIds={ruleSubject?.requiredIds ?? NO_IDS}
+        subjectTitle={ruleSubject?.title ?? ""}
       />
       <ActivityFormDialog
         activity={formActivity}

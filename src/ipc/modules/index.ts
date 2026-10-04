@@ -1,5 +1,6 @@
 import {
   create,
+  getUnlockRule,
   list,
   reorder,
   restore,
@@ -10,6 +11,7 @@ import {
 
 export const modules = {
   create,
+  getUnlockRule,
   list,
   reorder,
   restore,

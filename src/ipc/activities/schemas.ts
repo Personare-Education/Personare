@@ -29,6 +29,14 @@ export const setUnlockRuleInputSchema = z.object({
   requiredIds: z.array(z.string()),
 });
 
+export const listByProgramInputSchema = z.object({
+  programId: z.string(),
+});
+
+export const getUnlockRuleInputSchema = z.object({
+  id: z.string(),
+});
+
 export const completeActivityInputSchema = z.object({
   id: z.string(),
 });

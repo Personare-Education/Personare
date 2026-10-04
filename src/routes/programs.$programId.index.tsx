@@ -10,9 +10,11 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   createModule,
+  getModuleUnlockRule,
   listModules,
   reorderModules,
   restoreModule,
+  setModuleUnlockRule,
   softDeleteModule,
   updateModule,
 } from "@/actions/modules";
@@ -24,17 +26,23 @@ import { ModulesEmptyState } from "@/components/onboarding-empty-states";
 import OrganizeHeader from "@/components/organize-header";
 import { BreadcrumbItem, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import UnlockRuleDialog from "@/components/unlock-rule-dialog";
 import { useFocusedModuleRedirect } from "@/hooks/use-focused-module-redirect";
+import { useLocks } from "@/hooks/use-locks";
 import { useReviewSchedule } from "@/hooks/use-review-schedule";
+import { describeLock } from "@/utils/lock-text";
 import {
   type ReviewHighlight,
   summarizeReviewUrgency,
   toReviewHighlight,
 } from "@/utils/review-highlight";
 import { showUndoToast } from "@/utils/undo-toast";
+import type { UnlockMode } from "@/utils/unlock";
+
+const NO_IDS: string[] = [];
 
 function ProgramModulesPage() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { programId } = Route.useParams();
   const { focusDate, focusModuleId } = Route.useSearch();
   const { rows: scheduleRows } = useReviewSchedule();
@@ -177,6 +185,77 @@ function ProgramModulesPage() {
     [modules, programId, refreshModules]
   );
 
+  // Locked modules, in words, and their rules
+  // (docs/specs/sequences-and-locks.md §4).
+  const { locks, refresh: refreshLocks } = useLocks();
+  const [ruleSubject, setRuleSubject] = useState<{
+    id: string;
+    mode: string;
+    requiredIds: string[];
+    title: string;
+  } | null>(null);
+
+  const lockLabelById = useMemo(() => {
+    const names = Object.fromEntries(modules.map((row) => [row.id, row.name]));
+    return Object.fromEntries(
+      modules.flatMap((row) => {
+        const lock = locks.modules[row.id];
+        return lock
+          ? [
+              [
+                row.id,
+                describeLock(
+                  t,
+                  i18n.language,
+                  lock,
+                  row.unlockMode ?? "none",
+                  names
+                ),
+              ],
+            ]
+          : [];
+      })
+    ) as Record<string, string | undefined>;
+  }, [i18n.language, locks, modules, t]);
+
+  const ruleCandidates = useMemo(
+    () => [
+      {
+        items: modules
+          .filter((row) => row.id !== ruleSubject?.id)
+          .map((row) => ({ id: row.id, title: row.name })),
+        label: null,
+      },
+    ],
+    [modules, ruleSubject]
+  );
+
+  const handleUnlockRule = useCallback((module: Module) => {
+    getModuleUnlockRule(module.id).then((rule) => {
+      setRuleSubject({ ...rule, id: module.id, title: module.name });
+    });
+  }, []);
+
+  const handleRuleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setRuleSubject(null);
+    }
+  }, []);
+
+  const handleRuleSave = useCallback(
+    (mode: UnlockMode, requiredIds: string[]) => {
+      if (!ruleSubject) {
+        return;
+      }
+      setModuleUnlockRule(ruleSubject.id, mode, requiredIds).then(() => {
+        setRuleSubject(null);
+        refreshLocks();
+        refreshModules();
+      });
+    },
+    [refreshLocks, refreshModules, ruleSubject]
+  );
+
   const isEmpty = hasLoaded && modules.length === 0;
 
   return (
@@ -204,13 +283,24 @@ function ProgramModulesPage() {
       ) : (
         <ModulesDataTable
           highlightByModuleId={highlightByModuleId}
+          lockLabelById={lockLabelById}
           modules={modules}
           onEdit={handleEdit}
           onMove={handleMove}
           onNavigateToActivities={handleNavigateToActivities}
           onRequestDelete={handleRequestDelete}
+          onUnlockRule={handleUnlockRule}
         />
       )}
+      <UnlockRuleDialog
+        candidates={ruleCandidates}
+        mode={ruleSubject?.mode ?? "none"}
+        onOpenChange={handleRuleOpenChange}
+        onSave={handleRuleSave}
+        open={ruleSubject !== null}
+        requiredIds={ruleSubject?.requiredIds ?? NO_IDS}
+        subjectTitle={ruleSubject?.title ?? ""}
+      />
       <ModuleFormDialog
         module={formModule}
         onOpenChange={handleFormOpenChange}

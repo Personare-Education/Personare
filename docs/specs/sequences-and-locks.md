@@ -107,3 +107,20 @@ Cada PR tem a sua seção de critérios abaixo, escrita antes do código dele.
    direito); o primeiro não sobe, o último não desce. Enquanto a busca de atividades filtra a lista, mover
    fica de fora.
 5. Um quiz importado de IA entra no fim da lista (ou da sequência), como os outros.
+
+## 4. Cadeados — critérios de aceite
+
+1. Atividades (também dentro de uma sequência) e módulos ganham **Regra de desbloqueio** em Mais ações. O
+   diálogo oferece: **Livre**; **Depois de tudo o que vem antes**; **Depois de qualquer um destes** (OU);
+   **Depois de todos estes** (E). Nos dois últimos aparece a lista do que pode ser exigido (as outras
+   atividades do programa, agrupadas por módulo; ou os outros módulos), e salvar exige ao menos um marcado.
+   O diálogo abre com a regra atual.
+2. O que está bloqueado mostra um **cadeado** ao lado do nome e o que falta: "Libera depois de Capítulo 1 e
+   Videoaula" (ou "… Capítulo 1 ou Videoaula", numa regra de qualquer um); "Libera junto com Esqueleto" quando
+   espera o módulo (ou a sequência) liberar. O cadeado tem nome para leitores de tela ("Bloqueada").
+3. Uma atividade bloqueada não abre: as ações de abrir, revisar ou responder saem; a ação principal vira
+   **Regra de desbloqueio**. Editar, mover e excluir continuam.
+4. No gerenciador de uma sequência, **Ordem: Só sugerir / Bloquear em ordem** troca de uma vez as regras das
+   atividades dela (a primeira fica livre; as outras, "depois de tudo o que vem antes" ou livres). Cada
+   atividade da sequência mostra o cadeado e tem a sua regra.
+5. Depois de salvar uma regra (ou de concluir algo), os cadeados se atualizam.

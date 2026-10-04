@@ -555,4 +555,46 @@ describe("sequences and locks: data (sequences-and-locks.md §1)", () => {
       ).toEqual([inside.id]);
     });
   });
+
+  describe("rules for the screens (§4 AC-1)", () => {
+    it("lists a program's activities by module, and reads back a rule", async () => {
+      const second = await clients.modules.create({
+        name: "Músculos",
+        programId,
+      });
+      const pdf = await clients.activities.create({
+        moduleId,
+        title: "Capítulo",
+        type: "pdf",
+      });
+      const quiz = await clients.activities.create({
+        moduleId: second.id,
+        title: "Quiz",
+        type: "quiz",
+      });
+
+      const all = await clients.activities.listByProgram({ programId });
+      expect(all.map((row) => [row.id, row.moduleName])).toEqual([
+        [pdf.id, "Esqueleto"],
+        [quiz.id, "Músculos"],
+      ]);
+
+      await clients.activities.setUnlockRule({
+        id: quiz.id,
+        mode: "any",
+        requiredIds: [pdf.id],
+      });
+      await expect(
+        clients.activities.getUnlockRule({ id: quiz.id })
+      ).resolves.toEqual({ mode: "any", requiredIds: [pdf.id] });
+      await clients.modules.setUnlockRule({
+        id: second.id,
+        mode: "all",
+        requiredIds: [moduleId],
+      });
+      await expect(
+        clients.modules.getUnlockRule({ id: second.id })
+      ).resolves.toEqual({ mode: "all", requiredIds: [moduleId] });
+    });
+  });
 });
