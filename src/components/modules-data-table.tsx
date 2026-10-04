@@ -62,7 +62,6 @@ function ModuleRow({
       },
       {
         icon: <Pencil />,
-        inMenu: true,
         key: "edit",
         label: t("editModuleAction"),
         onSelect: () => onEdit(module),
@@ -70,7 +69,6 @@ function ModuleRow({
       {
         destructive: true,
         icon: <Trash2 />,
-        inMenu: true,
         key: "delete",
         label: t("deleteModuleAction"),
         onSelect: () => onRequestDelete(module),

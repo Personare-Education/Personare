@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { describe, expect, it, vi } from "vitest";
@@ -85,6 +85,17 @@ const ACTIVITIES: Activity[] = [
     url: null,
   },
 ];
+
+/** Opens the "More actions" menu of the row holding `title`. */
+async function openRowMenu(
+  user: ReturnType<typeof userEvent.setup>,
+  title: string
+) {
+  const row = screen.getByText(title).closest("tr") as HTMLTableRowElement;
+  await user.click(
+    within(row).getByRole("button", { name: i18n.t("moreActionsAction") })
+  );
+}
 
 function renderTable(
   activities: Activity[] = ACTIVITIES,
@@ -375,28 +386,37 @@ describe("ActivitiesDataTable", () => {
    * bubbles the request up, since opening either dialog is the caller's
    * responsibility.
    */
-  it("renders manage-questions and take-quiz actions only for Quiz activities", () => {
+  it("shows take-quiz on the Quiz row only, with manage-questions in its menu", async () => {
+    const user = userEvent.setup();
     renderTable();
 
-    const manageButtons = screen.getAllByRole("button", {
-      name: i18n.t("manageQuizQuestionsAction"),
-    });
-    const takeButtons = screen.getAllByRole("button", {
-      name: i18n.t("takeQuizAction"),
-    });
+    expect(
+      screen.getAllByRole("button", { name: i18n.t("takeQuizAction") })
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("button", {
+        name: i18n.t("manageQuizQuestionsAction"),
+      })
+    ).toBeNull();
 
-    expect(manageButtons).toHaveLength(1);
-    expect(takeButtons).toHaveLength(1);
+    await openRowMenu(user, "Quiz de fixacao");
+    expect(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("manageQuizQuestionsAction"),
+      })
+    ).toBeInTheDocument();
   });
 
   it("calls onManageQuiz with the corresponding activity when its manage-questions action is triggered", async () => {
     const user = userEvent.setup();
     const { onManageQuiz } = renderTable();
 
-    const manageButton = screen.getByRole("button", {
-      name: i18n.t("manageQuizQuestionsAction"),
-    });
-    await user.click(manageButton);
+    await openRowMenu(user, "Quiz de fixacao");
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("manageQuizQuestionsAction"),
+      })
+    );
 
     expect(onManageQuiz).toHaveBeenCalledTimes(1);
     expect(onManageQuiz).toHaveBeenCalledWith(ACTIVITIES[1]);
@@ -424,24 +444,31 @@ describe("ActivitiesDataTable", () => {
    * the table only bubbles the request up, since opening the manager dialog
    * is the caller's responsibility.
    */
-  it("renders a manage-flashcards action only for Flashcard Deck activities", () => {
+  it("keeps manage-flashcards in the Flashcard Deck row's menu", async () => {
+    const user = userEvent.setup();
     renderTable();
 
-    const manageFlashcardsButtons = screen.getAllByRole("button", {
-      name: i18n.t("manageFlashcardsAction"),
-    });
-
-    expect(manageFlashcardsButtons).toHaveLength(1);
+    expect(
+      screen.queryByRole("button", { name: i18n.t("manageFlashcardsAction") })
+    ).toBeNull();
+    await openRowMenu(user, "Baralho de revisao");
+    expect(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("manageFlashcardsAction"),
+      })
+    ).toBeInTheDocument();
   });
 
   it("calls onManageFlashcards with the corresponding activity when its manage-flashcards action is triggered", async () => {
     const user = userEvent.setup();
     const { onManageFlashcards } = renderTable();
 
-    const manageFlashcardsButton = screen.getByRole("button", {
-      name: i18n.t("manageFlashcardsAction"),
-    });
-    await user.click(manageFlashcardsButton);
+    await openRowMenu(user, "Baralho de revisao");
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: i18n.t("manageFlashcardsAction"),
+      })
+    );
 
     expect(onManageFlashcards).toHaveBeenCalledTimes(1);
     expect(onManageFlashcards).toHaveBeenCalledWith(ACTIVITIES[3]);
@@ -586,8 +613,11 @@ describe("ActivitiesDataTable row click and context menu", () => {
     const user = userEvent.setup();
     const { onManageQuiz, onTakeQuiz } = renderTable();
 
+    await openRowMenu(user, "Quiz de fixacao");
     await user.click(
-      screen.getByRole("button", { name: i18n.t("manageQuizQuestionsAction") })
+      await screen.findByRole("menuitem", {
+        name: i18n.t("manageQuizQuestionsAction"),
+      })
     );
 
     expect(onManageQuiz).toHaveBeenCalledWith(ACTIVITIES[1]);
@@ -710,5 +740,23 @@ describe("ActivitiesDataTable review highlight", () => {
     expect(
       document.querySelectorAll('[data-slot="overdue-review-marker"]')
     ).toHaveLength(1);
+  });
+});
+
+/** docs/specs/row-primary-action.md AC-1, AC-4 */
+describe("ActivitiesDataTable primary action", () => {
+  it("shows each row's main action as a labeled button", () => {
+    renderTable();
+
+    for (const key of [
+      "openActivityUrlAction",
+      "takeQuizAction",
+      "viewPdfAction",
+      "startReviewAction",
+    ]) {
+      expect(
+        screen.getByRole("button", { name: i18n.t(key) })
+      ).toHaveTextContent(i18n.t(key));
+    }
   });
 });
