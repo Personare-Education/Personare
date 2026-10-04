@@ -131,4 +131,16 @@ describe("ActivityDifficultyDialog (Issue #103)", () => {
     });
     await vi.waitFor(() => expect(good).toHaveAccessibleDescription("4 days"));
   });
+
+  /** docs/specs/rating-dialog-overflow.md AC-1, AC-2 */
+  it("lays the ratings out in a grid in a wider dialog, so none spills over", () => {
+    renderDialog();
+
+    const grid = screen
+      .getByRole("button", { name: i18n.t("activityRatingEasyAction") })
+      .closest("[data-slot='rating-grid']");
+    expect(grid).not.toBeNull();
+    expect(grid).toHaveClass("grid", "grid-cols-2", "sm:grid-cols-4");
+    expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-lg");
+  });
 });

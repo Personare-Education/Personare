@@ -11,7 +11,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -79,7 +78,9 @@ export default function ActivityDifficultyDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      {/* Wide enough for the activity words in any language and text size
+          (docs/specs/rating-dialog-overflow.md). */}
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{activityTitle}</DialogTitle>
           <DialogDescription>
@@ -89,7 +90,10 @@ export default function ActivityDifficultyDialog({
         <p className="text-muted-foreground text-sm">
           {t("activityDifficultyPromptMessage")}
         </p>
-        <DialogFooter>
+        <div
+          className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+          data-slot="rating-grid"
+        >
           {open ? (
             <RatingButtons
               intervals={intervals}
@@ -97,7 +101,7 @@ export default function ActivityDifficultyDialog({
               scale="activity"
             />
           ) : null}
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
