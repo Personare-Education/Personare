@@ -6,6 +6,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Tamanho do texto:** Configurações → Geral → **Tamanho do texto** (Pequeno, Padrão, Grande, Maior)
+  muda o texto do app inteiro na hora, junto com os espaçamentos, e a escolha vale ao abrir o app de
+  novo.
+
 ## [0.1.0-alpha.9] - 2026-10-03
 
 ### Added

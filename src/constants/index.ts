@@ -1,5 +1,6 @@
 export const LOCAL_STORAGE_KEYS = {
   LANGUAGE: "lang",
+  TEXT_SIZE: "textSize",
   THEME: "theme",
 };
 
