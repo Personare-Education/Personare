@@ -1,5 +1,6 @@
 import { type CSSProperties, useCallback, useEffect, useId } from "react";
 import { useTranslation } from "react-i18next";
+import KeyHint from "@/components/key-hint";
 import { Button } from "@/components/ui/button";
 import { formatInterval } from "@/utils/review-time";
 
@@ -90,7 +91,11 @@ function RatingButton({
       style={{ "--tone": RATING_TONES[rating] } as CSSProperties}
       variant="outline"
     >
-      {label}
+      {/* The key beside the name (docs/specs/key-hints.md AC-1). */}
+      <span className="flex items-center gap-1.5">
+        {label}
+        <KeyHint>{shortcut}</KeyHint>
+      </span>
       {interval ? (
         // The rating stays the button's name; the interval is its
         // description (AC-1).

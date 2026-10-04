@@ -70,4 +70,22 @@ describe("RatingButtons", () => {
       expect(button).toHaveAttribute("data-variant", "outline");
     }
   });
+
+  /** docs/specs/key-hints.md AC-1, AC-3 */
+  it("shows each rating's key, without changing the button's name", () => {
+    render(<RatingButtons onRate={vi.fn()} />);
+
+    const keys = {
+      ratingAgainAction: "1",
+      ratingEasyAction: "4",
+      ratingGoodAction: "3",
+      ratingHardAction: "2",
+    };
+    for (const [labelKey, key] of Object.entries(keys)) {
+      const button = screen.getByRole("button", { name: i18n.t(labelKey) });
+      const hint = button.querySelector("[data-slot='key-hint']");
+      expect(hint).toHaveTextContent(key);
+      expect(hint).toHaveAttribute("aria-hidden", "true");
+    }
+  });
 });

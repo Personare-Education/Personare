@@ -347,4 +347,17 @@ describe("ReviewSessionDialog (Issue #16)", () => {
     );
     expect(previewItemRatings).toHaveBeenCalledWith(DUE_ITEMS[0].id);
   });
+
+  /** docs/specs/key-hints.md AC-2 */
+  it("shows Space on the reveal button", async () => {
+    renderSession();
+    await screen.findByText(DUE_ITEMS[0].front);
+
+    const reveal = screen.getByRole("button", {
+      name: i18n.t("revealAnswerAction"),
+    });
+    expect(reveal.querySelector("[data-slot='key-hint']")).toHaveTextContent(
+      i18n.t("keySpaceLabel")
+    );
+  });
 });
