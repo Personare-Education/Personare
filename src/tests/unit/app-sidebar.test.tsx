@@ -6,6 +6,7 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "i18next";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import AppSidebar from "@/components/app-sidebar";
@@ -17,6 +18,10 @@ import "@/localization/i18n";
 vi.mock("@/actions/calendar", () => ({
   ensureReviewItems: vi.fn().mockResolvedValue(undefined),
   listSchedule: vi.fn().mockResolvedValue([]),
+}));
+vi.mock("@/actions/settings", () => ({
+  getSettings: vi.fn().mockResolvedValue({ autoStart: false }),
+  setAutoStart: vi.fn(),
 }));
 const { listSchedule } = await import("@/actions/calendar");
 
@@ -190,4 +195,18 @@ test("active route indicator moves with the current location", async () => {
 
   expect(calendarLinkAtCalendar).toHaveAttribute("aria-current", "page");
   expect(homeLinkAtCalendar).not.toHaveAttribute("aria-current");
+});
+
+/** docs/specs/settings-in-sidebar.md AC-1, AC-2 */
+test("opens Settings from the sidebar, not only from the account menu", async () => {
+  const user = userEvent.setup();
+  renderSidebarAt("/");
+
+  await user.click(
+    await screen.findByRole("button", { name: i18n.t("settingsPageTitle") })
+  );
+
+  expect(
+    await screen.findByRole("dialog", { name: i18n.t("settingsPageTitle") })
+  ).toBeInTheDocument();
 });
