@@ -6,6 +6,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.9] - 2026-10-03
+
 ### Added
 
 - **Rever a introdução:** Configurações → Geral → **Ver introdução** abre de novo as boas-vindas da
@@ -42,6 +44,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   lugar de "Errei / Difícil / Bom / Fácil", que fica para os flashcards.
 - **"N para revisar" nos cards de programa**, e um selo visível de "Revisão para hoje" / "Revisão
   atrasada" na linha da tabela (antes, só leitores de tela recebiam esse texto).
+
+- **O heatmap dos cards de programa "preenche" ao carregar**, com a mesma animação do site: cada dia
+  começa vazio e ganha a cor numa cascata do dia mais recente para o mais antigo. Toca
+  uma vez, quando os dados chegam, e não anima com "reduzir movimento" ligado no sistema.
 
 ### Changed
 
@@ -97,29 +103,6 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   a interface. As duas são gratuitas e vêm dentro do app. Isso também corrige um bug antigo: o app pedia
   a fonte "Geist", mas ela era registrada como "Geist Variable", então tudo caía na Arial.
 
-### Fixed
-
-- **Foco sempre visível:** nenhum anel de foco translúcido (eram ~1,4:1 a ~2:1); o que não tem estilo
-  próprio ganha um contorno sólido no azul da marca.
-- **Barras de progresso** passam a informar a porcentagem a leitores de tela (o valor não chegava ao
-  componente do Radix).
-- **Tema seguindo o sistema:** sem tema salvo, o app abre escuro quando o sistema está escuro. Antes
-  ele abria claro, e o primeiro clique no botão de tema não fazia nada.
-- **Contraste:** anel de foco no azul da marca (antes ~2,6:1 no claro), e o selo "Revisão hoje", os
-  números das boas-vindas, o ícone dos estados vazios e o "Correta" do editor acima de 4,5:1.
-- **Resultado do quiz:** voltou ao layout anterior, sem o cartão na cor do programa, que apertava a
-  coluna e cortava o gráfico.
-- **Revisões de hoje:** o flashcard tem a mesma largura do cartão do item acima dele, o brilho dos
-  cartões não é mais cortado nas bordas e a barra de rolagem segue o tema do app.
-
-### Added
-
-- **O heatmap dos cards de programa "preenche" ao carregar**, com a mesma animação do site: cada dia
-  começa vazio e ganha a cor numa cascata do dia mais recente para o mais antigo. Toca
-  uma vez, quando os dados chegam, e não anima com "reduzir movimento" ligado no sistema.
-
-### Changed
-
 - **Escrever perguntas do Quiz com um editor só.** A Dialog de perguntas deixa de ter um campo por
   enunciado e por alternativa: há um único editor Markdown, no estilo do GitHub (abas Escrever e
   Pré-visualizar, barra de formatação, imagem colada, arrastada ou escolhida). Shift+Enter (ou o
@@ -138,6 +121,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Criar um Quiz manual ou um baralho de Flashcards já abre o primeiro item.** Depois de salvar a
   atividade, a janela da primeira pergunta (ou do primeiro card) abre direto, e ao concluir aparece a
   lista do que foi criado.
+
+### Fixed
+
+- **Foco sempre visível:** nenhum anel de foco translúcido (eram ~1,4:1 a ~2:1); o que não tem estilo
+  próprio ganha um contorno sólido no azul da marca.
+- **Barras de progresso** passam a informar a porcentagem a leitores de tela (o valor não chegava ao
+  componente do Radix).
+- **Tema seguindo o sistema:** sem tema salvo, o app abre escuro quando o sistema está escuro. Antes
+  ele abria claro, e o primeiro clique no botão de tema não fazia nada.
+- **Contraste:** anel de foco no azul da marca (antes ~2,6:1 no claro), e o selo "Revisão hoje", os
+  números das boas-vindas, o ícone dos estados vazios e o "Correta" do editor acima de 4,5:1.
 
 ## [0.1.0-alpha.8] - 2026-09-30
 
