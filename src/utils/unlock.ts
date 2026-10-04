@@ -42,8 +42,8 @@ export interface LockState {
 
 /** Only what is locked; anything absent is free. */
 export interface Locks {
-  activities: Record<string, LockState>;
-  modules: Record<string, LockState>;
+  activities: Partial<Record<string, LockState>>;
+  modules: Partial<Record<string, LockState>>;
 }
 
 interface LockInput {
