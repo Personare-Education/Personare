@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { Flame } from "lucide-react";
-import { type CSSProperties, useCallback, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import KeyHint from "@/components/key-hint";
 import TodayItemCard from "@/components/today-item-card";
 import TodaySessionDialog from "@/components/today-session-dialog";
 import { Button } from "@/components/ui/button";
@@ -116,9 +117,36 @@ function DueToday({
 }) {
   const { t } = useTranslation();
 
+  // Enter starts the day, when nothing has focus -- a focused button or
+  // field keeps its own Enter (docs/specs/today-layout.md AC-2).
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        event.key !== "Enter" ||
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.target !== document.body
+      ) {
+        return;
+      }
+      event.preventDefault();
+      onStart();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onStart]);
+
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Start sits right under what it starts (AC-1). */}
+      <div
+        className="flex flex-col items-start gap-4"
+        data-slot="today-summary"
+      >
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="font-serif text-2xl">
             {t("todayDueSummary", { count: queue.dueCount })}
@@ -132,13 +160,14 @@ function DueToday({
             </span>
           ) : null}
           {queue.overdueCount > 0 ? (
-            <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive text-xs">
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive-text text-xs">
               {t("todayOverdueSummary", { count: queue.overdueCount })}
             </span>
           ) : null}
         </p>
-        <Button onClick={onStart} size="lg">
+        <Button aria-keyshortcuts="Enter" onClick={onStart} size="lg">
           {t("todayStartAction")}
+          <KeyHint>{t("keyEnterLabel")}</KeyHint>
         </Button>
       </div>
       <div className="flex flex-col gap-8">
