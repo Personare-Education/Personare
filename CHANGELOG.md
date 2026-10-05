@@ -6,10 +6,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.11] - 2026-10-05
+
 ### Added
 
 - **Testar pré-lançamentos:** em Configurações → Geral, ligado por padrão durante o beta. Ligado, o app se
   atualiza sozinho com as versões de teste (alphas) assim que saem; desligado, só com as versões normais.
+- **Atualização no Linux:** o AppImage baixa a versão nova, confere o arquivo e se troca sozinho, depois
+  pergunta se pode reiniciar. Nos pacotes `.deb` e `.rpm`, que precisam de permissão de administrador para
+  instalar, o app avisa da versão nova com um botão **Baixar**.
 
 ### Fixed
 
@@ -17,9 +22,6 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   ignorava pré-lançamentos, e todas as versões do beta são pré-lançamentos. Agora o app consulta o
   servidor do Personare. Vale no Windows e no Linux; no macOS depende de o app ser assinado pela Apple.
   Quem está numa versão anterior precisa instalar esta à mão uma vez.
-- **Atualização no Linux:** o AppImage baixa a versão nova, confere o arquivo e se troca sozinho, depois
-  pergunta se pode reiniciar. Nos pacotes `.deb` e `.rpm`, que precisam de permissão de administrador para
-  instalar, o app avisa da versão nova com um botão **Baixar**.
 - **Botões da janela no macOS:** fechar, minimizar e maximizar ficam centralizados numa faixa própria no
   topo, afastados do canto arredondado da janela, em vez de colados nele e em cima da linha do logo.
 
