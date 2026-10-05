@@ -41,6 +41,7 @@ import QuizQuestionManagerDialog from "@/components/quiz-question-manager-dialog
 import QuizRunnerDialog from "@/components/quiz-runner-dialog";
 import ReviewSessionDialog from "@/components/review-session-dialog";
 import SequenceManagerDialog from "@/components/sequence-manager-dialog";
+import SequenceRunnerDialog from "@/components/sequence-runner-dialog";
 import {
   BreadcrumbItem,
   BreadcrumbLink,
@@ -109,6 +110,9 @@ function ModuleActivitiesPage() {
   // (docs/specs/sequences-and-locks.md §3).
   const [sequenceBeingManaged, setSequenceBeingManaged] =
     useState<Activity | null>(null);
+  const [sequenceBeingDone, setSequenceBeingDone] = useState<Activity | null>(
+    null
+  );
   const [stepCountByGroupId, setStepCountByGroupId] = useState<
     Record<string, number | undefined>
   >({});
@@ -220,6 +224,16 @@ function ModuleActivitiesPage() {
 
   const handleManageSequence = useCallback((activity: Activity) => {
     setSequenceBeingManaged(activity);
+  }, []);
+
+  const handleRunSequence = useCallback((activity: Activity) => {
+    setSequenceBeingDone(activity);
+  }, []);
+
+  const handleSequenceRunnerOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setSequenceBeingDone(null);
+    }
   }, []);
 
   const handleSequenceManagerOpenChange = useCallback((open: boolean) => {
@@ -343,6 +357,21 @@ function ModuleActivitiesPage() {
       ruleSubject,
     ]
   );
+
+  // A sequence was done and rated: its row, the schedule and the locks.
+  const handleSequenceRated = useCallback(() => {
+    refreshReviewState();
+    refreshSchedule();
+    refreshActivities();
+    refreshProgramActivities();
+    refreshLocks();
+  }, [
+    refreshActivities,
+    refreshLocks,
+    refreshProgramActivities,
+    refreshReviewState,
+    refreshSchedule,
+  ]);
 
   // A sequence changed: its steps, order or rules.
   const handleSequenceChanged = useCallback(() => {
@@ -593,6 +622,7 @@ function ModuleActivitiesPage() {
             onMove={searchTerm.trim() ? undefined : handleMove}
             onOpenLink={armRatingOnReturn}
             onRequestDelete={handleRequestDelete}
+            onRunSequence={handleRunSequence}
             onStartReview={handleStartReview}
             onTakeQuiz={handleTakeQuiz}
             onUnlockRule={handleUnlockRule}
@@ -610,6 +640,12 @@ function ModuleActivitiesPage() {
         onOpenChange={handleSequenceManagerOpenChange}
         onUnlockRule={handleUnlockRule}
         open={sequenceBeingManaged !== null}
+      />
+      <SequenceRunnerDialog
+        group={sequenceBeingDone}
+        onOpenChange={handleSequenceRunnerOpenChange}
+        onRated={handleSequenceRated}
+        open={sequenceBeingDone !== null}
       />
       <UnlockRuleDialog
         candidates={ruleCandidates}

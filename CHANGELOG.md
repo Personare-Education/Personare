@@ -8,6 +8,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Sequências de atividades:** uma atividade nova do tipo **Sequência** reúne PDFs, links e quizzes numa
+  ordem que você define (por exemplo, "Atividade Revisória de Anatomia: PDF, videoaula, quiz"). O
+  gerenciador da sequência adiciona, move, edita e exclui as etapas. **Fazer sequência** percorre as etapas
+  na ordem, cada uma aberta e concluída, e termina numa avaliação só, que agenda a próxima revisão da
+  sequência inteira; em Hoje ela é um item.
+- **Atividades e módulos bloqueados:** **Regra de desbloqueio** (em Mais ações) define quando algo libera:
+  livre, depois de tudo o que vem antes, depois de qualquer um de uma lista ou depois de todos de uma
+  lista. O que está bloqueado mostra um cadeado e o que falta ("Libera depois de Capítulo 1 ou Videoaula"),
+  não abre e fica fora de Hoje e do calendário até liberar. Numa sequência, **Ordem: Só sugerir / Bloquear
+  em ordem** troca as regras de todas as etapas de uma vez.
+- **Ordem de atividades e módulos:** **Mover para cima** e **Mover para baixo** em Mais ações. Módulos novos
+  entram no fim da lista, não mais em ordem alfabética.
 - **Tamanho do texto:** Configurações → Geral → **Tamanho do texto** (Pequeno, Padrão, Grande, Maior)
   muda o texto do app inteiro na hora, junto com os espaçamentos, e a escolha vale ao abrir o app de
   novo.

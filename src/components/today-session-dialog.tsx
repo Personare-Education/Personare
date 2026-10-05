@@ -13,6 +13,7 @@ import {
   RatingSaveError,
   type RatingValue,
 } from "@/components/rating-buttons";
+import SequenceRunner from "@/components/sequence-runner";
 import SessionEndCard from "@/components/session-end-card";
 import TodayItemCard from "@/components/today-item-card";
 import { Button } from "@/components/ui/button";
@@ -335,7 +336,27 @@ export default function TodaySessionDialog({
                     onDone={handleDeckDone}
                   />
                 </div>
-              ) : (
+              ) : null}
+              {/* A sequence walks its steps here, then takes one rating
+                  (docs/specs/sequences-and-locks.md §5 AC-5). */}
+              {current.activityType === "group" ? (
+                <div className="flex flex-col gap-3">
+                  <TodayItemCard compact item={current} />
+                  <SequenceRunner
+                    group={{
+                      id: current.activityId,
+                      moduleId: current.moduleId,
+                      title: current.activityTitle,
+                    }}
+                    isSaving={isSaving}
+                    key={current.activityId}
+                    onRate={handleActivityRate}
+                    saveFailed={saveFailed}
+                  />
+                </div>
+              ) : null}
+              {current.activityType === "flashcard_deck" ||
+              current.activityType === "group" ? null : (
                 <ActivityStepPanel
                   isSaving={isSaving}
                   item={current}

@@ -3,6 +3,7 @@ import {
   Layers,
   Link as LinkIcon,
   ListChecks,
+  ListOrdered,
   type LucideIcon,
 } from "lucide-react";
 import { useCallback } from "react";
@@ -14,6 +15,7 @@ import type { TodayItem } from "@/utils/today-queue";
 
 const TYPE_ICONS: Record<string, LucideIcon> = {
   flashcard_deck: Layers,
+  group: ListOrdered,
   link: LinkIcon,
   pdf: FileText,
   quiz: ListChecks,
@@ -21,6 +23,7 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 
 const TYPE_LABEL_KEYS: Record<string, string> = {
   flashcard_deck: "activityTypeFlashcardDeck",
+  group: "activityTypeGroup",
   link: "activityTypeLink",
   pdf: "activityTypePdf",
   quiz: "activityTypeQuiz",
