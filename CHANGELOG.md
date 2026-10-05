@@ -6,6 +6,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.10] - 2026-10-05
+
 ### Added
 
 - **Sequências de atividades:** uma atividade nova do tipo **Sequência** reúne PDFs, links e quizzes numa
@@ -69,9 +71,9 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Avaliação que não salva não some:** se salvar a avaliação falhar, o cartão ou a atividade fica na
   tela com "Não foi possível salvar a avaliação. Tente de novo.", e avaliar de novo tenta outra vez.
   Um clique duplo não avalia duas vezes.
-- **Contraste e tradução:** a dica de tecla dentro do botão azul, o "Ainda vazio" do editor de
-  flashcards e o selo "atrasado" dos cartões de Hoje ficaram mais legíveis; os botões de mês da
-  sequência ficaram maiores; o botão de fechar dos diálogos diz "Fechar" em português.
+- **Contraste e tradução:** o "Ainda vazio" do editor de flashcards e o selo "atrasado" dos cartões de
+  Hoje ficaram mais legíveis; os botões de mês da sequência ficaram maiores; o botão de fechar dos
+  diálogos diz "Fechar" em português.
 
 ## [0.1.0-alpha.9] - 2026-10-03
 
