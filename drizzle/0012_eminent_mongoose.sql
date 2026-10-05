@@ -1,0 +1,1 @@
+ALTER TABLE `app_settings` ADD `test_prereleases` integer DEFAULT true NOT NULL;

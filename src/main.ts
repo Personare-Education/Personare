@@ -41,6 +41,7 @@ import {
   parseOAuthCallback,
 } from "@/main/oauth-callback";
 import { createPlaceholderTrayIcon } from "@/main/tray-icon";
+import { updateFeedHost } from "@/main/update-feed";
 import {
   IPC_CHANNELS,
   inDevelopment,
@@ -200,9 +201,20 @@ async function installExtensions() {
   }
 }
 
+/**
+ * Updates come from the backend's feed, on the channel the "Test
+ * pre-releases" setting picks (docs/specs/prerelease-updates.md):
+ * update.electronjs.org only serves regular releases, and every beta
+ * version is a pre-release.
+ */
 function checkForUpdates() {
+  const db = getDatabaseClient();
+  const testPrereleases = db
+    ? getOrCreateAppSettings(db).testPrereleases
+    : true;
   updateElectronApp({
     updateSource: {
+      host: updateFeedHost(testPrereleases),
       repo: "Personare-Education/personare-releases",
       type: UpdateSourceType.ElectronPublicUpdateService,
     },

@@ -4,7 +4,10 @@ import { app } from "electron";
 import type { DatabaseClient } from "@/database/client";
 import { appSettings as appSettingsTable } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
-import { setAutoStartInputSchema } from "./schemas";
+import {
+  setAutoStartInputSchema,
+  setTestPrereleasesInputSchema,
+} from "./schemas";
 
 const SETTINGS_ROW_ID = 1;
 
@@ -37,7 +40,10 @@ export function getOrCreateAppSettings(db: DatabaseClient) {
     .where(eq(appSettingsTable.id, SETTINGS_ROW_ID))
     .get();
 
-  return { autoStartEnabled: row?.autoStartEnabled ?? false };
+  return {
+    autoStartEnabled: row?.autoStartEnabled ?? false,
+    testPrereleases: row?.testPrereleases ?? true,
+  };
 }
 
 export const get = os.handler(() =>
@@ -58,4 +64,16 @@ export const setAutoStart = os
       .run();
 
     app.setLoginItemSettings({ openAtLogin: input.enabled });
+  });
+
+/** The update channel, read at launch (docs/specs/prerelease-updates.md). */
+export const setTestPrereleases = os
+  .input(setTestPrereleasesInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    getOrCreateAppSettings(db);
+    db.update(appSettingsTable)
+      .set({ testPrereleases: input.enabled })
+      .where(eq(appSettingsTable.id, SETTINGS_ROW_ID))
+      .run();
   });

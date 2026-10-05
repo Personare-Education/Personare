@@ -6,8 +6,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Testar pré-lançamentos:** em Configurações → Geral, ligado por padrão durante o beta. Ligado, o app se
+  atualiza sozinho com as versões de teste (alphas) assim que saem; desligado, só com as versões normais.
+
 ### Fixed
 
+- **A atualização automática chega:** nenhuma versão anterior era entregue sozinha, porque o serviço consultado
+  ignorava pré-lançamentos, e todas as versões do beta são pré-lançamentos. Agora o app consulta o
+  servidor do Personare. Vale no Windows; no macOS depende de o app ser assinado pela Apple, e no Linux a
+  atualização continua manual. Quem está numa versão anterior precisa instalar esta à mão uma vez.
 - **Botões da janela no macOS:** fechar, minimizar e maximizar ficam centralizados numa faixa própria no
   topo, afastados do canto arredondado da janela, em vez de colados nele e em cima da linha do logo.
 
