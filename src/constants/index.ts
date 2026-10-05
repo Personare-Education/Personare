@@ -35,3 +35,20 @@ export const OAUTH_PROTOCOL = "personare";
 export const OAUTH_REDIRECT_URI = `${OAUTH_PROTOCOL}://oauth-callback`;
 export const CALENDAR_CONNECT_REDIRECT_URI = `${OAUTH_PROTOCOL}://calendar-connect-callback`;
 export const DRIVE_CONNECT_REDIRECT_URI = `${OAUTH_PROTOCOL}://drive-connect-callback`;
+
+/**
+ * macOS: the window's top strip, empty and draggable, where the close,
+ * minimize and zoom buttons sit (docs/specs/mac-traffic-lights.md).
+ */
+export const MAC_TITLE_BAR_HEIGHT = 44;
+
+/** About the height of macOS's window buttons. */
+const MAC_TRAFFIC_LIGHT_SIZE = 14;
+
+/**
+ * Where the window buttons go: centered in the top strip and clear of the
+ * window's rounded corner, instead of pressed against it (AC-2, AC-3).
+ */
+export function macTrafficLightPosition(): { x: number; y: number } {
+  return { x: 18, y: (MAC_TITLE_BAR_HEIGHT - MAC_TRAFFIC_LIGHT_SIZE) / 2 };
+}

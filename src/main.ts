@@ -41,7 +41,12 @@ import {
   parseOAuthCallback,
 } from "@/main/oauth-callback";
 import { createPlaceholderTrayIcon } from "@/main/tray-icon";
-import { IPC_CHANNELS, inDevelopment, OAUTH_PROTOCOL } from "./constants";
+import {
+  IPC_CHANNELS,
+  inDevelopment,
+  macTrafficLightPosition,
+  OAUTH_PROTOCOL,
+} from "./constants";
 import { getBasePath } from "./utils/path";
 
 let mainWindow: BrowserWindow | undefined;
@@ -73,8 +78,10 @@ function createWindow() {
   const window = new BrowserWindow({
     height: 600,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
+    // Centered in the top strip, clear of the rounded corner
+    // (docs/specs/mac-traffic-lights.md).
     trafficLightPosition:
-      process.platform === "darwin" ? { x: 5, y: 5 } : undefined,
+      process.platform === "darwin" ? macTrafficLightPosition() : undefined,
     webPreferences: {
       contextIsolation: true,
       devTools: inDevelopment,
