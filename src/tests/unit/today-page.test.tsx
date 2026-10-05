@@ -11,6 +11,7 @@ import i18n from "i18next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@/localization/i18n";
 import type { ScheduleRow } from "@/actions/calendar";
+import { buildTodayQueue } from "@/utils/today-queue";
 
 /**
  * RED phase (docs/specs/today-review-queue.md AC-1..4, AC-8): the "Today"
@@ -422,8 +423,14 @@ describe("TodayPage", () => {
     expect(
       within(calculus).queryByText(i18n.t("todayUrgencyToday"))
     ).not.toBeInTheDocument();
+    // "26 hours ago" is one or two calendar days back depending on the
+    // hour the test runs: count them the way the screen does.
+    const overdueDays =
+      buildTodayQueue(DUE_ROWS, new Date()).items.find(
+        (item) => item.activityId === "a2"
+      )?.overdueDays ?? 0;
     expect(
-      screen.getByText(i18n.t("todayUrgencyOverdue", { count: 1 }))
+      screen.getByText(i18n.t("todayUrgencyOverdue", { count: overdueDays }))
     ).toBeInTheDocument();
   });
 });
