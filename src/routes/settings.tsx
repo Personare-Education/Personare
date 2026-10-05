@@ -5,6 +5,7 @@ import BackupExportDialog from "@/components/backup-export-dialog";
 import BackupImportDialog from "@/components/backup-import-dialog";
 import DriveBackupDialog from "@/components/drive-backup-dialog";
 import DriveRestoreDialog from "@/components/drive-restore-dialog";
+import PrereleaseUpdatesToggle from "@/components/prerelease-updates-toggle";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -51,6 +52,7 @@ export function SettingsPage() {
           {t("autoStartDescription")}
         </p>
       </div>
+      <PrereleaseUpdatesToggle />
       <AccountSection onDriveConnectedChange={setIsDriveConnected} />
       <div className="flex flex-col gap-2">
         <h2 className="font-medium font-serif text-xl">

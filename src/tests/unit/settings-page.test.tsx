@@ -18,6 +18,7 @@ import "@/localization/i18n";
 vi.mock("@/actions/settings", () => ({
   getSettings: vi.fn(),
   setAutoStart: vi.fn(),
+  setTestPrereleases: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/actions/dialog", () => ({
@@ -53,7 +54,7 @@ vi.mock("@/actions/drive-backup", () => ({
   restoreFromDrive: vi.fn(),
 }));
 
-const { getSettings } = await import("@/actions/settings");
+const { getSettings, setTestPrereleases } = await import("@/actions/settings");
 const {
   selectAccountExportPath,
   selectBackupExportPath,
@@ -75,7 +76,10 @@ const { SettingsPage } = await import("@/routes/settings");
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getSettings).mockResolvedValue({ autoStartEnabled: false });
+  vi.mocked(getSettings).mockResolvedValue({
+    autoStartEnabled: false,
+    testPrereleases: true,
+  });
   vi.mocked(getCalendarConnectionStatus).mockResolvedValue(false);
   vi.mocked(getDriveConnectionStatus).mockResolvedValue(false);
   vi.mocked(getSession).mockResolvedValue(null);
@@ -1006,5 +1010,24 @@ describe("SettingsPage Google Drive backup section (Issue #27)", () => {
         await screen.findByText(i18n.t("driveNoBackupFoundMessage"))
       ).toBeInTheDocument();
     });
+  });
+});
+
+/** docs/specs/prerelease-updates.md AC-1 */
+describe("SettingsPage pre-release updates", () => {
+  it("tests pre-releases by default, and saves turning it off", async () => {
+    const user = userEvent.setup();
+    render(<SettingsPage />);
+
+    const toggle = await screen.findByRole("switch", {
+      name: i18n.t("testPrereleasesToggleLabel"),
+    });
+    await waitFor(() => expect(toggle).toBeChecked());
+    await user.click(toggle);
+
+    expect(setTestPrereleases).toHaveBeenCalledWith(false);
+    expect(
+      screen.getByText(i18n.t("testPrereleasesDescription"))
+    ).toBeInTheDocument();
   });
 });

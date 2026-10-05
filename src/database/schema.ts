@@ -189,6 +189,13 @@ export const appSettings = sqliteTable("app_settings", {
     .notNull()
     .default(false),
   id: integer("id").primaryKey(),
+  /**
+   * Update from pre-releases too (docs/specs/prerelease-updates.md): on by
+   * default while Personare is in beta.
+   */
+  testPrereleases: integer("test_prereleases", { mode: "boolean" })
+    .notNull()
+    .default(true),
 });
 
 /**

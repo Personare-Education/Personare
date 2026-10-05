@@ -418,6 +418,9 @@ i18n.use(initReactI18next).init({
         streakResetsAtMidnightMessage: "Resets at midnight",
         syncCalendarAction: "Sync now",
         takeQuizAction: "Take quiz",
+        testPrereleasesDescription:
+          "Get test versions (alphas) as soon as they are out. Off, only regular versions. Applies the next time the app opens.",
+        testPrereleasesToggleLabel: "Test pre-releases",
         textSizeDefault: "Default",
         textSizeLabel: "Text size",
         textSizeLarge: "Large",
@@ -923,6 +926,9 @@ i18n.use(initReactI18next).init({
         streakResetsAtMidnightMessage: "Reseta à meia-noite",
         syncCalendarAction: "Sincronizar agora",
         takeQuizAction: "Responder quiz",
+        testPrereleasesDescription:
+          "Receba as versões de teste (alphas) assim que saírem. Desligado, só as versões normais. Vale na próxima vez que o app abrir.",
+        testPrereleasesToggleLabel: "Testar pré-lançamentos",
         textSizeDefault: "Padrão",
         textSizeLabel: "Tamanho do texto",
         textSizeLarge: "Grande",

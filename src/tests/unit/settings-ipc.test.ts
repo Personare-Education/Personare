@@ -75,7 +75,7 @@ describe("settings IPC namespace (Issue #20)", () => {
 
   describe("get", () => {
     it("creates the singleton row with autoStartEnabled false when it does not exist yet", async () => {
-      await expect(client.get()).resolves.toEqual({
+      await expect(client.get()).resolves.toMatchObject({
         autoStartEnabled: false,
       });
     });
@@ -84,14 +84,16 @@ describe("settings IPC namespace (Issue #20)", () => {
       await client.get();
       await client.setAutoStart({ enabled: true });
 
-      await expect(client.get()).resolves.toEqual({ autoStartEnabled: true });
+      await expect(client.get()).resolves.toMatchObject({
+        autoStartEnabled: true,
+      });
     });
 
     it("is idempotent -- calling get() multiple times before any write does not change the stored default", async () => {
       await client.get();
       await client.get();
 
-      await expect(client.get()).resolves.toEqual({
+      await expect(client.get()).resolves.toMatchObject({
         autoStartEnabled: false,
       });
     });
@@ -101,14 +103,16 @@ describe("settings IPC namespace (Issue #20)", () => {
     it("persists autoStartEnabled as true", async () => {
       await client.setAutoStart({ enabled: true });
 
-      await expect(client.get()).resolves.toEqual({ autoStartEnabled: true });
+      await expect(client.get()).resolves.toMatchObject({
+        autoStartEnabled: true,
+      });
     });
 
     it("persists autoStartEnabled as false", async () => {
       await client.setAutoStart({ enabled: true });
       await client.setAutoStart({ enabled: false });
 
-      await expect(client.get()).resolves.toEqual({
+      await expect(client.get()).resolves.toMatchObject({
         autoStartEnabled: false,
       });
     });
@@ -130,7 +134,27 @@ describe("settings IPC namespace (Issue #20)", () => {
     it("creates the singleton row even if get() was never called first (upsert, not update-only)", async () => {
       await client.setAutoStart({ enabled: true });
 
-      await expect(client.get()).resolves.toEqual({ autoStartEnabled: true });
+      await expect(client.get()).resolves.toMatchObject({
+        autoStartEnabled: true,
+      });
+    });
+  });
+
+  /** docs/specs/prerelease-updates.md AC-1, AC-2 */
+  describe("setTestPrereleases", () => {
+    it("tests pre-releases by default", async () => {
+      await expect(client.get()).resolves.toMatchObject({
+        testPrereleases: true,
+      });
+    });
+
+    it("saves the choice", async () => {
+      await client.setTestPrereleases({ enabled: false });
+
+      await expect(client.get()).resolves.toMatchObject({
+        autoStartEnabled: false,
+        testPrereleases: false,
+      });
     });
   });
 });
