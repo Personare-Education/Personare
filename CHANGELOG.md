@@ -6,6 +6,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Botões da janela no macOS:** fechar, minimizar e maximizar ficam centralizados numa faixa própria no
+  topo, afastados do canto arredondado da janela, em vez de colados nele e em cima da linha do logo.
+
 ## [0.1.0-alpha.10] - 2026-10-05
 
 ### Added

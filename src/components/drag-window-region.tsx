@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { getPlatform } from "@/actions/app";
 import { closeWindow, maximizeWindow, minimizeWindow } from "@/actions/window";
+import { MAC_TITLE_BAR_HEIGHT } from "@/constants";
 
 interface DragWindowRegionProps {
   title?: ReactNode;
@@ -39,10 +40,14 @@ export default function DragWindowRegion({ title }: DragWindowRegionProps) {
             {title}
           </div>
         )}
+        {/* Room for the window's own buttons, which sit centered in it
+            (docs/specs/mac-traffic-lights.md). */}
         {isMacOS && (
-          <div className="flex flex-1 p-2">
-            {/* Maintain the same height but do not display content */}
-          </div>
+          <div
+            className="flex flex-1"
+            data-slot="mac-title-bar"
+            style={{ height: MAC_TITLE_BAR_HEIGHT }}
+          />
         )}
       </div>
       {!isMacOS && <WindowButtons />}
