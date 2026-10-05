@@ -33,6 +33,7 @@ import { loadToken, saveToken } from "@/main/auth-token-storage";
 import { fetchCurrentUser } from "@/main/backend-client";
 import { countDueReviews } from "@/main/due-reviews";
 import { registerAppImageProtocolHandler } from "@/main/linux-protocol";
+import { startLinuxUpdates } from "@/main/linux-updates-electron";
 import {
   findOAuthCallbackUrl,
   getProtocolCallbackHost,
@@ -212,9 +213,19 @@ function checkForUpdates() {
   const testPrereleases = db
     ? getOrCreateAppSettings(db).testPrereleases
     : true;
+  const host = updateFeedHost(testPrereleases);
+  // update-electron-app has no Linux support: Linux has its own
+  // (docs/specs/linux-updates.md).
+  if (process.platform === "linux") {
+    startLinuxUpdates({
+      host,
+      repo: "Personare-Education/personare-releases",
+    });
+    return;
+  }
   updateElectronApp({
     updateSource: {
-      host: updateFeedHost(testPrereleases),
+      host,
       repo: "Personare-Education/personare-releases",
       type: UpdateSourceType.ElectronPublicUpdateService,
     },
