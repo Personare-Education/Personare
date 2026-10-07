@@ -9,9 +9,11 @@ import {
   softDeleteExam,
   updateExam,
 } from "@/actions/exams";
+import ExamAttemptsDialog from "@/components/exam-attempts-dialog";
 import ExamFormDialog, {
   type ExamModuleOption,
 } from "@/components/exam-form-dialog";
+import ExamRunnerDialog from "@/components/exam-runner-dialog";
 import ExamsDataTable, { type Exam } from "@/components/exams-data-table";
 import QuizQuestionManagerDialog from "@/components/quiz-question-manager-dialog";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,8 @@ export default function ExamsSection({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formStandaloneCount, setFormStandaloneCount] = useState(0);
   const [questionsExam, setQuestionsExam] = useState<Exam | null>(null);
+  const [runningExam, setRunningExam] = useState<Exam | null>(null);
+  const [historyExam, setHistoryExam] = useState<Exam | null>(null);
 
   const refreshExams = useCallback(() => {
     listExams(programId).then((loaded) => {
@@ -156,6 +160,18 @@ export default function ExamsSection({
     [changed, t, undoDelete]
   );
 
+  const handleRunnerOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setRunningExam(null);
+    }
+  }, []);
+
+  const handleHistoryOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setHistoryExam(null);
+    }
+  }, []);
+
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3 pt-4">
       <div className="flex items-center justify-between gap-4">
@@ -177,7 +193,9 @@ export default function ExamsSection({
           moduleNames={moduleNames}
           onEdit={openForm}
           onEditQuestions={setQuestionsExam}
+          onHistory={setHistoryExam}
           onRequestDelete={handleRequestDelete}
+          onTake={setRunningExam}
         />
       ) : null}
       <ExamFormDialog
@@ -188,6 +206,17 @@ export default function ExamsSection({
         onSubmit={handleFormSubmit}
         open={isFormOpen}
         standaloneCount={formStandaloneCount}
+      />
+      <ExamRunnerDialog
+        exam={runningExam}
+        onOpenChange={handleRunnerOpenChange}
+        onSubmitted={changed}
+        open={runningExam !== null}
+      />
+      <ExamAttemptsDialog
+        exam={historyExam}
+        onOpenChange={handleHistoryOpenChange}
+        open={historyExam !== null}
       />
       <QuizQuestionManagerDialog
         activity={null}

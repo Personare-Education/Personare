@@ -18,6 +18,7 @@ const MODULE_NAMES = { a: "Anatomia", b: "Fisiologia" };
 
 const EXAMS: Exam[] = [
   {
+    availableCount: 10,
     bestScore: 0.82,
     id: "e1",
     lastAttemptAt: new Date("2026-10-01"),
@@ -30,6 +31,7 @@ const EXAMS: Exam[] = [
     title: "Prova 1",
   },
   {
+    availableCount: 10,
     bestScore: null,
     id: "e2",
     lastAttemptAt: null,
@@ -47,7 +49,9 @@ function renderTable() {
   const handlers = {
     onEdit: vi.fn(),
     onEditQuestions: vi.fn(),
+    onHistory: vi.fn(),
     onRequestDelete: vi.fn(),
+    onTake: vi.fn(),
   };
   render(
     <ExamsDataTable exams={EXAMS} moduleNames={MODULE_NAMES} {...handlers} />
@@ -83,7 +87,9 @@ describe("ExamsDataTable (exams.md §2 AC-2)", () => {
         moduleNames={MODULE_NAMES}
         onEdit={vi.fn()}
         onEditQuestions={vi.fn()}
+        onHistory={vi.fn()}
         onRequestDelete={vi.fn()}
+        onTake={vi.fn()}
       />
     );
 
@@ -112,8 +118,52 @@ describe("ExamsDataTable (exams.md §2 AC-2)", () => {
     expect(handlers.onRequestDelete).toHaveBeenCalledWith(EXAMS[0]);
 
     await user.click(
-      within(row).getByRole("button", { name: i18n.t("editExamAction") })
+      within(row).getByRole("button", { name: i18n.t("moreActionsAction") })
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("editExamAction") })
     );
     expect(handlers.onEdit).toHaveBeenCalledWith(EXAMS[0]);
+  });
+
+  it("takes the exam as its main action, with the history in More actions (exams.md §3 AC-1, AC-7)", async () => {
+    const user = userEvent.setup();
+    const handlers = renderTable();
+    const row = screen.getByRole("row", { name: EXAM_1 });
+
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("takeExamAction") })
+    );
+    expect(handlers.onTake).toHaveBeenCalledWith(EXAMS[0]);
+
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("moreActionsAction") })
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("examHistoryAction") })
+    );
+    expect(handlers.onHistory).toHaveBeenCalledWith(EXAMS[0]);
+  });
+
+  it("cannot be taken with nothing to draw, and says why (exams.md §3 AC-1)", () => {
+    render(
+      <ExamsDataTable
+        exams={[{ ...EXAMS[0], availableCount: 0 }]}
+        moduleNames={MODULE_NAMES}
+        onEdit={vi.fn()}
+        onEditQuestions={vi.fn()}
+        onHistory={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onTake={vi.fn()}
+      />
+    );
+    const row = screen.getByRole("row", { name: EXAM_1 });
+
+    expect(
+      within(row).queryByRole("button", { name: i18n.t("takeExamAction") })
+    ).not.toBeInTheDocument();
+    expect(
+      within(row).getByText(i18n.t("examNothingToDrawLabel"))
+    ).toBeInTheDocument();
   });
 });

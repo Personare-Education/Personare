@@ -98,8 +98,11 @@ Cada PR tem a sua seção de critérios abaixo.
 
 ## 3. Fazer a prova — critérios de aceite
 
-1. A ação principal de uma prova é **Fazer prova**. Ela abre a prova com as perguntas sorteadas, uma por vez,
-   com "Pergunta 3 de 20". Sem nenhuma pergunta para sortear, **Fazer prova** fica desligado e diz por quê.
+1. A ação principal de uma prova é **Fazer prova** (Editar vai para Mais ações). Ela abre a prova com as
+   perguntas sorteadas, uma por vez, com "Pergunta 3 de 20". Sem nenhuma pergunta para sortear (os quizzes dos
+   módulos foram excluídos e não há avulsas), não há **Fazer prova**: a ação principal é **Editar** e a linha
+   diz "Sem perguntas para sortear". `exams.list` diz quantas perguntas uma tentativa teria
+   (`availableCount`).
 2. Escolher uma alternativa **não** mostra se está certa. **Anterior** e **Próxima** andam pelas perguntas, e
    a resposta pode ser trocada até a entrega.
 3. **Entregar prova** fica na última pergunta e no rodapé. Com perguntas em branco, pede confirmação ("Faltam

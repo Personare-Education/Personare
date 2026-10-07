@@ -137,6 +137,7 @@ describe("ExamFormDialog (exams.md §2 AC-3)", () => {
 
   it("opens an exam with its saved values", () => {
     renderForm({
+      availableCount: 10,
       bestScore: null,
       id: "e1",
       lastAttemptAt: null,
