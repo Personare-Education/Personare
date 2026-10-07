@@ -34,3 +34,26 @@ export function softDeleteExam(id: string) {
 export function restoreExam(id: string) {
   return ipc.client.exams.restore({ id });
 }
+
+/** An attempt's questions, drawn afresh (docs/specs/exams.md §1 AC-8). */
+export function drawExam(examId: string) {
+  return ipc.client.exams.draw({ examId });
+}
+
+export interface ExamAttemptInput {
+  correct: number;
+  durationMs: number;
+  examId: string;
+  startedAt: Date;
+  total: number;
+}
+
+/** Saves a submitted attempt (docs/specs/exams.md §3 AC-6). */
+export function saveExamAttempt(attempt: ExamAttemptInput) {
+  return ipc.client.exams.saveAttempt(attempt);
+}
+
+/** Newest first (docs/specs/exams.md §3 AC-7). */
+export function listExamAttempts(examId: string) {
+  return ipc.client.exams.listAttempts({ examId });
+}

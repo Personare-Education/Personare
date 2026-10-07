@@ -229,6 +229,17 @@ describe("exams: data (exams.md §1)", () => {
     });
   });
 
+  it("says how many questions an attempt would have (§3 AC-1)", async () => {
+    const big = await newExam({ questionCount: 20 });
+    const small = await newExam({ moduleIds: [anatomyId], questionCount: 2 });
+    await clients.quiz.createQuestion({ examId: small.id, text: "Avulsa" });
+
+    const listed = await clients.exams.list({ programId });
+
+    expect(listed.find((row) => row.id === big.id)?.availableCount).toBe(7);
+    expect(listed.find((row) => row.id === small.id)?.availableCount).toBe(3);
+  });
+
   it("says how many quiz questions each module has (AC-4)", async () => {
     const eligible = await clients.exams.listEligibleModules({ programId });
 

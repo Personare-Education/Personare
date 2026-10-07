@@ -233,13 +233,21 @@ export const list = os.input(listExamsInputSchema).handler(({ input }) => {
           )
         : null;
 
+    const moduleIds = liveExamModuleIds(db, exam.id);
+    const inModules = [
+      ...quizQuestionIdsByModule(db, moduleIds).values(),
+    ].reduce((sum, ids) => sum + ids.length, 0);
+    const standaloneCount = standaloneQuestionIds(db, exam.id).length;
+
     return {
       ...exam,
+      // How many an attempt would have now (docs/specs/exams.md §3 AC-1).
+      availableCount: Math.min(exam.questionCount, inModules) + standaloneCount,
       bestScore,
       lastAttemptAt,
-      moduleIds: liveExamModuleIds(db, exam.id),
+      moduleIds,
       passed: bestScore !== null && bestScore * 100 >= exam.passingScore,
-      standaloneCount: standaloneQuestionIds(db, exam.id).length,
+      standaloneCount,
     };
   });
 });

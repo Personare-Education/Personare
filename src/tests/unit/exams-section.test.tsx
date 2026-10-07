@@ -15,9 +15,12 @@ const EXAM_1 = /Prova 1/;
 
 vi.mock("@/actions/exams", () => ({
   createExam: vi.fn(),
+  drawExam: vi.fn().mockResolvedValue([]),
   listEligibleExamModules: vi.fn(),
+  listExamAttempts: vi.fn().mockResolvedValue([]),
   listExams: vi.fn(),
   restoreExam: vi.fn().mockResolvedValue(undefined),
+  saveExamAttempt: vi.fn(),
   softDeleteExam: vi.fn().mockResolvedValue(undefined),
   updateExam: vi.fn().mockResolvedValue(undefined),
 }));
@@ -43,6 +46,7 @@ vi.mock("@/actions/attachments", () => ({
 
 const {
   createExam,
+  drawExam,
   listEligibleExamModules,
   listExams,
   restoreExam,
@@ -53,6 +57,7 @@ const { showUndoToast } = await import("@/utils/undo-toast");
 const { default: ExamsSection } = await import("@/components/exams-section");
 
 const EXAM = {
+  availableCount: 10,
   bestScore: null,
   id: "e1",
   lastAttemptAt: null,
@@ -210,5 +215,21 @@ describe("ExamsSection (exams.md §2)", () => {
     const [[toast]] = vi.mocked(showUndoToast).mock.calls;
     toast.onUndo();
     expect(restoreExam).toHaveBeenCalledWith("e1");
+  });
+
+  it("opens the exam from its row (§3 AC-1)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listExams).mockResolvedValue([EXAM]);
+    renderSection();
+
+    const row = await screen.findByRole("row", { name: EXAM_1 });
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("takeExamAction") })
+    );
+
+    await waitFor(() => expect(drawExam).toHaveBeenCalledWith("e1"));
+    expect(
+      await screen.findByRole("dialog", { name: "Prova 1" })
+    ).toBeInTheDocument();
   });
 });

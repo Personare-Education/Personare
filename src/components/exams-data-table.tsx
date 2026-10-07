@@ -1,4 +1,4 @@
-import { ListChecks, Pencil, Trash2 } from "lucide-react";
+import { History, ListChecks, Pencil, Play, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ActionableTableRow, {
@@ -16,6 +16,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 /** An exam as the program page lists it (docs/specs/exams.md §1 AC-3). */
 export interface Exam {
+  /** How many questions an attempt would have now; 0 when none. */
+  availableCount: number;
   /** The best share of right answers, 0 to 1; null before any attempt. */
   bestScore: number | null;
   id: string;
@@ -37,7 +39,11 @@ interface ExamsDataTableProps {
   moduleNames: Record<string, string | undefined>;
   onEdit: (exam: Exam) => void;
   onEditQuestions: (exam: Exam) => void;
+  /** Its past attempts (docs/specs/exams.md §3 AC-7). */
+  onHistory: (exam: Exam) => void;
   onRequestDelete: (exam: Exam) => void;
+  /** Takes the exam (docs/specs/exams.md §3 AC-1). */
+  onTake: (exam: Exam) => void;
 }
 
 interface ExamRowProps extends Omit<ExamsDataTableProps, "exams"> {
@@ -49,13 +55,27 @@ function ExamRow({
   moduleNames,
   onEdit,
   onEditQuestions,
+  onHistory,
   onRequestDelete,
+  onTake,
 }: ExamRowProps) {
   const { t } = useTranslation();
+  const canTake = exam.availableCount > 0;
 
-  // The first action is what clicking the row does.
+  // The first action is what clicking the row does: taking the exam, or
+  // editing it when it has nothing to draw (docs/specs/exams.md §3 AC-1).
   const actions = useMemo<RowAction[]>(
     () => [
+      ...(canTake
+        ? [
+            {
+              icon: <Play />,
+              key: "take",
+              label: t("takeExamAction"),
+              onSelect: () => onTake(exam),
+            },
+          ]
+        : []),
       {
         icon: <Pencil />,
         key: "edit",
@@ -69,6 +89,12 @@ function ExamRow({
         onSelect: () => onEditQuestions(exam),
       },
       {
+        icon: <History />,
+        key: "history",
+        label: t("examHistoryAction"),
+        onSelect: () => onHistory(exam),
+      },
+      {
         destructive: true,
         icon: <Trash2 />,
         key: "delete",
@@ -76,7 +102,16 @@ function ExamRow({
         onSelect: () => onRequestDelete(exam),
       },
     ],
-    [exam, onEdit, onEditQuestions, onRequestDelete, t]
+    [
+      canTake,
+      exam,
+      onEdit,
+      onEditQuestions,
+      onHistory,
+      onRequestDelete,
+      onTake,
+      t,
+    ]
   );
 
   const sources = exam.moduleIds
@@ -109,7 +144,13 @@ function ExamRow({
         </span>
       </TableCell>
       <TableCell className="tabular-nums">
-        {t("examQuestionCount", { count: exam.questionCount })}
+        {canTake ? (
+          t("examQuestionCount", { count: exam.questionCount })
+        ) : (
+          <span className="text-muted-foreground">
+            {t("examNothingToDrawLabel")}
+          </span>
+        )}
       </TableCell>
       <TableCell className="tabular-nums">
         {exam.timeLimitMinutes === null
