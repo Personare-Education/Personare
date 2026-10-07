@@ -53,3 +53,23 @@ export function restoreProgram(id: string) {
 export function softDeleteProgram(id: string) {
   return ipc.client.programs.softDelete({ id });
 }
+
+/** What importing the file would do, writing nothing (docs/specs/program-import.md §3). */
+export function previewProgramImport(markdown: string) {
+  return ipc.client.programs.previewImport({ markdown });
+}
+
+/** Imports a program from Markdown, new or completing one (§2). */
+export function importProgram(markdown: string) {
+  return ipc.client.programs.import({ markdown });
+}
+
+/** Takes away what one import created (§2 AC-6). */
+export function undoProgramImport(created: {
+  activityIds: string[];
+  examIds: string[];
+  moduleIds: string[];
+  programId: string | null;
+}) {
+  return ipc.client.programs.undoImport({ created });
+}

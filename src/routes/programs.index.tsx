@@ -19,6 +19,7 @@ import {
   type ProgramActivityCount,
   restoreProgram,
   softDeleteProgram,
+  undoProgramImport,
   updateProgram,
 } from "@/actions/programs";
 import DeleteProgramDialog from "@/components/delete-program-dialog";
@@ -26,11 +27,13 @@ import { ProgramsEmptyState } from "@/components/onboarding-empty-states";
 import ProgramFormDialog, {
   type ProgramFormSubmitValues,
 } from "@/components/program-form-dialog";
+import ProgramImportDialog from "@/components/program-import-dialog";
 import ProgramsCardGrid, {
   type Program,
 } from "@/components/programs-card-grid";
 import { Button } from "@/components/ui/button";
 import { useDueReviews } from "@/hooks/use-due-count";
+import type { ImportReport } from "@/ipc/shared/program-import";
 import { showUndoToast } from "@/utils/undo-toast";
 
 interface ProgramsSearch {
@@ -60,6 +63,7 @@ export function ProgramsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [programPendingDelete, setProgramPendingDelete] =
     useState<Program | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const activityCountsByProgramId = useMemo(
     () => groupActivityCountsByProgram(activityCounts),
@@ -168,6 +172,28 @@ export function ProgramsPage() {
     });
   }, [programPendingDelete, refreshPrograms, t, undoDelete]);
 
+  const handleImportClick = useCallback(() => setIsImportOpen(true), []);
+
+  // Imported: open the program, with Undo (docs/specs/program-import.md §3 AC-3).
+  const handleImported = useCallback(
+    (report: ImportReport) => {
+      setIsImportOpen(false);
+      refreshPrograms();
+      navigate({
+        params: { programId: report.programId },
+        to: "/programs/$programId",
+      });
+      showUndoToast({
+        message: t("programImportedMessage", { name: report.programName }),
+        onUndo: () => {
+          undoProgramImport(report.created).then(refreshPrograms);
+        },
+        undoLabel: t("undoAction"),
+      });
+    },
+    [navigate, refreshPrograms, t]
+  );
+
   return (
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="flex items-center justify-between">
@@ -176,13 +202,21 @@ export function ProgramsPage() {
         </h1>
         {/* One create button per area (AC-6): the empty state has its own. */}
         {isEmpty ? null : (
-          <Button onClick={handleCreateClick}>
-            {t("createProgramAction")}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleImportClick} variant="outline">
+              {t("importProgramAction")}
+            </Button>
+            <Button onClick={handleCreateClick}>
+              {t("createProgramAction")}
+            </Button>
+          </div>
         )}
       </div>
       {isEmpty ? (
-        <ProgramsEmptyState onCreate={handleCreateClick} />
+        <ProgramsEmptyState
+          onCreate={handleCreateClick}
+          onImport={handleImportClick}
+        />
       ) : (
         <ProgramsCardGrid
           activityCountsByProgramId={activityCountsByProgramId}
@@ -198,6 +232,11 @@ export function ProgramsPage() {
         onSubmit={handleFormSubmit}
         open={isFormOpen}
         program={formProgram}
+      />
+      <ProgramImportDialog
+        onImported={handleImported}
+        onOpenChange={setIsImportOpen}
+        open={isImportOpen}
       />
       <DeleteProgramDialog
         onConfirm={handleConfirmDelete}
