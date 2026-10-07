@@ -22,8 +22,8 @@
   (programas, módulos, atividades, sequências, flashcards, perguntas e alternativas, regras de desbloqueio,
   provas e os módulos de cada prova; as provas entraram no backup em docs/specs/exams.md §1 AC-10). Um
   teste confirma: importar, fazer backup e restaurar devolve tudo.
-- **Metodologia:** Spec Driven Development + TDD, em PRs empilhados sobre a pilha das Provas (#200→#203),
-  CHANGELOG no último.
+- **Metodologia:** Spec Driven Development + TDD, em PRs empilhados a partir de `main` (as Provas, #200→#204,
+  já estão lá), CHANGELOG no último.
 
 ## O formato
 
@@ -104,7 +104,10 @@ Regras:
   (docs/specs/exam-locks.md): `Libera depois de:` seguido de `módulos da prova`, `<A>; <B>` (todos estes
   módulos), `qualquer um de: <A>; <B>` ou `passar na prova: <título>`. As perguntas abaixo dela são as
   **avulsas**, no mesmo formato do quiz.
-- Blocos de código (```` ``` ````) são texto: um `#` dentro deles não abre nada.
+- Blocos de código (```` ``` ````) são texto: um `#` dentro deles não abre nada. A exceção é o bloco que
+  **embrulha a resposta inteira** (```` ```markdown ```` … ```` ``` ````), como os chats costumam entregar:
+  esse é tirado. Texto antes de `# Programa:` (a conversa da IA) é ignorado.
+- Sem `Perguntas:`, a prova sorteia 10.
 
 ## Completar um programa existente
 
@@ -151,6 +154,7 @@ O leitor nunca recusa o arquivo inteiro por um trecho. Cada problema vira um avi
    **só** o arquivo, no formato acima, com um exemplo curto de cada bloco e as regras (uma alternativa certa,
    ao menos duas, LaTeX entre `$`, sem PDFs), e para usar os nomes exatos nas regras e nas provas.
 6. Um arquivo gerado a partir do exemplo do próprio prompt é lido sem nenhum aviso.
+7. A resposta embrulhada num bloco ```` ```markdown ````, ou com texto antes de `# Programa:`, é lida igual.
 
 ## 2. Gravar — critérios de aceite
 
