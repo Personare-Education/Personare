@@ -10,6 +10,7 @@ import DriveBackupDialog from "@/components/drive-backup-dialog";
 import DriveRestoreDialog from "@/components/drive-restore-dialog";
 import LangToggle from "@/components/lang-toggle";
 import PrereleaseUpdatesToggle from "@/components/prerelease-updates-toggle";
+import SoundsToggle from "@/components/sounds-toggle";
 import TextSizeToggle from "@/components/text-size-toggle";
 import ToggleTheme from "@/components/toggle-theme";
 import { Button } from "@/components/ui/button";
@@ -180,6 +181,7 @@ export default function SettingsDialog({
                     </p>
                   </div>
                   <PrereleaseUpdatesToggle />
+                  <SoundsToggle />
                   <div className="flex flex-col items-start gap-2">
                     <h3 className="font-semibold text-sm">
                       {t("replayWelcomeTitle")}

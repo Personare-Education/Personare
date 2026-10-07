@@ -6,6 +6,7 @@ import { appSettings as appSettingsTable } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
 import {
   setAutoStartInputSchema,
+  setSoundsEnabledInputSchema,
   setTestPrereleasesInputSchema,
 } from "./schemas";
 
@@ -42,6 +43,7 @@ export function getOrCreateAppSettings(db: DatabaseClient) {
 
   return {
     autoStartEnabled: row?.autoStartEnabled ?? false,
+    soundsEnabled: row?.soundsEnabled ?? true,
     testPrereleases: row?.testPrereleases ?? true,
   };
 }
@@ -74,6 +76,18 @@ export const setTestPrereleases = os
     getOrCreateAppSettings(db);
     db.update(appSettingsTable)
       .set({ testPrereleases: input.enabled })
+      .where(eq(appSettingsTable.id, SETTINGS_ROW_ID))
+      .run();
+  });
+
+/** Settings → Sounds (docs/specs/gamification.md §2 AC-3). */
+export const setSoundsEnabled = os
+  .input(setSoundsEnabledInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    getOrCreateAppSettings(db);
+    db.update(appSettingsTable)
+      .set({ soundsEnabled: input.enabled })
       .where(eq(appSettingsTable.id, SETTINGS_ROW_ID))
       .run();
   });

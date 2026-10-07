@@ -547,6 +547,9 @@ i18n.use(initReactI18next).init({
         settingsGeneralCategoryLabel: "General",
         settingsPageTitle: "Settings",
         skipStepAction: "Skip step",
+        soundsDescription:
+          "A sound on each right answer, in quizzes and on an exam's result.",
+        soundsToggleLabel: "Sounds",
         startReviewAction: "Start review",
         streakBestLabel: "Best Streak",
         streakCurrentLabel: "Current Streak",
@@ -1203,6 +1206,9 @@ i18n.use(initReactI18next).init({
         settingsGeneralCategoryLabel: "Geral",
         settingsPageTitle: "Configurações",
         skipStepAction: "Pular etapa",
+        soundsDescription:
+          "Um som a cada acerto, nos quizzes e no resultado das provas.",
+        soundsToggleLabel: "Sons",
         startReviewAction: "Iniciar revisão",
         streakBestLabel: "Melhor Sequência",
         streakCurrentLabel: "Sequência Atual",

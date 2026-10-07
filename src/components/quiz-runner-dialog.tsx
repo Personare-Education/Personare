@@ -55,6 +55,7 @@ import {
   type QuizScore,
   suggestQuizRating,
 } from "@/utils/quiz-scoring";
+import { playCorrect, playWrong } from "@/utils/sounds";
 import { cn } from "@/utils/tailwind";
 
 interface QuizRunnerDialogProps {
@@ -441,6 +442,15 @@ export default function QuizRunnerDialog({
   const handleCheckClick = useCallback(() => {
     if (currentQuestion && currentChoice) {
       setAnswers((prev) => ({ ...prev, [currentQuestion.id]: currentChoice }));
+      // Each answer sounds right or wrong (docs/specs/gamification.md §2 AC-1).
+      if (
+        currentQuestion.options.find((option) => option.id === currentChoice)
+          ?.isCorrect
+      ) {
+        playCorrect();
+      } else {
+        playWrong();
+      }
     }
   }, [currentChoice, currentQuestion]);
 
