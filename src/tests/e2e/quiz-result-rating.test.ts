@@ -132,6 +132,15 @@ test("finishing a quiz rates it right on its result", async () => {
   ).toHaveCount(0);
 
   await struggled.click();
+
+  // The day's first review lights the streak (docs/specs/gamification.md §1).
+  await expect(page.locator("[data-igniting]")).toBeVisible();
+  await expect(page.getByText("Your streak has started")).toBeVisible();
+  if (process.env.EXAMS_SCREENSHOTS) {
+    await page.screenshot({
+      path: `${process.env.EXAMS_SCREENSHOTS}/streak-ignite.png`,
+    });
+  }
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(quizRow.getByText("Struggled")).toBeVisible();
 });

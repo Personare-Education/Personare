@@ -4,6 +4,7 @@ import {
   computeBestStreak,
   computeCurrentStreak,
   msUntilNextLocalMidnight,
+  streakIgnition,
   toActiveDateSet,
 } from "@/utils/streak";
 
@@ -150,5 +151,28 @@ describe("buildMonthGrid (Issue #streak)", () => {
       .flat()
       .find((day) => day.dateKey === "2026-03-11");
     expect(inactiveCell?.isActive).toBe(false);
+  });
+
+  describe("streakIgnition (gamification.md §1 AC-4)", () => {
+    const now = new Date("2026-03-15T10:00:00");
+
+    it("gives the new streak when a review lights today", () => {
+      expect(
+        streakIgnition(
+          new Set(["2026-03-14"]),
+          new Set(["2026-03-14", "2026-03-15"]),
+          now
+        )
+      ).toBe(2);
+    });
+
+    it("gives null when today was already lit, or still is not", () => {
+      expect(
+        streakIgnition(new Set(["2026-03-15"]), new Set(["2026-03-15"]), now)
+      ).toBeNull();
+      expect(
+        streakIgnition(new Set(["2026-03-14"]), new Set(["2026-03-14"]), now)
+      ).toBeNull();
+    });
   });
 });

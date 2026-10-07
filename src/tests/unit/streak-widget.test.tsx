@@ -7,11 +7,13 @@ import "@/localization/i18n";
 vi.mock("@/actions/streak", () => ({
   listActivityCounts: vi.fn(),
 }));
+vi.mock("sonner", () => ({ toast: vi.fn() }));
 
 const { listActivityCounts } = await import("@/actions/streak");
 const { SidebarProvider } = await import("@/components/ui/sidebar");
 const { StreakWidget } = await import("@/components/streak-widget");
 const { notifyReviewCompleted } = await import("@/utils/review-events");
+const { toast } = await import("sonner");
 
 function renderWidget() {
   return render(
@@ -156,5 +158,69 @@ describe("StreakWidget", () => {
       screen.getByRole("button", { name: i18n.t("calendarPreviousAction") })
     );
     expect(screen.getByText("March 2026")).toBeInTheDocument();
+  });
+
+  describe("lighting the day's streak (gamification.md §1)", () => {
+    const day = (date: string) => ({
+      activities: 1,
+      count: 1,
+      date,
+      programId: "p1",
+    });
+
+    it("lights the flame and says so when a review lights the day's streak", async () => {
+      vi.mocked(toast).mockClear();
+      vi.mocked(listActivityCounts)
+        .mockResolvedValueOnce([day("2026-03-13"), day("2026-03-14")])
+        .mockResolvedValue([
+          day("2026-03-13"),
+          day("2026-03-14"),
+          day("2026-03-15"),
+        ]);
+      renderWidget();
+      await screen.findByText(i18n.t("streakDaysLabel", { count: 2 }));
+
+      notifyReviewCompleted();
+
+      expect(
+        await screen.findByText(i18n.t("streakDaysLabel", { count: 3 }))
+      ).toBeInTheDocument();
+      expect(document.querySelector("[data-igniting]")).not.toBeNull();
+      expect(toast).toHaveBeenCalledWith(
+        i18n.t("streakIgnitedMessage", { count: 3 })
+      );
+    });
+
+    it("says the streak started on its first day", async () => {
+      vi.mocked(toast).mockClear();
+      vi.mocked(listActivityCounts)
+        .mockResolvedValueOnce([])
+        .mockResolvedValue([day("2026-03-15")]);
+      renderWidget();
+      await screen.findByText(i18n.t("streakDaysLabel", { count: 0 }));
+
+      notifyReviewCompleted();
+
+      await screen.findByText(i18n.t("streakDaysLabel", { count: 1 }));
+      expect(toast).toHaveBeenCalledWith(i18n.t("streakStartedMessage"));
+    });
+
+    it("does nothing for the day's later reviews, nor on opening an already lit day", async () => {
+      vi.mocked(toast).mockClear();
+      vi.mocked(listActivityCounts).mockResolvedValue([
+        day("2026-03-14"),
+        day("2026-03-15"),
+      ]);
+      renderWidget();
+      await screen.findByText(i18n.t("streakDaysLabel", { count: 2 }));
+
+      notifyReviewCompleted();
+      await vi.waitFor(() =>
+        expect(listActivityCounts).toHaveBeenCalledTimes(2)
+      );
+
+      expect(toast).not.toHaveBeenCalled();
+      expect(document.querySelector("[data-igniting]")).toBeNull();
+    });
   });
 });

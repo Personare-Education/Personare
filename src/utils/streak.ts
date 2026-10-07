@@ -69,6 +69,21 @@ export function computeBestStreak(activeDates: Set<string>): number {
   return best;
 }
 
+/**
+ * The streak a review just lit, or null (docs/specs/gamification.md §1
+ * AC-4): today was not counted before it and is now.
+ */
+export function streakIgnition(
+  before: Set<string>,
+  after: Set<string>,
+  now: Date
+): number | null {
+  const today = toDateKey(now);
+  return !before.has(today) && after.has(today)
+    ? computeCurrentStreak(after, now)
+    : null;
+}
+
 export function msUntilNextLocalMidnight(now: Date): number {
   const nextMidnight = startOfDay(addDays(now, 1));
   return nextMidnight.getTime() - now.getTime();
