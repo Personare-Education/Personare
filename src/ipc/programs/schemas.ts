@@ -16,3 +16,17 @@ export const updateProgramInputSchema = z.object({
 export const softDeleteProgramInputSchema = z.object({
   id: z.string(),
 });
+
+/** A program in Markdown (docs/specs/program-import.md). */
+export const importProgramInputSchema = z.object({
+  markdown: z.string(),
+});
+
+export const undoProgramImportInputSchema = z.object({
+  created: z.object({
+    activityIds: z.array(z.string()),
+    examIds: z.array(z.string()),
+    moduleIds: z.array(z.string()),
+    programId: z.string().nullable(),
+  }),
+});
