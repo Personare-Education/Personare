@@ -57,3 +57,16 @@ export function saveExamAttempt(attempt: ExamAttemptInput) {
 export function listExamAttempts(examId: string) {
   return ipc.client.exams.listAttempts({ examId });
 }
+
+/** An exam's own unlock rule (docs/specs/exam-locks.md). */
+export function setExamUnlockRule(
+  id: string,
+  mode: "none" | "sources" | "all" | "any" | "exam",
+  requiredIds: string[]
+) {
+  return ipc.client.exams.setUnlockRule({ id, mode, requiredIds });
+}
+
+export function getExamUnlockRule(id: string) {
+  return ipc.client.exams.getUnlockRule({ id });
+}

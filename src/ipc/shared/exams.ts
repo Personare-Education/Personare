@@ -4,21 +4,27 @@ import {
   examAttempts as examAttemptsTable,
   examModules as examModulesTable,
   exams as examsTable,
+  modules as modulesTable,
 } from "@/database/schema";
 import type { LockExam } from "@/utils/unlock";
 
 /**
- * Every live exam and whether an attempt has passed it -- right answers
- * at or above its passing score (docs/specs/exams.md §4 AC-2).
+ * Every live exam, whether an attempt has passed it -- right answers at or
+ * above its passing score (docs/specs/exams.md §4 AC-2) -- and its own rule
+ * with the live modules it draws from (docs/specs/exam-locks.md).
  */
-export function loadExamPasses(db: DatabaseClient): LockExam[] {
+export function loadLockExams(db: DatabaseClient): LockExam[] {
+  const rows = db
+    .select({
+      id: examsTable.id,
+      passingScore: examsTable.passingScore,
+      unlockMode: examsTable.unlockMode,
+    })
+    .from(examsTable)
+    .where(isNull(examsTable.deletedAt))
+    .all();
   const passingScoreById = new Map(
-    db
-      .select({ id: examsTable.id, passingScore: examsTable.passingScore })
-      .from(examsTable)
-      .where(isNull(examsTable.deletedAt))
-      .all()
-      .map((row) => [row.id, row.passingScore])
+    rows.map((row) => [row.id, row.passingScore])
   );
   const passed = new Set(
     db
@@ -35,10 +41,23 @@ export function loadExamPasses(db: DatabaseClient): LockExam[] {
       })
       .map((attempt) => attempt.examId)
   );
+  const sources = db
+    .select({
+      examId: examModulesTable.examId,
+      moduleId: examModulesTable.moduleId,
+    })
+    .from(examModulesTable)
+    .innerJoin(modulesTable, eq(modulesTable.id, examModulesTable.moduleId))
+    .where(isNull(modulesTable.deletedAt))
+    .all();
 
-  return [...passingScoreById.keys()].map((id) => ({
-    id,
-    passed: passed.has(id),
+  return rows.map((row) => ({
+    id: row.id,
+    moduleIds: sources
+      .filter((source) => source.examId === row.id)
+      .map((source) => source.moduleId),
+    passed: passed.has(row.id),
+    unlockMode: row.unlockMode,
   }));
 }
 

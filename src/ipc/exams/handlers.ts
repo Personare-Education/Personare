@@ -9,8 +9,10 @@ import {
   modules as modulesTable,
   quizOptions as quizOptionsTable,
   quizQuestions as quizQuestionsTable,
+  unlockRequirements as unlockRequirementsTable,
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
+import { assertNoLockCycle, loadLocks } from "@/ipc/shared/locks";
 import { drawExamQuestions } from "@/utils/exam-draw";
 import {
   createExamInputSchema,
@@ -18,6 +20,7 @@ import {
   examRefInputSchema,
   listExamsInputSchema,
   saveAttemptInputSchema,
+  setExamUnlockRuleInputSchema,
   updateExamInputSchema,
 } from "./schemas";
 
@@ -316,6 +319,10 @@ export const draw = os.input(examRefInputSchema).handler(({ input }) => {
   if (!exam) {
     throw new Error("The exam does not exist");
   }
+  // A locked exam cannot be taken (docs/specs/exam-locks.md AC-3).
+  if (loadLocks(db).exams?.[exam.id]) {
+    throw new Error("The exam is locked");
+  }
   const pools = [
     ...quizQuestionIdsByModule(db, liveExamModuleIds(db, exam.id)),
   ].map(([moduleId, questionIds]) => ({ moduleId, questionIds }));
@@ -391,3 +398,121 @@ export const listAttempts = os
       .orderBy(desc(examAttemptsTable.startedAt))
       .all()
   );
+
+/**
+ * What an exam's rule can take (docs/specs/exam-locks.md AC-1): live
+ * modules of its program for "all"/"any" (at least one), one other live
+ * exam of its program for "exam", nothing otherwise.
+ */
+function examRuleList(
+  db: DatabaseClient,
+  exam: { id: string; programId: string },
+  mode: string,
+  requiredIds: string[]
+): string[] {
+  const ids = [...new Set(requiredIds)];
+  if (mode === "all" || mode === "any") {
+    const found = db
+      .select({ id: modulesTable.id })
+      .from(modulesTable)
+      .where(
+        and(
+          inArray(modulesTable.id, ids.length > 0 ? ids : [""]),
+          eq(modulesTable.programId, exam.programId),
+          isNull(modulesTable.deletedAt)
+        )
+      )
+      .all();
+    if (ids.length === 0 || found.length !== ids.length) {
+      throw new Error("The rule takes modules of the exam's program");
+    }
+    return ids;
+  }
+  if (mode === "exam") {
+    const [requiredId] = ids;
+    const found =
+      ids.length === 1 && requiredId !== exam.id
+        ? db
+            .select({ id: examsTable.id })
+            .from(examsTable)
+            .where(
+              and(
+                eq(examsTable.id, requiredId),
+                eq(examsTable.programId, exam.programId),
+                isNull(examsTable.deletedAt)
+              )
+            )
+            .get()
+        : undefined;
+    if (!found) {
+      throw new Error("The rule takes one other exam of the program");
+    }
+    return ids;
+  }
+  return [];
+}
+
+export const setUnlockRule = os
+  .input(setExamUnlockRuleInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const exam = db
+      .select({ id: examsTable.id, programId: examsTable.programId })
+      .from(examsTable)
+      .where(and(eq(examsTable.id, input.id), isNull(examsTable.deletedAt)))
+      .get();
+    if (!exam) {
+      throw new Error("The exam does not exist");
+    }
+    const requiredIds = examRuleList(db, exam, input.mode, input.requiredIds);
+    assertNoLockCycle(
+      db,
+      { id: exam.id, kind: "exam" },
+      input.mode,
+      requiredIds
+    );
+
+    const now = new Date();
+    db.transaction((tx) => {
+      tx.update(examsTable)
+        .set({ unlockMode: input.mode, updatedAt: now })
+        .where(eq(examsTable.id, exam.id))
+        .run();
+      tx.delete(unlockRequirementsTable)
+        .where(eq(unlockRequirementsTable.subjectId, exam.id))
+        .run();
+      if (requiredIds.length > 0) {
+        tx.insert(unlockRequirementsTable)
+          .values(
+            requiredIds.map((requiredId) => ({
+              createdAt: now,
+              requiredId,
+              subjectId: exam.id,
+              subjectKind: "exam",
+            }))
+          )
+          .run();
+      }
+    });
+  });
+
+/** The exam's rule as saved, for its dialog (docs/specs/exam-locks.md AC-5). */
+export const getUnlockRule = os
+  .input(examIdInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const exam = db
+      .select({ mode: examsTable.unlockMode })
+      .from(examsTable)
+      .where(eq(examsTable.id, input.id))
+      .get();
+    const requiredIds = db
+      .select({ requiredId: unlockRequirementsTable.requiredId })
+      .from(unlockRequirementsTable)
+      .where(eq(unlockRequirementsTable.subjectId, input.id))
+      .orderBy(asc(unlockRequirementsTable.createdAt))
+      .all()
+      .map((row) => row.requiredId);
+
+    return { mode: exam?.mode ?? "none", requiredIds };
+  });

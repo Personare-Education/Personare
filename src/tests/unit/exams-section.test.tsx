@@ -16,11 +16,15 @@ const EXAM_1 = /Prova 1/;
 vi.mock("@/actions/exams", () => ({
   createExam: vi.fn(),
   drawExam: vi.fn().mockResolvedValue([]),
+  getExamUnlockRule: vi
+    .fn()
+    .mockResolvedValue({ mode: "none", requiredIds: [] }),
   listEligibleExamModules: vi.fn(),
   listExamAttempts: vi.fn().mockResolvedValue([]),
   listExams: vi.fn(),
   restoreExam: vi.fn().mockResolvedValue(undefined),
   saveExamAttempt: vi.fn(),
+  setExamUnlockRule: vi.fn().mockResolvedValue(undefined),
   softDeleteExam: vi.fn().mockResolvedValue(undefined),
   updateExam: vi.fn().mockResolvedValue(undefined),
 }));
@@ -36,6 +40,11 @@ vi.mock("@/actions/quiz", () => ({
   updateQuizQuestion: vi.fn(),
 }));
 vi.mock("@/utils/undo-toast", () => ({ showUndoToast: vi.fn() }));
+vi.mock("@/actions/review", () => ({
+  listLocks: vi
+    .fn()
+    .mockResolvedValue({ activities: {}, exams: {}, modules: {} }),
+}));
 vi.mock("@/actions/dialog", () => ({ selectImageFile: vi.fn() }));
 vi.mock("@/actions/attachments", () => ({
   deleteAttachmentImage: vi.fn(),
@@ -47,6 +56,7 @@ vi.mock("@/actions/attachments", () => ({
 const {
   createExam,
   drawExam,
+  setExamUnlockRule,
   listEligibleExamModules,
   listExams,
   restoreExam,
@@ -231,5 +241,29 @@ describe("ExamsSection (exams.md §2)", () => {
     expect(
       await screen.findByRole("dialog", { name: "Prova 1" })
     ).toBeInTheDocument();
+  });
+
+  it("edits an exam's unlock rule (exam-locks.md AC-5)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listExams).mockResolvedValue([EXAM] as never);
+    renderSection();
+
+    const row = await screen.findByRole("row", { name: EXAM_1 });
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("moreActionsAction") })
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: i18n.t("unlockRuleAction") })
+    );
+    await user.click(
+      await screen.findByRole("radio", { name: i18n.t("unlockModeSources") })
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("saveAction") })
+    );
+
+    await waitFor(() =>
+      expect(setExamUnlockRule).toHaveBeenCalledWith("e1", "sources", [])
+    );
   });
 });

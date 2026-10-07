@@ -173,4 +173,62 @@ describe("UnlockRuleDialog", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("an exam's rule (exam-locks.md AC-5)", () => {
+    function renderExamDialog(mode = "none", requiredIds: string[] = []) {
+      const onSave = vi.fn();
+      render(
+        <UnlockRuleDialog
+          candidates={[
+            { items: [{ id: "m1", title: "Fundamentos" }], label: null },
+          ]}
+          exams={[{ id: "e2", title: "Prova 2" }]}
+          mode={mode}
+          modes={["none", "sources", "all", "any", "exam"]}
+          onOpenChange={vi.fn()}
+          onSave={onSave}
+          open
+          requiredIds={requiredIds}
+          subjectTitle="Prova 1"
+        />
+      );
+      return { onSave };
+    }
+
+    it("offers its own modes, without 'everything before it'", () => {
+      renderExamDialog();
+
+      expect(
+        screen.getByRole("radio", { name: i18n.t("unlockModeSources") })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("radio", { name: i18n.t("unlockModePrevious") })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: i18n.t("unlockModeExam") })
+      ).toBeInTheDocument();
+    });
+
+    it("saves 'after its own modules' with no list", async () => {
+      const user = userEvent.setup();
+      const { onSave } = renderExamDialog();
+
+      await user.click(
+        screen.getByRole("radio", { name: i18n.t("unlockModeSources") })
+      );
+      await user.click(
+        screen.getByRole("button", { name: i18n.t("saveAction") })
+      );
+
+      expect(onSave).toHaveBeenCalledWith("sources", []);
+    });
+
+    it("opens on the saved rule", () => {
+      renderExamDialog("sources");
+
+      expect(
+        screen.getByRole("radio", { name: i18n.t("unlockModeSources") })
+      ).toBeChecked();
+    });
+  });
 });

@@ -1,9 +1,10 @@
-import { History, ListChecks, Pencil, Play, Trash2 } from "lucide-react";
+import { History, ListChecks, Lock, Pencil, Play, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ActionableTableRow, {
   type RowAction,
 } from "@/components/actionable-table-row";
+import LockLabel from "@/components/lock-label";
 import {
   Table,
   TableBody,
@@ -36,6 +37,8 @@ export const EXAM_MAX_SCORE = 1000;
 
 interface ExamsDataTableProps {
   exams: Exam[];
+  /** What each locked exam is missing; absent means free (exam-locks.md AC-3). */
+  lockLabelById?: Record<string, string | undefined>;
   moduleNames: Record<string, string | undefined>;
   onEdit: (exam: Exam) => void;
   onEditQuestions: (exam: Exam) => void;
@@ -44,29 +47,48 @@ interface ExamsDataTableProps {
   onRequestDelete: (exam: Exam) => void;
   /** Takes the exam (docs/specs/exams.md §3 AC-1). */
   onTake: (exam: Exam) => void;
+  /** Opens its unlock rule (docs/specs/exam-locks.md AC-5). */
+  onUnlockRule?: (exam: Exam) => void;
 }
 
-interface ExamRowProps extends Omit<ExamsDataTableProps, "exams"> {
+interface ExamRowProps
+  extends Omit<ExamsDataTableProps, "exams" | "lockLabelById"> {
   exam: Exam;
+  lockLabel: string | undefined;
 }
 
 function ExamRow({
   exam,
+  lockLabel,
   moduleNames,
   onEdit,
   onEditQuestions,
   onHistory,
   onRequestDelete,
   onTake,
+  onUnlockRule,
 }: ExamRowProps) {
   const { t } = useTranslation();
   const canTake = exam.availableCount > 0;
+  const isLocked = lockLabel !== undefined;
 
   // The first action is what clicking the row does: taking the exam, or
   // editing it when it has nothing to draw (docs/specs/exams.md §3 AC-1).
-  const actions = useMemo<RowAction[]>(
-    () => [
-      ...(canTake
+  // Locked, it cannot be taken: its rule leads (exam-locks.md AC-3).
+  const actions = useMemo<RowAction[]>(() => {
+    const rule: RowAction[] = onUnlockRule
+      ? [
+          {
+            icon: <Lock />,
+            key: "unlock-rule",
+            label: t("unlockRuleAction"),
+            onSelect: () => onUnlockRule(exam),
+          },
+        ]
+      : [];
+    return [
+      ...(isLocked ? rule : []),
+      ...(canTake && !isLocked
         ? [
             {
               icon: <Play />,
@@ -88,6 +110,7 @@ function ExamRow({
         label: t("examQuestionsAction"),
         onSelect: () => onEditQuestions(exam),
       },
+      ...(isLocked ? [] : rule),
       {
         icon: <History />,
         key: "history",
@@ -101,18 +124,19 @@ function ExamRow({
         label: t("deleteExamAction"),
         onSelect: () => onRequestDelete(exam),
       },
-    ],
-    [
-      canTake,
-      exam,
-      onEdit,
-      onEditQuestions,
-      onHistory,
-      onRequestDelete,
-      onTake,
-      t,
-    ]
-  );
+    ];
+  }, [
+    canTake,
+    exam,
+    isLocked,
+    onEdit,
+    onEditQuestions,
+    onHistory,
+    onRequestDelete,
+    onTake,
+    onUnlockRule,
+    t,
+  ]);
 
   const sources = exam.moduleIds
     .map((id) => moduleNames[id])
@@ -132,8 +156,14 @@ function ExamRow({
       onOpen={actions[0].onSelect}
       rowId={exam.id}
     >
-      <TableCell className="font-medium">{exam.title}</TableCell>
-      <TableCell>
+      {/* Wraps, so a long name or padlock does not push the actions off. */}
+      <TableCell className="whitespace-normal font-medium">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          {exam.title}
+          {lockLabel ? <LockLabel label={lockLabel} /> : null}
+        </span>
+      </TableCell>
+      <TableCell className="whitespace-normal">
         <span className="flex flex-wrap items-baseline gap-x-2">
           <span>{sources}</span>
           {exam.standaloneCount > 0 ? (
@@ -163,8 +193,11 @@ function ExamRow({
 }
 
 /** The program's exams (docs/specs/exams.md §2 AC-2). */
+const NO_LOCKS: Record<string, string | undefined> = {};
+
 export default function ExamsDataTable({
   exams,
+  lockLabelById = NO_LOCKS,
   ...rowProps
 }: ExamsDataTableProps) {
   const { t } = useTranslation();
@@ -184,7 +217,12 @@ export default function ExamsDataTable({
         </TableHeader>
         <TableBody>
           {exams.map((exam) => (
-            <ExamRow exam={exam} key={exam.id} {...rowProps} />
+            <ExamRow
+              exam={exam}
+              key={exam.id}
+              lockLabel={lockLabelById[exam.id]}
+              {...rowProps}
+            />
           ))}
         </TableBody>
       </Table>

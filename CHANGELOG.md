@@ -19,6 +19,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Desbloquear um módulo com uma prova:** a regra de desbloqueio de um módulo ganha **Depois de passar na
   prova**. O módulo (e as atividades dele) fica trancado até uma tentativa atingir a nota para passar; o
   cadeado diz "Libera depois de passar em Prova 1 (70%)".
+- **Regra de desbloqueio da prova:** a própria prova pode ficar trancada até você **concluir os módulos dela**,
+  concluir **todos** ou **qualquer um** de uma lista de módulos, ou **passar noutra prova**. Trancada, ela
+  mostra o cadeado e o que falta, e não pode ser feita.
+
+### Changed
+
+- **Nenhuma regra de desbloqueio tranca algo para sempre:** uma regra que faria um módulo ou uma prova
+  esperar por si mesmo (a prova A espera a B, que espera a A) é recusada, e o diálogo diz por quê.
 
 ## [0.1.0-alpha.11] - 2026-10-05
 

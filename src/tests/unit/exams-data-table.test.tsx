@@ -166,4 +166,43 @@ describe("ExamsDataTable (exams.md §2 AC-2)", () => {
       within(row).getByText(i18n.t("examNothingToDrawLabel"))
     ).toBeInTheDocument();
   });
+
+  it("shows a locked exam's padlock, and leads with its rule instead of taking it (exam-locks.md AC-3, AC-5)", async () => {
+    const user = userEvent.setup();
+    const onUnlockRule = vi.fn();
+    render(
+      <ExamsDataTable
+        exams={EXAMS}
+        lockLabelById={{ e1: "Libera depois de Fundamentos" }}
+        moduleNames={MODULE_NAMES}
+        onEdit={vi.fn()}
+        onEditQuestions={vi.fn()}
+        onHistory={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onTake={vi.fn()}
+        onUnlockRule={onUnlockRule}
+      />
+    );
+    const row = screen.getByRole("row", { name: EXAM_1 });
+
+    expect(
+      within(row).getByText("Libera depois de Fundamentos")
+    ).toBeInTheDocument();
+    expect(
+      within(row).queryByRole("button", { name: i18n.t("takeExamAction") })
+    ).not.toBeInTheDocument();
+    await user.click(
+      within(row).getByRole("button", { name: i18n.t("unlockRuleAction") })
+    );
+    expect(onUnlockRule).toHaveBeenCalledWith(EXAMS[0]);
+
+    // A free exam has the rule in More actions.
+    const free = screen.getByRole("row", { name: EXAM_2 });
+    await user.click(
+      within(free).getByRole("button", { name: i18n.t("moreActionsAction") })
+    );
+    expect(
+      screen.getByRole("menuitem", { name: i18n.t("unlockRuleAction") })
+    ).toBeInTheDocument();
+  });
 });
