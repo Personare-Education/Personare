@@ -2,6 +2,9 @@ import type { DatabaseClient } from "@/database/client";
 import {
   activities,
   appSettings,
+  examAttempts,
+  examModules,
+  exams,
   flashcards,
   modules,
   programs,
@@ -19,6 +22,9 @@ export function collectBackupData(
   return {
     activities: db.select().from(activities).all(),
     appSettings: db.select().from(appSettings).all(),
+    examAttempts: db.select().from(examAttempts).all(),
+    examModules: db.select().from(examModules).all(),
+    exams: db.select().from(exams).all(),
     flashcards: db.select().from(flashcards).all(),
     modules: db.select().from(modules).all(),
     programs: db.select().from(programs).all(),
@@ -27,6 +33,30 @@ export function collectBackupData(
     reviewItems: db.select().from(reviewItems).all(),
     unlockRequirements: db.select().from(unlockRequirements).all(),
   };
+}
+
+type Transaction = Parameters<Parameters<DatabaseClient["transaction"]>[0]>[0];
+
+/**
+ * The tables older backups lack (unlock rules, exams): restored when there,
+ * left empty when not.
+ */
+function restoreLaterTables(
+  tx: Transaction,
+  data: Omit<BackupData, "exportedAt" | "version">
+): void {
+  if (data.exams && data.exams.length > 0) {
+    tx.insert(exams).values(data.exams).run();
+  }
+  if (data.examModules && data.examModules.length > 0) {
+    tx.insert(examModules).values(data.examModules).run();
+  }
+  if (data.examAttempts && data.examAttempts.length > 0) {
+    tx.insert(examAttempts).values(data.examAttempts).run();
+  }
+  if (data.unlockRequirements && data.unlockRequirements.length > 0) {
+    tx.insert(unlockRequirements).values(data.unlockRequirements).run();
+  }
 }
 
 export function restoreBackupData(
@@ -38,6 +68,9 @@ export function restoreBackupData(
     tx.delete(reviewItems).run();
     tx.delete(quizOptions).run();
     tx.delete(quizQuestions).run();
+    tx.delete(examAttempts).run();
+    tx.delete(examModules).run();
+    tx.delete(exams).run();
     tx.delete(flashcards).run();
     tx.delete(activities).run();
     tx.delete(modules).run();
@@ -53,6 +86,8 @@ export function restoreBackupData(
     if (data.activities.length > 0) {
       tx.insert(activities).values(data.activities).run();
     }
+    // Before the questions: a standalone question points at its exam.
+    restoreLaterTables(tx, data);
     if (data.flashcards.length > 0) {
       tx.insert(flashcards).values(data.flashcards).run();
     }
@@ -67,9 +102,6 @@ export function restoreBackupData(
     }
     if (data.appSettings.length > 0) {
       tx.insert(appSettings).values(data.appSettings).run();
-    }
-    if (data.unlockRequirements && data.unlockRequirements.length > 0) {
-      tx.insert(unlockRequirements).values(data.unlockRequirements).run();
     }
   });
   // A backup from before sequences and locks lacks their order and

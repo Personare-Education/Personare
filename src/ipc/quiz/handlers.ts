@@ -42,7 +42,9 @@ export const listQuestions = os
       .from(quizQuestions)
       .where(
         and(
-          eq(quizQuestions.activityId, input.activityId),
+          input.examId === undefined
+            ? eq(quizQuestions.activityId, input.activityId ?? "")
+            : eq(quizQuestions.examId, input.examId),
           isNull(quizQuestions.deletedAt)
         )
       )
@@ -59,8 +61,9 @@ export const createQuestion = os
     return db
       .insert(quizQuestions)
       .values({
-        activityId: input.activityId,
+        activityId: input.activityId ?? null,
         createdAt: now,
+        examId: input.examId ?? null,
         imagePath: input.imagePath ?? null,
         text: input.text,
         updatedAt: now,

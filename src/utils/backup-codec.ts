@@ -1,6 +1,9 @@
 import type {
   activities,
   appSettings,
+  examAttempts,
+  examModules,
+  exams,
   flashcards,
   modules,
   programs,
@@ -13,6 +16,10 @@ import type {
 export interface BackupData {
   activities: (typeof activities.$inferSelect)[];
   appSettings: (typeof appSettings.$inferSelect)[];
+  /** Missing in backups made before exams (docs/specs/exams.md §1 AC-10). */
+  examAttempts?: (typeof examAttempts.$inferSelect)[];
+  examModules?: (typeof examModules.$inferSelect)[];
+  exams?: (typeof exams.$inferSelect)[];
   exportedAt: Date;
   flashcards: (typeof flashcards.$inferSelect)[];
   modules: (typeof modules.$inferSelect)[];

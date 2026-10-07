@@ -15,5 +15,17 @@ export function runMigrations(
   db: DatabaseClient,
   migrationsFolder: string = path.resolve(process.cwd(), "drizzle")
 ) {
-  migrate(db, { migrationsFolder });
+  // The migrator runs inside a transaction, where a migration's own
+  // `PRAGMA foreign_keys=OFF` does nothing; rebuilding a table that others
+  // point at (quiz_questions, docs/specs/exams.md) then fails on COMMIT.
+  // SQLite's way: keys off around the migration, on again after.
+  const keysWereOn = db.$client.pragma("foreign_keys", { simple: true }) === 1;
+  db.$client.pragma("foreign_keys = OFF");
+  try {
+    migrate(db, { migrationsFolder });
+  } finally {
+    if (keysWereOn) {
+      db.$client.pragma("foreign_keys = ON");
+    }
+  }
 }
