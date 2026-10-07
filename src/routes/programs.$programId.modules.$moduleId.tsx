@@ -338,7 +338,8 @@ function ModuleActivitiesPage() {
 
   const handleRuleSave = useCallback(
     (mode: UnlockMode, requiredIds: string[]) => {
-      if (!ruleSubject) {
+      // An activity's rule never waits for an exam (docs/specs/exams.md §4 AC-5).
+      if (!ruleSubject || mode === "exam") {
         return;
       }
       setActivityUnlockRule(ruleSubject.id, mode, requiredIds).then(() => {
