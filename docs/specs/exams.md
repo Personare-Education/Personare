@@ -80,7 +80,7 @@ Cada PR tem a sua seção de critérios abaixo.
 ## 2. Provas na tela — critérios de aceite
 
 1. Na página do programa, abaixo da tabela de módulos, vem a seção **Provas** (título de seção), com
-   **Criar prova**. Sem provas, a seção diz o que é uma prova e oferece **Criar prova**. Sem módulos, a seção
+   **Nova prova**. Sem provas, a seção diz o que é uma prova e oferece **Nova prova**. Sem módulos, a seção
    não aparece.
 2. A tabela de provas mostra o título, de onde vêm as perguntas ("Anatomia, Fisiologia" e "+ 3 avulsas"),
    quantas perguntas ("20 perguntas"), o tempo ("30 min" ou "Sem limite") e a melhor nota com a aprovação
