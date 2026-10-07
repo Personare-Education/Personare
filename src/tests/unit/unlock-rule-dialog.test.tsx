@@ -92,4 +92,85 @@ describe("UnlockRuleDialog", () => {
       )
     ).toBeInTheDocument();
   });
+
+  describe("after passing an exam (exams.md §4 AC-1, AC-5)", () => {
+    const EXAMS = [
+      { id: "e1", title: "Prova 1" },
+      { id: "e2", title: "Prova 2" },
+    ];
+
+    function renderModuleDialog(mode = "none", requiredIds: string[] = []) {
+      const onSave = vi.fn();
+      render(
+        <UnlockRuleDialog
+          candidates={GROUPS}
+          exams={EXAMS}
+          mode={mode}
+          onOpenChange={vi.fn()}
+          onSave={onSave}
+          open
+          requiredIds={requiredIds}
+          subjectTitle="Músculos"
+        />
+      );
+      return { onSave };
+    }
+
+    it("is not offered without exams (an activity's rule)", () => {
+      renderDialog();
+
+      expect(
+        screen.queryByRole("radio", { name: i18n.t("unlockModeExam") })
+      ).not.toBeInTheDocument();
+    });
+
+    it("saves the one exam chosen", async () => {
+      const user = userEvent.setup();
+      const { onSave } = renderModuleDialog();
+
+      await user.click(
+        screen.getByRole("radio", { name: i18n.t("unlockModeExam") })
+      );
+      const save = screen.getByRole("button", { name: i18n.t("saveAction") });
+      expect(save).toBeDisabled();
+      await user.click(screen.getByRole("radio", { name: "Prova 2" }));
+      await user.click(screen.getByRole("radio", { name: "Prova 1" }));
+      await user.click(save);
+
+      expect(onSave).toHaveBeenCalledWith("exam", ["e1"]);
+    });
+
+    it("opens on the exam saved", () => {
+      renderModuleDialog("exam", ["e2"]);
+
+      expect(
+        screen.getByRole("radio", { name: i18n.t("unlockModeExam") })
+      ).toBeChecked();
+      expect(screen.getByRole("radio", { name: "Prova 2" })).toBeChecked();
+    });
+
+    it("says when the program has no exam to wait for", async () => {
+      const user = userEvent.setup();
+      render(
+        <UnlockRuleDialog
+          candidates={GROUPS}
+          exams={[]}
+          mode="none"
+          onOpenChange={vi.fn()}
+          onSave={vi.fn()}
+          open
+          requiredIds={[]}
+          subjectTitle="Músculos"
+        />
+      );
+
+      await user.click(
+        screen.getByRole("radio", { name: i18n.t("unlockModeExam") })
+      );
+
+      expect(
+        screen.getByText(i18n.t("unlockNoExamsMessage"))
+      ).toBeInTheDocument();
+    });
+  });
 });

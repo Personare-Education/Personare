@@ -239,4 +239,49 @@ describe("computeLocks", () => {
       expect(locks.activities.quiz).toBeUndefined();
     });
   });
+
+  describe("after passing an exam (exams.md §4 AC-2)", () => {
+    const rule = {
+      activities: [activity({ id: "a", moduleId: "m2" })],
+      modules: [
+        module({ id: "m1" }),
+        module({ id: "m2", position: 1, unlockMode: "exam" }),
+      ],
+      requirements: [requirement("m2", "e1", "module")],
+    };
+
+    it("locks the module until the exam is passed, with the exam missing", () => {
+      const locks = computeLocks({
+        ...rule,
+        exams: [{ id: "e1", passed: false }],
+      });
+
+      expect(locks.modules.m2).toEqual({
+        locked: true,
+        missing: [{ id: "e1", kind: "exam" }],
+      });
+      // Its activities wait for it, as with any locked module.
+      expect(locks.activities.a).toEqual({
+        locked: true,
+        missing: [{ id: "m2", kind: "module" }],
+        waiting: true,
+      });
+    });
+
+    it("frees the module once the exam is passed", () => {
+      const locks = computeLocks({
+        ...rule,
+        exams: [{ id: "e1", passed: true }],
+      });
+
+      expect(locks.modules.m2).toBeUndefined();
+      expect(locks.activities.a).toBeUndefined();
+    });
+
+    it("stops locking when the exam no longer exists", () => {
+      const locks = computeLocks({ ...rule, exams: [] });
+
+      expect(locks.modules.m2).toBeUndefined();
+    });
+  });
 });

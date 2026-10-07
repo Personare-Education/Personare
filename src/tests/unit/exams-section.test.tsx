@@ -99,7 +99,7 @@ describe("ExamsSection (exams.md §2)", () => {
   });
 
   it("lists the program's exams", async () => {
-    vi.mocked(listExams).mockResolvedValue([EXAM]);
+    vi.mocked(listExams).mockResolvedValue([EXAM] as never);
     renderSection();
 
     expect(
@@ -200,7 +200,7 @@ describe("ExamsSection (exams.md §2)", () => {
 
   it("deletes an exam with undo", async () => {
     const user = userEvent.setup();
-    vi.mocked(listExams).mockResolvedValue([EXAM]);
+    vi.mocked(listExams).mockResolvedValue([EXAM] as never);
     renderSection();
 
     const row = await screen.findByRole("row", { name: EXAM_1 });
@@ -219,7 +219,7 @@ describe("ExamsSection (exams.md §2)", () => {
 
   it("opens the exam from its row (§3 AC-1)", async () => {
     const user = userEvent.setup();
-    vi.mocked(listExams).mockResolvedValue([EXAM]);
+    vi.mocked(listExams).mockResolvedValue([EXAM] as never);
     renderSection();
 
     const row = await screen.findByRole("row", { name: EXAM_1 });

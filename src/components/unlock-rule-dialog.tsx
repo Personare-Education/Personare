@@ -20,6 +20,9 @@ const MODES: { labelKey: string; value: UnlockMode }[] = [
   { labelKey: "unlockModeAll", value: "all" },
 ];
 
+/** Only a module's rule offers it (docs/specs/exams.md §4 AC-1, AC-5). */
+const EXAM_MODE = { labelKey: "unlockModeExam", value: "exam" as const };
+
 /** What a rule can require, grouped (activities by module). */
 export interface UnlockCandidateGroup {
   /** `nested`: inside a sequence, shown under it. */
@@ -30,6 +33,11 @@ export interface UnlockCandidateGroup {
 
 interface UnlockRuleDialogProps {
   candidates: UnlockCandidateGroup[];
+  /**
+   * The exams it can wait for, which a module's rule offers ("After passing
+   * an exam"); left out for an activity's.
+   */
+  exams?: { id: string; title: string }[];
   /** The rule as saved, to open on. */
   mode: string;
   onOpenChange: (open: boolean) => void;
@@ -50,6 +58,7 @@ const MODE_CARD_CLASS_NAME =
  */
 export default function UnlockRuleDialog({
   candidates,
+  exams,
   mode,
   onOpenChange,
   onSave,
@@ -61,20 +70,27 @@ export default function UnlockRuleDialog({
   const modeLabelId = useId();
   const [selectedMode, setSelectedMode] = useState<UnlockMode>("none");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
+  const modes = exams ? [...MODES, EXAM_MODE] : MODES;
 
   useEffect(() => {
     if (open) {
+      const options = exams ? [...MODES, EXAM_MODE] : MODES;
       setSelectedMode(
-        MODES.some((option) => option.value === mode)
+        options.some((option) => option.value === mode)
           ? (mode as UnlockMode)
           : "none"
       );
-      setSelectedIds(requiredIds);
+      setSelectedIds(mode === "exam" ? [] : requiredIds);
+      setSelectedExamId(mode === "exam" ? (requiredIds[0] ?? null) : null);
     }
-  }, [mode, open, requiredIds]);
+  }, [exams, mode, open, requiredIds]);
 
   const takesList = selectedMode === "any" || selectedMode === "all";
-  const canSave = !takesList || selectedIds.length > 0;
+  const takesExam = selectedMode === "exam";
+  const canSave =
+    (!takesList || selectedIds.length > 0) &&
+    (!takesExam || (exams ?? []).some((exam) => exam.id === selectedExamId));
 
   const handleModeChange = useCallback((value: string) => {
     setSelectedMode(value as UnlockMode);
@@ -92,6 +108,10 @@ export default function UnlockRuleDialog({
       if (!canSave) {
         return;
       }
+      if (takesExam) {
+        onSave("exam", selectedExamId ? [selectedExamId] : []);
+        return;
+      }
       // The list in screen order, whatever order it was checked in.
       const order = candidates.flatMap((group) =>
         group.items.map((item) => item.id)
@@ -101,7 +121,16 @@ export default function UnlockRuleDialog({
         takesList ? order.filter((id) => selectedIds.includes(id)) : []
       );
     },
-    [canSave, candidates, onSave, selectedIds, selectedMode, takesList]
+    [
+      canSave,
+      candidates,
+      onSave,
+      selectedExamId,
+      selectedIds,
+      selectedMode,
+      takesExam,
+      takesList,
+    ]
   );
 
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -127,7 +156,7 @@ export default function UnlockRuleDialog({
               <span className="sr-only" id={modeLabelId}>
                 {t("unlockRuleAction")}
               </span>
-              {MODES.map((option) => (
+              {modes.map((option) => (
                 <RadioGroupPrimitive.Item
                   className={MODE_CARD_CLASS_NAME}
                   key={option.value}
@@ -162,6 +191,13 @@ export default function UnlockRuleDialog({
                   </p>
                 )}
               </div>
+            ) : null}
+            {takesExam ? (
+              <ExamChoices
+                exams={exams ?? []}
+                onChange={setSelectedExamId}
+                selectedId={selectedExamId}
+              />
             ) : null}
           </div>
           <DialogFooter>
@@ -257,5 +293,53 @@ function CandidateItem({
       />
       {title}
     </label>
+  );
+}
+
+interface ExamChoicesProps {
+  exams: { id: string; title: string }[];
+  onChange: (id: string) => void;
+  selectedId: string | null;
+}
+
+/** The one exam a module waits for (docs/specs/exams.md §4 AC-1). */
+function ExamChoices({ exams, onChange, selectedId }: ExamChoicesProps) {
+  const { t } = useTranslation();
+  const labelId = useId();
+
+  if (exams.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        {t("unlockNoExamsMessage")}
+      </p>
+    );
+  }
+
+  return (
+    <RadioGroupPrimitive.Root
+      aria-labelledby={labelId}
+      className="flex flex-col gap-1"
+      onValueChange={onChange}
+      value={selectedId ?? ""}
+    >
+      <span className="sr-only" id={labelId}>
+        {t("unlockModeExam")}
+      </span>
+      {exams.map((exam) => (
+        <RadioGroupPrimitive.Item
+          className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring"
+          key={exam.id}
+          value={exam.id}
+        >
+          <span
+            aria-hidden="true"
+            className="flex size-4 shrink-0 items-center justify-center rounded-full border border-input"
+          >
+            <RadioGroupPrimitive.Indicator className="size-2 rounded-full bg-primary" />
+          </span>
+          {exam.title}
+        </RadioGroupPrimitive.Item>
+      ))}
+    </RadioGroupPrimitive.Root>
   );
 }

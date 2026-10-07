@@ -58,4 +58,19 @@ describe("describeLock", () => {
       )
     ).toBe(i18n.t("lockWaitingLabel", { item: "Esqueleto" }));
   });
+
+  it("names the exam to pass and its score (exams.md §4 AC-3)", async () => {
+    await i18n.changeLanguage("pt-BR");
+    expect(
+      describeLock(
+        i18n.t,
+        "pt-BR",
+        { locked: true, missing: [{ id: "e", kind: "exam" }] },
+        "exam",
+        { e: "Prova 1" },
+        { e: 70 }
+      )
+    ).toBe("Libera depois de passar em Prova 1 (70%)");
+    await i18n.changeLanguage("en");
+  });
 });

@@ -365,7 +365,8 @@ export default function ExamRunnerDialog({
         onInteractOutside={handleInteractOutside}
         ref={contentRef}
       >
-        <DialogHeader className="flex-row items-center justify-between gap-4">
+        {/* Clear of the close button, top right. */}
+        <DialogHeader className="flex-row items-center justify-between gap-4 pe-8">
           <DialogTitle>{exam?.title}</DialogTitle>
           {isRunning ? (
             <ExamClock elapsedMs={elapsedMs} limitMs={limitMs} />

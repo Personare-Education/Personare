@@ -4,7 +4,8 @@
  * (deleted ones already left out) and every screen reads the same answer.
  */
 
-export type UnlockMode = "none" | "previous" | "any" | "all";
+/** "exam" is for modules only: after passing an exam (docs/specs/exams.md §4). */
+export type UnlockMode = "none" | "previous" | "any" | "all" | "exam";
 
 export interface LockModule {
   id: string;
@@ -22,6 +23,12 @@ export interface LockActivity {
   unlockMode: string;
 }
 
+/** A live exam, and whether an attempt has passed it. */
+export interface LockExam {
+  id: string;
+  passed: boolean;
+}
+
 export interface LockRequirement {
   requiredId: string;
   subjectId: string;
@@ -31,7 +38,7 @@ export interface LockRequirement {
 /** Something that must be done (or unlocked) first. */
 export interface MissingItem {
   id: string;
-  kind: "activity" | "module";
+  kind: "activity" | "exam" | "module";
 }
 
 export interface LockState {
@@ -50,6 +57,8 @@ export interface Locks {
 
 interface LockInput {
   activities: LockActivity[];
+  /** Live exams; one a rule points at that is not here no longer locks. */
+  exams?: LockExam[];
   modules: LockModule[];
   requirements: LockRequirement[];
 }
@@ -91,11 +100,13 @@ function missingByRule<T extends { id: string }>(
 
 export function computeLocks({
   activities,
+  exams = [],
   modules,
   requirements,
 }: LockInput): Locks {
   const activityById = new Map(activities.map((row) => [row.id, row]));
   const moduleById = new Map(modules.map((row) => [row.id, row]));
+  const examById = new Map(exams.map((row) => [row.id, row]));
 
   const listOf = <T>(subjectId: string, byId: Map<string, T>): T[] =>
     requirements
@@ -123,6 +134,17 @@ export function computeLocks({
   const locks: Locks = { activities: {}, modules: {} };
 
   for (const row of modules) {
+    // Free once its exam is passed (docs/specs/exams.md §4 AC-2).
+    if (row.unlockMode === "exam") {
+      const pending = listOf(row.id, examById).filter((exam) => !exam.passed);
+      if (pending.length > 0) {
+        locks.modules[row.id] = {
+          locked: true,
+          missing: pending.map(({ id }) => ({ id, kind: "exam" })),
+        };
+      }
+      continue;
+    }
     const siblings = byPosition(
       modules.filter((other) => other.programId === row.programId)
     );

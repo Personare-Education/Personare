@@ -28,7 +28,8 @@ export function reorderModules(programId: string, ids: string[]) {
 
 export function setModuleUnlockRule(
   id: string,
-  mode: "none" | "previous" | "any" | "all",
+  /** "exam": after passing an exam (docs/specs/exams.md §4). */
+  mode: "none" | "previous" | "any" | "all" | "exam",
   requiredIds: string[]
 ) {
   return ipc.client.modules.setUnlockRule({ id, mode, requiredIds });

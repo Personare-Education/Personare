@@ -5,6 +5,7 @@ import {
   modules as modulesTable,
   unlockRequirements as unlockRequirementsTable,
 } from "@/database/schema";
+import { loadExamPasses } from "@/ipc/shared/exams";
 import { computeLocks, type Locks } from "@/utils/unlock";
 
 /**
@@ -44,5 +45,10 @@ export function loadLocks(db: DatabaseClient): Locks {
     .from(unlockRequirementsTable)
     .all();
 
-  return computeLocks({ activities, modules, requirements });
+  return computeLocks({
+    activities,
+    exams: loadExamPasses(db),
+    modules,
+    requirements,
+  });
 }
