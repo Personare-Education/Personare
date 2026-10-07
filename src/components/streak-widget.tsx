@@ -1,7 +1,8 @@
 import { addMonths, format, subMonths } from "date-fns";
 import { ChevronLeft, ChevronRight, Flame, Trophy } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { listActivityCounts } from "@/actions/streak";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,12 +22,16 @@ import {
   computeBestStreak,
   computeCurrentStreak,
   msUntilNextLocalMidnight,
+  streakIgnition,
   toActiveDateSet,
 } from "@/utils/streak";
 import { cn } from "@/utils/tailwind";
 
 const WEEKDAY_COUNT = 7;
 const TICK_MS = 1000;
+/** How long the flame burns bright after lighting the day (§1 AC-1). */
+const IGNITE_MS = 1400;
+const SPARKS = [0, 1, 2, 3, 4, 5];
 
 function formatCountdown(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / TICK_MS));
@@ -44,10 +49,36 @@ export function StreakWidget() {
   const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(() => new Date());
   const [displayMonth, setDisplayMonth] = useState(() => new Date());
+  const [isIgniting, setIsIgniting] = useState(false);
+  // The days as last loaded; null until the first load, which never lights
+  // anything (docs/specs/gamification.md §1 AC-1).
+  const loadedRef = useRef<Set<string> | null>(null);
 
   const refreshActiveDates = useCallback(() => {
-    listActivityCounts().then((rows) => setActiveDates(toActiveDateSet(rows)));
-  }, []);
+    listActivityCounts().then((rows) => {
+      const next = toActiveDateSet(rows);
+      const before = loadedRef.current;
+      loadedRef.current = next;
+      setActiveDates(next);
+      const lit = before ? streakIgnition(before, next, new Date()) : null;
+      if (lit !== null) {
+        setIsIgniting(true);
+        toast(
+          lit === 1
+            ? t("streakStartedMessage")
+            : t("streakIgnitedMessage", { count: lit })
+        );
+      }
+    });
+  }, [t]);
+
+  useEffect(() => {
+    if (!isIgniting) {
+      return;
+    }
+    const timeout = setTimeout(() => setIsIgniting(false), IGNITE_MS);
+    return () => clearTimeout(timeout);
+  }, [isIgniting]);
 
   useEffect(() => {
     refreshActiveDates();
@@ -100,7 +131,28 @@ export function StreakWidget() {
             <SidebarMenuButton
               aria-label={t("streakDaysLabel", { count: currentStreak })}
             >
-              <Flame className={cn(currentStreak > 0 && "text-orange-500")} />
+              {/* Lit: it grows, glows and gives off sparks (§1 AC-1, AC-3). */}
+              <span
+                className="relative flex size-4 shrink-0 items-center justify-center"
+                data-igniting={isIgniting || undefined}
+              >
+                <Flame
+                  className={cn(
+                    currentStreak > 0 && "text-orange-500",
+                    isIgniting && "streak-ignite text-orange-400"
+                  )}
+                />
+                {isIgniting
+                  ? SPARKS.map((spark) => (
+                      <span
+                        aria-hidden="true"
+                        className="streak-spark"
+                        key={spark}
+                        style={{ "--spark": spark } as React.CSSProperties}
+                      />
+                    ))
+                  : null}
+              </span>
               <span>{t("streakDaysLabel", { count: currentStreak })}</span>
             </SidebarMenuButton>
           </PopoverTrigger>
