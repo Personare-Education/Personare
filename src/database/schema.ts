@@ -97,11 +97,15 @@ export const unlockRequirements = sqliteTable("unlock_requirements", {
  * softDeleteOption behaves exactly like every other soft-delete in the app.
  */
 export const quizQuestions = sqliteTable("quiz_questions", {
-  activityId: text("activity_id")
-    .notNull()
-    .references(() => activities.id),
+  /** The quiz it belongs to, or null for an exam's standalone question. */
+  activityId: text("activity_id").references(() => activities.id),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  /**
+   * The exam it belongs to, for a standalone question; exactly one of
+   * activityId/examId is set (docs/specs/exams.md).
+   */
+  examId: text("exam_id").references(() => exams.id),
   id: text("id")
     .primaryKey()
     .$defaultFn(() => randomUUID()),
@@ -145,6 +149,56 @@ export const flashcards = sqliteTable("flashcards", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+/**
+ * An exam (docs/specs/exams.md): drawn at random from its modules' quizzes,
+ * plus its standalone questions, taken on demand -- no FSRS.
+ */
+export const exams = sqliteTable("exams", {
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  /** The share of right answers that passes, in percent. */
+  passingScore: integer("passing_score").notNull().default(70),
+  programId: text("program_id")
+    .notNull()
+    .references(() => programs.id),
+  /** How many questions an attempt draws from the modules. */
+  questionCount: integer("question_count").notNull(),
+  /** Null when the exam has no time limit. */
+  timeLimitMinutes: integer("time_limit_minutes"),
+  title: text("title").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+/** The modules an exam draws its questions from. */
+export const examModules = sqliteTable("exam_modules", {
+  examId: text("exam_id")
+    .notNull()
+    .references(() => exams.id),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  moduleId: text("module_id")
+    .notNull()
+    .references(() => modules.id),
+});
+
+/** A finished attempt; one abandoned midway is never saved. */
+export const examAttempts = sqliteTable("exam_attempts", {
+  correct: integer("correct").notNull(),
+  durationMs: integer("duration_ms").notNull(),
+  examId: text("exam_id")
+    .notNull()
+    .references(() => exams.id),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+  total: integer("total").notNull(),
 });
 
 /**

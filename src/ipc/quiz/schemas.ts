@@ -1,14 +1,31 @@
 import { z } from "zod";
 
-export const listQuestionsInputSchema = z.object({
-  activityId: z.string(),
+/**
+ * A question belongs to a quiz or, standalone, to an exam: exactly one of
+ * the two (docs/specs/exams.md §1 AC-6).
+ */
+const questionOwnerSchema = z.object({
+  activityId: z.string().optional(),
+  examId: z.string().optional(),
 });
 
-export const createQuestionInputSchema = z.object({
-  activityId: z.string(),
-  imagePath: z.string().nullable().optional(),
-  text: z.string().min(1),
-});
+function hasOneOwner(owner: z.infer<typeof questionOwnerSchema>) {
+  return (owner.activityId === undefined) !== (owner.examId === undefined);
+}
+
+const ONE_OWNER_MESSAGE = "A question belongs to an activity or an exam";
+
+export const listQuestionsInputSchema = questionOwnerSchema.refine(
+  hasOneOwner,
+  ONE_OWNER_MESSAGE
+);
+
+export const createQuestionInputSchema = questionOwnerSchema
+  .extend({
+    imagePath: z.string().nullable().optional(),
+    text: z.string().min(1),
+  })
+  .refine(hasOneOwner, ONE_OWNER_MESSAGE);
 
 export const updateQuestionInputSchema = z.object({
   id: z.string(),
