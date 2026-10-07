@@ -248,6 +248,10 @@ export const appSettings = sqliteTable("app_settings", {
     .notNull()
     .default(false),
   id: integer("id").primaryKey(),
+  /** Settings → Sounds (docs/specs/gamification.md §2 AC-3). */
+  soundsEnabled: integer("sounds_enabled", { mode: "boolean" })
+    .notNull()
+    .default(true),
   /**
    * Update from pre-releases too (docs/specs/prerelease-updates.md): on by
    * default while Personare is in beta.

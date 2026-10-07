@@ -157,4 +157,18 @@ describe("settings IPC namespace (Issue #20)", () => {
       });
     });
   });
+
+  describe("sounds (gamification.md §2 AC-3)", () => {
+    it("are on by default and keep what is saved", async () => {
+      await expect(client.get()).resolves.toMatchObject({
+        soundsEnabled: true,
+      });
+
+      await client.setSoundsEnabled({ enabled: false });
+
+      await expect(client.get()).resolves.toMatchObject({
+        soundsEnabled: false,
+      });
+    });
+  });
 });

@@ -39,6 +39,7 @@ import {
   type QuizAnswers,
   type QuizScore,
 } from "@/utils/quiz-scoring";
+import { playExamTick, playVictory, scheduleExamResult } from "@/utils/sounds";
 import { cn } from "@/utils/tailwind";
 
 interface ExamRunnerDialogProps {
@@ -57,6 +58,8 @@ interface ExamResult {
 }
 
 const SECOND_MS = 1000;
+/** How long QuizScoreResult takes to count the score up. */
+const SCORE_COUNT_UP_MS = 1500;
 const MINUTE_MS = 60 * SECOND_MS;
 
 /** "05:07": minutes and seconds, as a clock shows them. */
@@ -280,6 +283,23 @@ export default function ExamRunnerDialog({
       submit(true);
     }
   }, [elapsedMs, isRunning, limitMs, submit]);
+
+  // Silent while answering; on the result, a tick per correct answer as
+  // the score counts up, and the victory on a pass
+  // (docs/specs/gamification.md §2 AC-2).
+  useEffect(() => {
+    if (!(result && exam)) {
+      return;
+    }
+    const { correct, total } = result.score;
+    return scheduleExamResult({
+      correct,
+      durationMs: SCORE_COUNT_UP_MS,
+      onTick: playExamTick,
+      onVictory: playVictory,
+      passed: total > 0 && (correct / total) * 100 >= exam.passingScore,
+    });
+  }, [exam, result]);
 
   const unanswered = questions.filter(
     (question) => answers[question.id] === undefined

@@ -22,6 +22,7 @@ import type { Activity } from "@/components/activities-data-table";
 vi.mock("@/actions/quiz", () => ({
   listQuizQuestionsWithOptions: vi.fn(),
 }));
+vi.mock("@/utils/sounds", () => ({ playCorrect: vi.fn() }));
 vi.mock("@/actions/attachments", () => ({
   getAttachmentImageDataUrl: vi.fn(),
 }));
@@ -33,6 +34,7 @@ vi.mock("@/actions/review", () => ({
 }));
 
 const { listQuizQuestionsWithOptions } = await import("@/actions/quiz");
+const { playCorrect } = await import("@/utils/sounds");
 const { getAttachmentImageDataUrl } = await import("@/actions/attachments");
 const {
   armPendingActivityRating,
@@ -792,5 +794,22 @@ describe("QuizRunnerDialog as a sequence step", () => {
       await screen.findByRole("button", { name: i18n.t("continueAction") })
     );
     expect(onFinished).toHaveBeenCalledWith(QUIZ_ACTIVITY);
+  });
+
+  it("plays the correct-answer sound when a right answer is confirmed, and nothing for a wrong one (gamification.md §2 AC-1)", async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    await answer(user, 0);
+    expect(playCorrect).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await answer(user, 1);
+    expect(playCorrect).toHaveBeenCalledTimes(1);
   });
 });

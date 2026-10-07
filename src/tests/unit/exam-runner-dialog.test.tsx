@@ -18,6 +18,12 @@ vi.mock("@/actions/exams", () => ({
 vi.mock("@/actions/attachments", () => ({
   getAttachmentImageDataUrl: vi.fn(),
 }));
+vi.mock("@/utils/sounds", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/sounds")>()),
+  playCorrect: vi.fn(),
+  playExamTick: vi.fn(),
+  playVictory: vi.fn(),
+}));
 // Motion drives CountUp from real time; as in quiz-score-result.test.tsx,
 // this stand-in shows the final value once started.
 vi.mock("@/components/count-up", async () => {
@@ -45,6 +51,9 @@ vi.mock("@/components/count-up", async () => {
 });
 
 const { drawExam, saveExamAttempt } = await import("@/actions/exams");
+const { playCorrect, playExamTick, playVictory } = await import(
+  "@/utils/sounds"
+);
 const { default: ExamRunnerDialog } = await import(
   "@/components/exam-runner-dialog"
 );
@@ -311,5 +320,43 @@ describe("ExamRunnerDialog (exams.md §3)", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(saveExamAttempt).not.toHaveBeenCalled();
+  });
+
+  describe("sounds (gamification.md §2 AC-2)", () => {
+    it("stays silent while answering, then ticks once per correct answer and plays the victory on a pass", async () => {
+      const user = setup();
+      renderRunner({ ...EXAM, passingScore: 50 });
+      await screen.findByText(QUESTIONS[0].text);
+
+      await choose(user, 1);
+      await user.click(button("nextQuestionAction"));
+      await choose(user, 1);
+      expect(playCorrect).not.toHaveBeenCalled();
+      expect(playExamTick).not.toHaveBeenCalled();
+
+      await user.click(button("submitExamAction"));
+      await act(() => vi.advanceTimersByTimeAsync(3000));
+
+      expect(playExamTick).toHaveBeenCalledTimes(2);
+      expect(playVictory).toHaveBeenCalledTimes(1);
+    });
+
+    it("plays no victory when it did not pass", async () => {
+      const user = setup();
+      renderRunner({ ...EXAM, passingScore: 100 });
+      await screen.findByText(QUESTIONS[0].text);
+
+      await choose(user, 1);
+      await user.click(button("submitExamAction"));
+      await user.click(
+        within(await screen.findByRole("alertdialog")).getByRole("button", {
+          name: i18n.t("submitExamAction"),
+        })
+      );
+      await act(() => vi.advanceTimersByTimeAsync(3000));
+
+      expect(playExamTick).toHaveBeenCalledTimes(1);
+      expect(playVictory).not.toHaveBeenCalled();
+    });
   });
 });

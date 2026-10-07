@@ -1,11 +1,13 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { getPendingActivityRating } from "@/actions/review";
+import { getSettings } from "@/actions/settings";
 import ActivityDifficultyDialog from "@/components/activity-difficulty-dialog";
 import AppToaster from "@/components/app-toaster";
 import BetaGate from "@/components/beta-gate";
 import StackContent from "@/components/stack-content";
 import BaseLayout from "@/layouts/base-layout";
+import { setSoundsEnabled } from "@/utils/sounds";
 
 type PendingActivityRating = Awaited<
   ReturnType<typeof getPendingActivityRating>
@@ -16,6 +18,10 @@ function Root() {
 
   useEffect(() => {
     getPendingActivityRating().then(setPending);
+    // Settings → Sounds, before the first sound (docs/specs/gamification.md §2).
+    getSettings()
+      .then((settings) => setSoundsEnabled(settings.soundsEnabled))
+      .catch(() => undefined);
   }, []);
 
   const handleOpenChange = useCallback((open: boolean) => {

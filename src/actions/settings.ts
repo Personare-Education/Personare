@@ -12,3 +12,8 @@ export function setAutoStart(enabled: boolean) {
 export function setTestPrereleases(enabled: boolean) {
   return ipc.client.settings.setTestPrereleases({ enabled });
 }
+
+/** Settings → Sounds (docs/specs/gamification.md §2 AC-3). */
+export function setSoundsEnabled(enabled: boolean) {
+  return ipc.client.settings.setSoundsEnabled({ enabled });
+}
