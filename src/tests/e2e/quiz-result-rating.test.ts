@@ -146,14 +146,19 @@ test("finishing a quiz rates it right on its result", async () => {
   await page.getByRole("button", { name: "Rank: Iron III" }).click();
   const ranking = page.getByRole("dialog", { name: "Ranking" });
   await expect(ranking.getByText("Review", { exact: true })).toBeVisible();
-  await expect(
-    ranking.getByRole("listitem").filter({ hasText: "Magnum" })
-  ).toBeVisible();
+  await expect(ranking.getByRole("img", { name: "Iron III" })).toBeVisible();
   if (process.env.EXAMS_SCREENSHOTS) {
     // Past the dialog's fade-in.
     await page.waitForTimeout(500);
     await page.screenshot({
       path: `${process.env.EXAMS_SCREENSHOTS}/ranking.png`,
+    });
+  }
+  await ranking.getByRole("tab", { name: "All ranks" }).click();
+  await expect(ranking.getByRole("listitem", { name: "Magnum" })).toBeVisible();
+  if (process.env.EXAMS_SCREENSHOTS) {
+    await page.screenshot({
+      path: `${process.env.EXAMS_SCREENSHOTS}/ranking-all.png`,
     });
   }
   await page.keyboard.press("Escape");

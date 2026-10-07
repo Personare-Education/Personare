@@ -1,8 +1,11 @@
-import { Crown, Gem, type LucideIcon, Medal } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getPointsSummary } from "@/actions/points";
+import RankEmblem, {
+  TIER_COLORS,
+  tierTextColor,
+} from "@/components/rank-emblem";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { onPointsChanged } from "@/utils/points-events";
 import { RANK_STEPS, type RankStep, type RankTier } from "@/utils/ranks";
 import { onReviewCompleted } from "@/utils/review-events";
@@ -24,30 +28,18 @@ import { cn } from "@/utils/tailwind";
 
 type PointsSummary = Awaited<ReturnType<typeof getPointsSummary>>;
 
-/** Each tier's color, the same in light and dark. */
-const TIER_COLORS: Record<RankTier, string> = {
-  bronze: "oklch(0.62 0.12 55)",
-  diamond: "oklch(0.72 0.13 230)",
-  emerald: "oklch(0.66 0.15 160)",
-  gold: "oklch(0.78 0.15 85)",
-  iron: "oklch(0.6 0.02 250)",
-  magnum: "oklch(0.62 0.2 300)",
-  platinum: "oklch(0.74 0.08 195)",
-  silver: "oklch(0.75 0.02 250)",
-};
-
-const TIER_ICONS: Record<RankTier, LucideIcon> = {
-  bronze: Medal,
-  diamond: Gem,
-  emerald: Gem,
-  gold: Medal,
-  iron: Medal,
-  magnum: Crown,
-  platinum: Medal,
-  silver: Medal,
-};
-
 const DIVISION_NUMERALS = { 1: "I", 2: "II", 3: "III" } as const;
+
+/** The tiers with divisions, left to right, for the grid of every rank. */
+const GRID_TIERS: RankTier[] = [
+  "iron",
+  "bronze",
+  "silver",
+  "gold",
+  "platinum",
+  "emerald",
+  "diamond",
+];
 
 /** How long a new tier is celebrated (§4 AC-3). */
 const CELEBRATE_MS = 1600;
@@ -68,17 +60,6 @@ function progressOf(summary: PointsSummary): number {
   return end === null
     ? 100
     : Math.round(((summary.points - start) / (end - start)) * 100);
-}
-
-function RankIcon({ className, tier }: { className?: string; tier: RankTier }) {
-  const Icon = TIER_ICONS[tier];
-  return (
-    <Icon
-      aria-hidden="true"
-      className={className}
-      style={{ color: TIER_COLORS[tier] }}
-    />
-  );
 }
 
 /**
@@ -157,8 +138,10 @@ export function RankWidget() {
               className="relative flex size-4 shrink-0 items-center justify-center"
               data-celebrating={isCelebrating || undefined}
             >
-              <RankIcon
-                className={cn("size-4", isCelebrating && "rank-celebrate")}
+              <RankEmblem
+                className={cn("shrink-0", isCelebrating && "rank-celebrate")}
+                division={summary.rank.division}
+                size={20}
                 tier={summary.rank.tier}
               />
             </span>
@@ -203,9 +186,9 @@ function signed(amount: number): string {
 }
 
 /**
- * The Ranking (§4 AC-2, AC-4): the step and the season's points, the
- * whole ladder with the current step, the latest gains and losses, and the
- * seasons gone by.
+ * The Ranking (§4 AC-2, AC-4), in two tabs: My rank -- the emblem in the
+ * middle, the season's points, the progress in the step and the history --
+ * and every rank, laid out as a grid.
  */
 function RankingDialog({
   name,
@@ -213,25 +196,8 @@ function RankingDialog({
   open,
   summary,
 }: RankingDialogProps) {
-  const { i18n, t } = useTranslation();
-  const rankName = useRankName();
+  const { t } = useTranslation();
   const seasonName = useSeasonName();
-  const timeFormat = new Intl.DateTimeFormat(i18n.language, {
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-  });
-  const next = RANK_STEPS[summary.rank.step];
-  // Opens with the current step in view, wherever it is on the ladder.
-  const currentRef = useCallback((item: HTMLLIElement | null) => {
-    // Only the ladder scrolls to it, never the rest of the Ranking.
-    const ladder = item?.parentElement;
-    if (item && ladder) {
-      ladder.scrollTop =
-        item.offsetTop - ladder.offsetTop - ladder.clientHeight / 2;
-    }
-  }, []);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -242,119 +208,232 @@ function RankingDialog({
             {t("rankSeasonLabel", { season: seasonName(summary.season.id) })}
           </DialogDescription>
         </DialogHeader>
-        {/* Side by side, each column scrolls on its own; stacked on a narrow
-            window, the whole Ranking scrolls. */}
-        <div className="-mx-1 grid min-h-0 gap-6 overflow-y-auto px-1 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] sm:grid-cols-[minmax(0,1fr)_14rem] sm:grid-rows-[minmax(0,1fr)] sm:overflow-hidden">
-          <div className="flex flex-col gap-5 sm:min-h-0 sm:overflow-y-auto">
-            <div className="flex items-center gap-3">
-              <RankIcon className="size-10" tier={summary.rank.tier} />
-              <div className="flex flex-col">
-                <span className="font-medium font-serif text-2xl">{name}</span>
-                <span className="text-muted-foreground text-sm tabular-nums">
-                  {t("rankPoints", { count: summary.points })}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Progress value={progressOf(summary)} />
-              <span className="text-muted-foreground text-xs">
-                {summary.toNext === null || !next
-                  ? t("rankTopMessage")
-                  : t("rankToNext", {
-                      count: summary.toNext,
-                      rank: rankName(next),
-                    })}
-              </span>
-            </div>
-            <section className="flex flex-col gap-2">
-              <h3 className="font-medium text-sm">{t("rankRecentTitle")}</h3>
-              {summary.recent.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  {t("rankRecentEmpty")}
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-1 text-sm">
-                  {summary.recent.map((event, index) => (
-                    <li
-                      className="flex items-center justify-between gap-3"
-                      // biome-ignore lint/suspicious/noArrayIndexKey: the list is reloaded whole and never reordered.
-                      key={index}
-                    >
-                      <span>{t(`rankKind_${event.kind}`)}</span>
-                      <span className="flex items-center gap-3 text-muted-foreground text-xs tabular-nums">
-                        {timeFormat.format(event.createdAt)}
-                        <span
-                          className={cn(
-                            "w-10 text-right font-medium text-sm",
-                            event.amount > 0
-                              ? "text-success-text"
-                              : "text-destructive-text"
-                          )}
-                        >
-                          {signed(event.amount)}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-            {summary.pastSeasons.length > 0 ? (
-              <section className="flex flex-col gap-2">
-                <h3 className="font-medium text-sm">
-                  {t("rankPastSeasonsTitle")}
-                </h3>
-                <ul className="flex flex-col gap-1 text-sm">
-                  {summary.pastSeasons.map((season) => {
-                    const step = RANK_STEPS[season.step - 1];
-                    return (
-                      <li
-                        className="flex items-center justify-between gap-3"
-                        key={season.season}
-                      >
-                        <span>{seasonName(season.season)}</span>
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <RankIcon className="size-3.5" tier={step.tier} />
-                          {rankName(step)}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ) : null}
-          </div>
-          <ol
-            aria-label={t("rankLadderTitle")}
-            className="relative flex flex-col-reverse gap-0.5 text-sm [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] sm:min-h-0 sm:overflow-y-auto sm:pe-1"
+        <Tabs className="min-h-0" defaultValue="mine">
+          <TabsList>
+            <TabsTrigger value="mine">{t("rankMyRankTab")}</TabsTrigger>
+            <TabsTrigger value="all">{t("rankAllRanksTab")}</TabsTrigger>
+          </TabsList>
+          <TabsContent
+            className="-mx-1 min-h-0 overflow-y-auto px-1 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
+            value="mine"
           >
-            {RANK_STEPS.map((step) => {
-              const isCurrent = step.step === summary.rank.step;
+            <MyRank name={name} summary={summary} />
+          </TabsContent>
+          <TabsContent
+            className="-mx-1 min-h-0 overflow-auto px-1 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
+            value="all"
+          >
+            <AllRanks summary={summary} />
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** The emblem in the middle, the points and the way to the next step. */
+function MyRank({ name, summary }: { name: string; summary: PointsSummary }) {
+  const { i18n, t } = useTranslation();
+  const rankName = useRankName();
+  const seasonName = useSeasonName();
+  const { rank } = summary;
+  const next = RANK_STEPS[rank.step];
+  const timeFormat = new Intl.DateTimeFormat(i18n.language, {
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+  });
+
+  return (
+    <div className="flex flex-col gap-5 pt-2">
+      <section
+        className="flex flex-col items-center gap-3 rounded-xl border px-6 pt-6 pb-5"
+        style={{
+          background: `radial-gradient(120% 90% at 50% 0%, color-mix(in oklch, ${TIER_COLORS[rank.tier]} 22%, transparent), transparent 70%)`,
+        }}
+      >
+        <RankEmblem
+          division={rank.division}
+          label={name}
+          size={112}
+          tier={rank.tier}
+        />
+        <h3
+          className="font-semibold text-3xl uppercase tracking-[0.08em]"
+          style={{ color: tierTextColor(rank.tier) }}
+        >
+          {name}
+        </h3>
+        <div className="flex w-full flex-col items-center gap-1 border-t pt-3">
+          <span className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
+            {t("rankSeasonPointsLabel")}
+          </span>
+          <span className="font-semibold text-2xl tabular-nums">
+            {t("rankPoints", { count: summary.points })}
+          </span>
+        </div>
+        <div className="flex w-full flex-col gap-1.5">
+          <Progress value={progressOf(summary)} />
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium">{t("rankProgressTitle")}</span>
+            <span className="text-muted-foreground tabular-nums">
+              {rank.end === null
+                ? summary.points
+                : `${summary.points - rank.start}/${rank.end - rank.start}`}
+            </span>
+          </div>
+          <span className="text-muted-foreground text-xs">
+            {summary.toNext === null || !next
+              ? t("rankTopMessage")
+              : t("rankToNext", {
+                  count: summary.toNext,
+                  rank: rankName(next),
+                })}
+          </span>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="font-medium text-sm">{t("rankRecentTitle")}</h3>
+        {summary.recent.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            {t("rankRecentEmpty")}
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y text-sm">
+            {summary.recent.map((event, index) => (
+              <li
+                className="flex items-center justify-between gap-3 py-1.5"
+                // biome-ignore lint/suspicious/noArrayIndexKey: the list is reloaded whole and never reordered.
+                key={index}
+              >
+                <span>{t(`rankKind_${event.kind}`)}</span>
+                <span className="flex items-center gap-3 text-muted-foreground text-xs tabular-nums">
+                  {timeFormat.format(event.createdAt)}
+                  <span
+                    className={cn(
+                      "w-10 text-right font-semibold text-sm",
+                      event.amount > 0
+                        ? "text-success-text"
+                        : "text-destructive-text"
+                    )}
+                  >
+                    {signed(event.amount)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {summary.pastSeasons.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h3 className="font-medium text-sm">{t("rankPastSeasonsTitle")}</h3>
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {summary.pastSeasons.map((season) => {
+              const step = RANK_STEPS[season.step - 1];
               return (
                 <li
-                  aria-current={isCurrent ? "step" : undefined}
-                  className={cn(
-                    "flex items-center justify-between gap-2 rounded-md px-2 py-0.5",
-                    isCurrent
-                      ? "bg-muted font-medium"
-                      : step.step > summary.rank.step && "text-muted-foreground"
-                  )}
-                  key={step.step}
-                  ref={isCurrent ? currentRef : undefined}
+                  className="flex items-center justify-between gap-3"
+                  key={season.season}
                 >
-                  <span className="flex items-center gap-2">
-                    <RankIcon className="size-3.5" tier={step.tier} />
+                  <span>{seasonName(season.season)}</span>
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <RankEmblem
+                      division={step.division}
+                      size={20}
+                      tier={step.tier}
+                    />
                     {rankName(step)}
-                  </span>
-                  <span className="text-muted-foreground text-xs tabular-nums">
-                    {step.start}
                   </span>
                 </li>
               );
             })}
-          </ol>
+          </ul>
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+const ROW_NUMERALS = ["I", "II", "III"];
+
+/**
+ * Every rank (§4 AC-2): a column per tier, its divisions top to bottom from
+ * I to III, and Magnum on its own at the end. The current step stands out;
+ * the ones still to reach are dimmed. In the list's order, a screen reader
+ * hears them from the bottom up.
+ */
+function AllRanks({ summary }: { summary: PointsSummary }) {
+  const { t } = useTranslation();
+  const rankName = useRankName();
+
+  return (
+    <div className="flex flex-col gap-2 pt-3">
+      <div
+        aria-hidden="true"
+        className="grid grid-cols-[1.5rem_repeat(8,minmax(3.25rem,1fr))] gap-x-1 text-center text-[0.65rem] text-muted-foreground uppercase tracking-[0.08em]"
+      >
+        <span />
+        {[...GRID_TIERS, "magnum" as const].map((tier) => (
+          <span className="truncate" key={tier}>
+            {t(`rankTier_${tier}`)}
+          </span>
+        ))}
+      </div>
+      <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-1">
+        <div
+          aria-hidden="true"
+          className="grid grid-rows-3 gap-y-2 text-[0.65rem] text-muted-foreground"
+        >
+          {ROW_NUMERALS.map((numeral) => (
+            <span className="flex items-center" key={numeral}>
+              {numeral}
+            </span>
+          ))}
         </div>
-      </DialogContent>
-    </Dialog>
+        <ol
+          aria-label={t("rankLadderTitle")}
+          className="grid grid-cols-[repeat(8,minmax(3.25rem,1fr))] grid-rows-3 gap-x-1 gap-y-2"
+        >
+          {RANK_STEPS.map((step) => {
+            const isCurrent = step.step === summary.rank.step;
+            const reached = step.step <= summary.rank.step;
+            const isMagnum = step.division === null;
+            return (
+              <li
+                aria-current={isCurrent ? "step" : undefined}
+                aria-label={rankName(step)}
+                className={cn(
+                  "flex items-center justify-center rounded-lg py-1.5",
+                  isCurrent && "bg-muted ring-2",
+                  !reached && "opacity-55"
+                )}
+                data-reached={reached}
+                key={step.step}
+                style={{
+                  gridColumn: String(
+                    isMagnum ? 8 : GRID_TIERS.indexOf(step.tier) + 1
+                  ),
+                  gridRow: isMagnum ? "1 / span 3" : String(step.division),
+                  ...(isCurrent
+                    ? { ["--tw-ring-color" as string]: TIER_COLORS[step.tier] }
+                    : {}),
+                }}
+                title={t("rankStartsAt", { count: step.start })}
+              >
+                <RankEmblem
+                  division={step.division}
+                  size={isMagnum ? 64 : 46}
+                  tier={step.tier}
+                />
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </div>
   );
 }

@@ -80,7 +80,7 @@ describe("RankWidget (gamification.md §4)", () => {
     );
   });
 
-  it("opens the Ranking: points, the whole ladder with the current step, the latest points and past seasons (AC-2)", async () => {
+  it("opens on My rank: the emblem in the middle, the points, the progress in the step and the history (AC-2)", async () => {
     const user = userEvent.setup();
     vi.mocked(getPointsSummary).mockResolvedValue(
       summary(1000, {
@@ -97,25 +97,55 @@ describe("RankWidget (gamification.md §4)", () => {
     });
 
     expect(
+      within(ranking).getByRole("tab", { name: i18n.t("rankMyRankTab") })
+    ).toHaveAttribute("aria-selected", "true");
+    expect(
+      within(ranking).getByRole("img", { name: "Prata II" })
+    ).toBeInTheDocument();
+    expect(
       within(ranking).getByText(i18n.t("rankPoints", { count: 1000 }))
     ).toBeInTheDocument();
+    // 1000 is 50 into Silver II, whose division is 200 wide.
+    expect(within(ranking).getByText("50/200")).toBeInTheDocument();
     expect(
       within(ranking).getByText(
         i18n.t("rankToNext", { count: 150, rank: "Prata I" })
       )
     ).toBeInTheDocument();
-    const ladder = within(ranking).getByRole("list", {
-      name: i18n.t("rankLadderTitle"),
-    });
-    expect(within(ladder).getAllByRole("listitem")).toHaveLength(
-      RANK_STEPS.length
-    );
-    expect(
-      within(ladder).getByRole("listitem", { current: "step" })
-    ).toHaveTextContent("Prata II");
     expect(within(ranking).getByText("+15")).toBeInTheDocument();
     expect(within(ranking).getByText("−2")).toBeInTheDocument();
     expect(within(ranking).getByText(PAST_SEASON)).toBeInTheDocument();
+  });
+
+  it("shows every rank in a grid: a column per tier, divisions I on top, Magnum on its own (AC-2)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getPointsSummary).mockResolvedValue(summary(1000) as never);
+    renderWidget();
+
+    await user.click(await screen.findByRole("button", { name: SILVER_II }));
+    await user.click(
+      await screen.findByRole("tab", { name: i18n.t("rankAllRanksTab") })
+    );
+
+    const ladder = screen.getByRole("list", {
+      name: i18n.t("rankLadderTitle"),
+    });
+    const items = within(ladder).getAllByRole("listitem");
+    expect(items).toHaveLength(RANK_STEPS.length);
+    expect(
+      within(ladder).getByRole("listitem", { current: "step" })
+    ).toHaveAccessibleName("Prata II");
+    // Placed on the grid: Silver is the 3rd column; division I on the top row.
+    const silverI = within(ladder).getByRole("listitem", { name: "Prata I" });
+    expect(silverI.style.gridColumn).toBe("3");
+    expect(silverI.style.gridRow).toBe("1");
+    const magnum = within(ladder).getByRole("listitem", { name: "Magnum" });
+    expect(magnum.style.gridColumn).toBe("8");
+    // Above the current step, the ranks still to reach are dimmed.
+    expect(silverI).toHaveAttribute("data-reached", "false");
+    expect(
+      within(ladder).getByRole("listitem", { name: "Ferro III" })
+    ).toHaveAttribute("data-reached", "true");
   });
 
   it("says when it climbs a step (AC-3)", async () => {
