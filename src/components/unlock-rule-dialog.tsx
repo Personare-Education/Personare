@@ -1,5 +1,5 @@
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,15 +13,18 @@ import {
 import { cn } from "@/utils/tailwind";
 import type { UnlockMode } from "@/utils/unlock";
 
-const MODES: { labelKey: string; value: UnlockMode }[] = [
-  { labelKey: "unlockModeNone", value: "none" },
-  { labelKey: "unlockModePrevious", value: "previous" },
-  { labelKey: "unlockModeAny", value: "any" },
-  { labelKey: "unlockModeAll", value: "all" },
-];
+const MODE_LABEL_KEYS: Record<UnlockMode, string> = {
+  all: "unlockModeAll",
+  any: "unlockModeAny",
+  exam: "unlockModeExam",
+  none: "unlockModeNone",
+  previous: "unlockModePrevious",
+  // An exam's own modules (docs/specs/exam-locks.md AC-5).
+  sources: "unlockModeSources",
+};
 
-/** Only a module's rule offers it (docs/specs/exams.md §4 AC-1, AC-5). */
-const EXAM_MODE = { labelKey: "unlockModeExam", value: "exam" as const };
+/** An activity's and a module's modes; a module's add "exam" (exams.md §4). */
+const DEFAULT_MODES: UnlockMode[] = ["none", "previous", "any", "all"];
 
 /** What a rule can require, grouped (activities by module). */
 export interface UnlockCandidateGroup {
@@ -33,6 +36,8 @@ export interface UnlockCandidateGroup {
 
 interface UnlockRuleDialogProps {
   candidates: UnlockCandidateGroup[];
+  /** Why the last save was refused, shown above the buttons. */
+  error?: string | null;
   /**
    * The exams it can wait for, which a module's rule offers ("After passing
    * an exam"); left out for an activity's.
@@ -40,6 +45,8 @@ interface UnlockRuleDialogProps {
   exams?: { id: string; title: string }[];
   /** The rule as saved, to open on. */
   mode: string;
+  /** The modes to offer, in order; by default an activity's or a module's. */
+  modes?: UnlockMode[];
   onOpenChange: (open: boolean) => void;
   onSave: (mode: UnlockMode, requiredIds: string[]) => void;
   open: boolean;
@@ -58,8 +65,10 @@ const MODE_CARD_CLASS_NAME =
  */
 export default function UnlockRuleDialog({
   candidates,
+  error = null,
   exams,
   mode,
+  modes: modesProp,
   onOpenChange,
   onSave,
   open,
@@ -71,20 +80,23 @@ export default function UnlockRuleDialog({
   const [selectedMode, setSelectedMode] = useState<UnlockMode>("none");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
-  const modes = exams ? [...MODES, EXAM_MODE] : MODES;
+  // Kept the same between renders: the form resets when it changes.
+  const offersExam = exams !== undefined;
+  const modes = useMemo<UnlockMode[]>(
+    () =>
+      modesProp ?? [...DEFAULT_MODES, ...(offersExam ? ["exam" as const] : [])],
+    [modesProp, offersExam]
+  );
 
   useEffect(() => {
     if (open) {
-      const options = exams ? [...MODES, EXAM_MODE] : MODES;
       setSelectedMode(
-        options.some((option) => option.value === mode)
-          ? (mode as UnlockMode)
-          : "none"
+        modes.includes(mode as UnlockMode) ? (mode as UnlockMode) : "none"
       );
       setSelectedIds(mode === "exam" ? [] : requiredIds);
       setSelectedExamId(mode === "exam" ? (requiredIds[0] ?? null) : null);
     }
-  }, [exams, mode, open, requiredIds]);
+  }, [mode, modes, open, requiredIds]);
 
   const takesList = selectedMode === "any" || selectedMode === "all";
   const takesExam = selectedMode === "exam";
@@ -159,8 +171,8 @@ export default function UnlockRuleDialog({
               {modes.map((option) => (
                 <RadioGroupPrimitive.Item
                   className={MODE_CARD_CLASS_NAME}
-                  key={option.value}
-                  value={option.value}
+                  key={option}
+                  value={option}
                 >
                   <span
                     aria-hidden="true"
@@ -168,7 +180,7 @@ export default function UnlockRuleDialog({
                   >
                     <RadioGroupPrimitive.Indicator className="size-2 rounded-full bg-primary" />
                   </span>
-                  {t(option.labelKey)}
+                  {t(MODE_LABEL_KEYS[option])}
                 </RadioGroupPrimitive.Item>
               ))}
             </RadioGroupPrimitive.Root>
@@ -200,6 +212,11 @@ export default function UnlockRuleDialog({
               />
             ) : null}
           </div>
+          {error ? (
+            <p className="text-destructive-text text-sm" role="alert">
+              {error}
+            </p>
+          ) : null}
           <DialogFooter>
             <Button onClick={handleCancel} type="button" variant="outline">
               {t("cancelAction")}

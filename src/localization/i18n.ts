@@ -566,10 +566,13 @@ i18n.use(initReactI18next).init({
         unlockModeExam: "After passing an exam",
         unlockModeNone: "Free",
         unlockModePrevious: "After everything before it",
+        unlockModeSources: "After finishing the exam's modules",
         unlockNoCandidatesMessage: "There is nothing else here to wait for.",
         unlockNoExamsMessage:
           "This program has no exam to wait for yet. Create one under Exams, below the modules.",
         unlockRuleAction: "Unlock rule",
+        unlockRuleCycleError:
+          "This rule would keep it locked for good: something it waits for is waiting for it.",
         unlockRuleDescription: "Locked items stay off Today until they unlock.",
         unlockRuleTitle: "When {{title}} unlocks",
         viewActivitiesAction: "View activities",
@@ -1148,10 +1151,13 @@ i18n.use(initReactI18next).init({
         unlockModeExam: "Depois de passar na prova",
         unlockModeNone: "Livre",
         unlockModePrevious: "Depois de tudo o que vem antes",
+        unlockModeSources: "Depois de concluir os módulos da prova",
         unlockNoCandidatesMessage: "Não há mais nada aqui para esperar.",
         unlockNoExamsMessage:
           "Este programa ainda não tem prova para esperar. Crie uma em Provas, abaixo dos módulos.",
         unlockRuleAction: "Regra de desbloqueio",
+        unlockRuleCycleError:
+          "Esta regra deixaria isto trancado para sempre: algo que ele espera está esperando por ele.",
         unlockRuleDescription:
           "O que está bloqueado fica fora de Hoje até liberar.",
         unlockRuleTitle: "Quando {{title}} libera",

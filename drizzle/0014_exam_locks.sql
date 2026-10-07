@@ -1,0 +1,1 @@
+ALTER TABLE `exams` ADD `unlock_mode` text DEFAULT 'none' NOT NULL;

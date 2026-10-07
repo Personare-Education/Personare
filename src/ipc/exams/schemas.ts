@@ -36,3 +36,18 @@ export const saveAttemptInputSchema = z.object({
   startedAt: z.coerce.date(),
   total: z.number().int().min(0),
 });
+
+/** docs/specs/exam-locks.md AC-1 */
+export const EXAM_UNLOCK_MODES = [
+  "none",
+  "sources",
+  "all",
+  "any",
+  "exam",
+] as const;
+
+export const setExamUnlockRuleInputSchema = z.object({
+  id: z.string(),
+  mode: z.enum(EXAM_UNLOCK_MODES),
+  requiredIds: z.array(z.string()),
+});

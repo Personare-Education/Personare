@@ -181,4 +181,29 @@ test("an exam drawn from a quiz unlocks the module that waits for it", async () 
   await expect(
     advancedRow.getByText(`Unlocks after passing ${examName} (70%)`)
   ).toHaveCount(0);
+
+  // A second exam waits for its own modules: Basics' quiz was never done,
+  // so it stays locked and cannot be taken (exam-locks.md AC-3, AC-5).
+  const finalName = `Final exam ${suffix}`;
+  await exams.getByRole("button", { name: "New exam" }).click();
+  const finalForm = page.getByRole("dialog", { name: "New exam" });
+  await finalForm.getByLabel("Title").fill(finalName);
+  await finalForm.getByRole("checkbox", { name: new RegExp(basics) }).check();
+  await finalForm.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const finalRow = exams.getByRole("row", { name: new RegExp(finalName) });
+  await finalRow.getByLabel("More actions").click();
+  await page.getByRole("menuitem", { name: "Unlock rule" }).click();
+  const examRule = page.getByRole("dialog");
+  await examRule
+    .getByRole("radio", { name: "After finishing the exam's modules" })
+    .click();
+  await shot("6-exam-rule");
+  await examRule.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(finalRow.getByText(`Unlocks after ${basics}`)).toBeVisible();
+  await expect(finalRow.getByRole("button", { name: "Take exam" })).toHaveCount(
+    0
+  );
+  await shot("7-locked-exam");
 });

@@ -204,6 +204,7 @@ function ProgramModulesPage() {
     refreshExams();
     refreshLocks();
   }, [refreshExams, refreshLocks]);
+  const [ruleError, setRuleError] = useState<string | null>(null);
   const [ruleSubject, setRuleSubject] = useState<{
     id: string;
     mode: string;
@@ -265,6 +266,7 @@ function ProgramModulesPage() {
 
   const handleUnlockRule = useCallback((module: Module) => {
     getModuleUnlockRule(module.id).then((rule) => {
+      setRuleError(null);
       setRuleSubject({ ...rule, id: module.id, title: module.name });
     });
   }, []);
@@ -280,13 +282,17 @@ function ProgramModulesPage() {
       if (!ruleSubject) {
         return;
       }
-      setModuleUnlockRule(ruleSubject.id, mode, requiredIds).then(() => {
-        setRuleSubject(null);
-        refreshLocks();
-        refreshModules();
-      });
+      // Refused when it would lock something for good
+      // (docs/specs/exam-locks.md AC-4): the dialog stays and says why.
+      setModuleUnlockRule(ruleSubject.id, mode, requiredIds)
+        .then(() => {
+          setRuleSubject(null);
+          refreshLocks();
+          refreshModules();
+        })
+        .catch(() => setRuleError(t("unlockRuleCycleError")));
     },
-    [refreshLocks, refreshModules, ruleSubject]
+    [refreshLocks, refreshModules, ruleSubject, t]
   );
 
   const isEmpty = hasLoaded && modules.length === 0;
@@ -339,6 +345,7 @@ function ProgramModulesPage() {
       ) : null}
       <UnlockRuleDialog
         candidates={ruleCandidates}
+        error={ruleError}
         exams={ruleExams}
         mode={ruleSubject?.mode ?? "none"}
         onOpenChange={handleRuleOpenChange}

@@ -171,6 +171,11 @@ export const exams = sqliteTable("exams", {
   /** Null when the exam has no time limit. */
   timeLimitMinutes: integer("time_limit_minutes"),
   title: text("title").notNull(),
+  /**
+   * none | sources | all | any | exam; the lists live in unlock_requirements
+   * (docs/specs/exam-locks.md).
+   */
+  unlockMode: text("unlock_mode").notNull().default("none"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 

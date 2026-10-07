@@ -7,6 +7,7 @@ import {
   unlockRequirements as unlockRequirementsTable,
 } from "@/database/schema";
 import { assertUnlockExam } from "@/ipc/shared/exams";
+import { assertNoLockCycle } from "@/ipc/shared/locks";
 
 /** How an activity or module unlocks (docs/specs/sequences-and-locks.md). */
 export const UNLOCK_MODES = ["none", "previous", "any", "all"] as const;
@@ -135,6 +136,9 @@ export function setUnlockRule(
       throw new Error("Only a module can wait for an exam");
     }
     assertUnlockExam(db, id, programId, requiredIds);
+  }
+  if (kind === "module") {
+    assertNoLockCycle(db, { id, kind }, mode, requiredIds);
   }
   const takesActivitiesOrModules = mode === "any" || mode === "all";
   let list: string[] = [];

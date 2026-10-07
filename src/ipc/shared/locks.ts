@@ -5,15 +5,20 @@ import {
   modules as modulesTable,
   unlockRequirements as unlockRequirementsTable,
 } from "@/database/schema";
-import { loadExamPasses } from "@/ipc/shared/exams";
-import { computeLocks, type Locks } from "@/utils/unlock";
+import { loadLockExams } from "@/ipc/shared/exams";
+import {
+  computeLocks,
+  findLockCycle,
+  type LockInput,
+  type Locks,
+} from "@/utils/unlock";
 
 /**
  * Every lock, from the live rows (docs/specs/sequences-and-locks.md §2):
  * deleted modules and activities are left out, so rules pointing at them
  * stop counting.
  */
-export function loadLocks(db: DatabaseClient): Locks {
+export function loadLockInput(db: DatabaseClient): LockInput {
   const modules = db
     .select({
       id: modulesTable.id,
@@ -45,10 +50,49 @@ export function loadLocks(db: DatabaseClient): Locks {
     .from(unlockRequirementsTable)
     .all();
 
-  return computeLocks({
-    activities,
-    exams: loadExamPasses(db),
-    modules,
-    requirements,
-  });
+  return { activities, exams: loadLockExams(db), modules, requirements };
+}
+
+export function loadLocks(db: DatabaseClient): Locks {
+  return computeLocks(loadLockInput(db));
+}
+
+/**
+ * Refuses a module's or an exam's new rule when it would make it wait for
+ * itself, locked for good (docs/specs/exam-locks.md AC-4).
+ */
+export function assertNoLockCycle(
+  db: DatabaseClient,
+  subject: { id: string; kind: "exam" | "module" },
+  mode: string,
+  requiredIds: string[]
+): void {
+  const input = loadLockInput(db);
+  const requirements = [
+    ...input.requirements.filter((row) => row.subjectId !== subject.id),
+    ...requiredIds.map((requiredId) => ({
+      requiredId,
+      subjectId: subject.id,
+      subjectKind: subject.kind,
+    })),
+  ];
+  const proposed: LockInput =
+    subject.kind === "module"
+      ? {
+          ...input,
+          modules: input.modules.map((row) =>
+            row.id === subject.id ? { ...row, unlockMode: mode } : row
+          ),
+          requirements,
+        }
+      : {
+          ...input,
+          exams: input.exams?.map((row) =>
+            row.id === subject.id ? { ...row, unlockMode: mode } : row
+          ),
+          requirements,
+        };
+  if (findLockCycle(proposed, subject.id)) {
+    throw new Error("This rule would keep it locked for good");
+  }
 }

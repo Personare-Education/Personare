@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   createExam,
   type ExamFields,
+  getExamUnlockRule,
   listEligibleExamModules,
   listExams,
   restoreExam,
+  setExamUnlockRule,
   softDeleteExam,
   updateExam,
 } from "@/actions/exams";
@@ -17,7 +19,15 @@ import ExamRunnerDialog from "@/components/exam-runner-dialog";
 import ExamsDataTable, { type Exam } from "@/components/exams-data-table";
 import QuizQuestionManagerDialog from "@/components/quiz-question-manager-dialog";
 import { Button } from "@/components/ui/button";
+import UnlockRuleDialog from "@/components/unlock-rule-dialog";
+import { useLocks } from "@/hooks/use-locks";
+import { describeLock } from "@/utils/lock-text";
 import { showUndoToast } from "@/utils/undo-toast";
+import type { UnlockMode } from "@/utils/unlock";
+
+/** An exam's modes (docs/specs/exam-locks.md AC-5). */
+const EXAM_RULE_MODES: UnlockMode[] = ["none", "sources", "all", "any", "exam"];
+const NO_IDS: string[] = [];
 
 interface ExamsSectionProps {
   moduleNames: Record<string, string | undefined>;
@@ -36,7 +46,7 @@ export default function ExamsSection({
   onExamsChange,
   programId,
 }: ExamsSectionProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const headingId = useId();
   const [exams, setExams] = useState<Exam[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -59,10 +69,101 @@ export default function ExamsSection({
     refreshExams();
   }, [refreshExams]);
 
+  // Locked exams, in words (docs/specs/exam-locks.md AC-3).
+  const { locks, refresh: refreshLocks } = useLocks();
   const changed = useCallback(() => {
     refreshExams();
+    refreshLocks();
     onExamsChange?.();
-  }, [onExamsChange, refreshExams]);
+  }, [onExamsChange, refreshExams, refreshLocks]);
+
+  const lockLabelById = useMemo(() => {
+    const names = {
+      ...moduleNames,
+      ...Object.fromEntries(exams.map((exam) => [exam.id, exam.title])),
+    };
+    const examScores = Object.fromEntries(
+      exams.map((exam) => [exam.id, exam.passingScore])
+    );
+    return Object.fromEntries(
+      exams.flatMap((exam) => {
+        const lock = locks.exams?.[exam.id];
+        return lock
+          ? [
+              [
+                exam.id,
+                describeLock(
+                  t,
+                  i18n.language,
+                  lock,
+                  // A "sources" rule reads like an all-of list.
+                  lock.missing[0]?.kind === "exam" ? "exam" : "all",
+                  names,
+                  examScores
+                ),
+              ],
+            ]
+          : [];
+      })
+    ) as Record<string, string | undefined>;
+  }, [exams, i18n.language, locks, moduleNames, t]);
+
+  const [ruleSubject, setRuleSubject] = useState<{
+    id: string;
+    mode: string;
+    requiredIds: string[];
+    title: string;
+  } | null>(null);
+  const [ruleError, setRuleError] = useState<string | null>(null);
+
+  const ruleCandidates = useMemo(
+    () => [
+      {
+        items: Object.entries(moduleNames).map(([id, name]) => ({
+          id,
+          title: name ?? "",
+        })),
+        label: null,
+      },
+    ],
+    [moduleNames]
+  );
+  const ruleExams = useMemo(
+    () =>
+      exams
+        .filter((exam) => exam.id !== ruleSubject?.id)
+        .map((exam) => ({ id: exam.id, title: exam.title })),
+    [exams, ruleSubject]
+  );
+
+  const handleUnlockRule = useCallback((exam: Exam) => {
+    getExamUnlockRule(exam.id).then((rule) => {
+      setRuleError(null);
+      setRuleSubject({ ...rule, id: exam.id, title: exam.title });
+    });
+  }, []);
+
+  const handleRuleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setRuleSubject(null);
+    }
+  }, []);
+
+  // Refused when it would lock something for good (AC-4): the dialog stays.
+  const handleRuleSave = useCallback(
+    (mode: UnlockMode, requiredIds: string[]) => {
+      if (!ruleSubject || mode === "previous") {
+        return;
+      }
+      setExamUnlockRule(ruleSubject.id, mode, requiredIds)
+        .then(() => {
+          setRuleSubject(null);
+          changed();
+        })
+        .catch(() => setRuleError(t("unlockRuleCycleError")));
+    },
+    [changed, ruleSubject, t]
+  );
 
   // The modules (and their quiz questions) as they are when the form opens.
   const openForm = useCallback(
@@ -190,12 +291,14 @@ export default function ExamsSection({
       {exams.length > 0 ? (
         <ExamsDataTable
           exams={exams}
+          lockLabelById={lockLabelById}
           moduleNames={moduleNames}
           onEdit={openForm}
           onEditQuestions={setQuestionsExam}
           onHistory={setHistoryExam}
           onRequestDelete={handleRequestDelete}
           onTake={setRunningExam}
+          onUnlockRule={handleUnlockRule}
         />
       ) : null}
       <ExamFormDialog
@@ -206,6 +309,18 @@ export default function ExamsSection({
         onSubmit={handleFormSubmit}
         open={isFormOpen}
         standaloneCount={formStandaloneCount}
+      />
+      <UnlockRuleDialog
+        candidates={ruleCandidates}
+        error={ruleError}
+        exams={ruleExams}
+        mode={ruleSubject?.mode ?? "none"}
+        modes={EXAM_RULE_MODES}
+        onOpenChange={handleRuleOpenChange}
+        onSave={handleRuleSave}
+        open={ruleSubject !== null}
+        requiredIds={ruleSubject?.requiredIds ?? NO_IDS}
+        subjectTitle={ruleSubject?.title ?? ""}
       />
       <ExamRunnerDialog
         exam={runningExam}
