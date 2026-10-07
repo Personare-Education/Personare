@@ -103,10 +103,13 @@ describe("ExamsSection (exams.md §2)", () => {
     expect(listExams).toHaveBeenCalledWith("p1");
   });
 
-  it("creates an exam, then opens its standalone questions (AC-4)", async () => {
+  it("saves a new exam and closes, without opening its standalone questions (AC-3)", async () => {
     const user = userEvent.setup();
     vi.mocked(listExams).mockResolvedValue([]);
-    vi.mocked(createExam).mockResolvedValue({ ...EXAM, title: "Final" });
+    vi.mocked(createExam).mockResolvedValue({
+      ...EXAM,
+      title: "Final",
+    } as never);
     renderSection();
 
     await user.click(
@@ -132,11 +135,62 @@ describe("ExamsSection (exams.md §2)", () => {
       })
     );
     await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    );
+    expect(listExamQuestionsWithOptions).not.toHaveBeenCalled();
+  });
+
+  it("on a new exam, Standalone questions saves it first, then opens them over the form (AC-4)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listExams).mockResolvedValue([]);
+    vi.mocked(createExam).mockResolvedValue({
+      ...EXAM,
+      title: "Final",
+    } as never);
+    renderSection();
+
+    await user.click(
+      await screen.findByRole("button", { name: i18n.t("createExamAction") })
+    );
+    const form = await screen.findByRole("dialog");
+    await user.type(
+      within(form).getByLabelText(i18n.t("examTitleLabel")),
+      "Final"
+    );
+    await user.click(within(form).getByRole("checkbox", { name: ANATOMY }));
+    await user.click(
+      within(form).getByRole("button", { name: i18n.t("examQuestionsAction") })
+    );
+
+    await waitFor(() => expect(createExam).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
       expect(listExamQuestionsWithOptions).toHaveBeenCalledWith("e1")
     );
     expect(
       await screen.findByRole("dialog", { name: "Final" })
     ).toBeInTheDocument();
+  });
+
+  it("on a saved exam, Standalone questions just opens them (AC-4)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listExams).mockResolvedValue([EXAM] as never);
+    renderSection();
+
+    const row = await screen.findByRole("row", { name: EXAM_1 });
+    // The context menu has every action, whichever is the row's main one.
+    await user.pointer({ keys: "[MouseRight]", target: row });
+    await user.click(
+      await screen.findByRole("menuitem", { name: i18n.t("editExamAction") })
+    );
+    const form = await screen.findByRole("dialog");
+    await user.click(
+      within(form).getByRole("button", { name: i18n.t("examQuestionsAction") })
+    );
+
+    await waitFor(() =>
+      expect(listExamQuestionsWithOptions).toHaveBeenCalledWith("e1")
+    );
+    expect(createExam).not.toHaveBeenCalled();
   });
 
   it("deletes an exam with undo", async () => {

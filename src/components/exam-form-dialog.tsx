@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { ListChecks } from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ExamFields } from "@/actions/exams";
 import type { Exam } from "@/components/exams-data-table";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumberInput } from "@/components/ui/number-input";
 import { cn } from "@/utils/tailwind";
 
 /** A module the exam can draw from, with its quiz questions. */
@@ -24,9 +26,17 @@ export interface ExamModuleOption {
 interface ExamFormDialogProps {
   exam: Exam | null;
   modules: ExamModuleOption[];
+  /**
+   * Opens the exam's standalone questions, apart from saving
+   * (docs/specs/exams.md §2 AC-4); a new exam is saved first, with these
+   * fields, since the questions belong to it.
+   */
+  onEditQuestions: (fields: ExamFields) => void;
   onOpenChange: (open: boolean) => void;
   onSubmit: (fields: ExamFields) => void;
   open: boolean;
+  /** How many standalone questions the exam has now, for its button. */
+  standaloneCount?: number;
 }
 
 const DEFAULT_QUESTION_COUNT = 10;
@@ -46,15 +56,18 @@ function wholeNumber(value: string): number | null {
 export default function ExamFormDialog({
   exam,
   modules,
+  onEditQuestions,
   onOpenChange,
   onSubmit,
   open,
+  standaloneCount = exam?.standaloneCount ?? 0,
 }: ExamFormDialogProps) {
   const { t } = useTranslation();
   const titleId = useId();
   const countId = useId();
   const timeId = useId();
   const timeHintId = useId();
+  const questionsHintId = useId();
   const scoreId = useId();
   const modulesLabelId = useId();
   const [title, setTitle] = useState("");
@@ -102,42 +115,41 @@ export default function ExamFormDialog({
     );
   }, []);
 
+  // The form as it stands, once it can be saved.
+  const fields = useMemo<ExamFields | null>(
+    () =>
+      canSave && questionCount !== null && score !== null
+        ? {
+            // In the program's order, whatever order they were checked in.
+            moduleIds: chosen.map((module) => module.id),
+            passingScore: score,
+            questionCount,
+            timeLimitMinutes: minutes,
+            title: title.trim(),
+          }
+        : null,
+    [canSave, chosen, minutes, questionCount, score, title]
+  );
+
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!canSave || questionCount === null || score === null) {
-        return;
+      if (fields) {
+        onSubmit(fields);
       }
-      onSubmit({
-        // In the program's order, whatever order they were checked in.
-        moduleIds: chosen.map((module) => module.id),
-        passingScore: score,
-        questionCount,
-        timeLimitMinutes: minutes,
-        title: title.trim(),
-      });
     },
-    [canSave, chosen, minutes, onSubmit, questionCount, score, title]
+    [fields, onSubmit]
   );
+
+  const handleQuestionsClick = useCallback(() => {
+    if (fields) {
+      onEditQuestions(fields);
+    }
+  }, [fields, onEditQuestions]);
 
   const handleTitleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) =>
       setTitle(event.target.value),
-    []
-  );
-  const handleCountChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setCount(event.target.value),
-    []
-  );
-  const handleTimeChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setTimeLimit(event.target.value),
-    []
-  );
-  const handleScoreChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setPassingScore(event.target.value),
     []
   );
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -182,11 +194,10 @@ export default function ExamFormDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <Label htmlFor={countId}>{t("examQuestionCountLabel")}</Label>
-                <Input
+                <NumberInput
                   id={countId}
-                  inputMode="numeric"
-                  onChange={handleCountChange}
-                  type="text"
+                  min={1}
+                  onValueChange={setCount}
                   value={count}
                 />
                 <p className="text-muted-foreground text-xs">
@@ -195,22 +206,21 @@ export default function ExamFormDialog({
               </div>
               <div className="flex flex-col gap-1">
                 <Label htmlFor={scoreId}>{t("examPassingScoreLabel")}</Label>
-                <Input
+                <NumberInput
                   id={scoreId}
-                  inputMode="numeric"
-                  onChange={handleScoreChange}
-                  type="text"
+                  max={100}
+                  min={1}
+                  onValueChange={setPassingScore}
                   value={passingScore}
                 />
               </div>
               <div className="flex flex-col gap-1">
                 <Label htmlFor={timeId}>{t("examTimeLimitLabel")}</Label>
-                <Input
+                <NumberInput
                   aria-describedby={timeHintId}
                   id={timeId}
-                  inputMode="numeric"
-                  onChange={handleTimeChange}
-                  type="text"
+                  min={1}
+                  onValueChange={setTimeLimit}
                   value={timeLimit}
                 />
                 <p className="text-muted-foreground text-xs" id={timeHintId}>
@@ -219,13 +229,38 @@ export default function ExamFormDialog({
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={handleCancel} type="button" variant="outline">
-              {t("cancelAction")}
-            </Button>
-            <Button disabled={!canSave} type="submit">
-              {t("saveAction")}
-            </Button>
+          {/* Standalone questions apart from Save, on the left. */}
+          <DialogFooter className="sm:items-center sm:justify-between">
+            <div className="flex flex-col items-start gap-1">
+              <Button
+                aria-describedby={exam ? undefined : questionsHintId}
+                disabled={fields === null}
+                onClick={handleQuestionsClick}
+                type="button"
+                variant="outline"
+              >
+                <ListChecks />
+                {exam && standaloneCount > 0
+                  ? t("examQuestionsCountAction", { count: standaloneCount })
+                  : t("examQuestionsAction")}
+              </Button>
+              {exam ? null : (
+                <p
+                  className="text-muted-foreground text-xs"
+                  id={questionsHintId}
+                >
+                  {t("examQuestionsSavesFirstHint")}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button onClick={handleCancel} type="button" variant="outline">
+                {t("cancelAction")}
+              </Button>
+              <Button disabled={!canSave} type="submit">
+                {t("saveAction")}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

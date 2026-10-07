@@ -22,18 +22,34 @@ const MODULES = [
   { id: "c", name: "Bioética", questionCount: 0 },
 ];
 
+const SAVED_EXAM: Exam = {
+  availableCount: 10,
+  bestScore: null,
+  id: "e1",
+  lastAttemptAt: null,
+  moduleIds: ["b"],
+  passed: false,
+  passingScore: 80,
+  questionCount: 5,
+  standaloneCount: 3,
+  timeLimitMinutes: 20,
+  title: "Prova 1",
+};
+
 function renderForm(exam: Exam | null = null) {
   const onSubmit = vi.fn();
+  const onEditQuestions = vi.fn();
   render(
     <ExamFormDialog
       exam={exam}
       modules={MODULES}
+      onEditQuestions={onEditQuestions}
       onOpenChange={vi.fn()}
       onSubmit={onSubmit}
       open
     />
   );
-  return { onSubmit };
+  return { onEditQuestions, onSubmit };
 }
 
 describe("ExamFormDialog (exams.md §2 AC-3)", () => {
@@ -161,5 +177,55 @@ describe("ExamFormDialog (exams.md §2 AC-3)", () => {
       expect(input).toHaveAttribute("type", "text");
       expect(input).toHaveAttribute("inputmode", "numeric");
     }
+  });
+
+  describe("standalone questions, apart from Save (§2 AC-4)", () => {
+    it("opens a saved exam's standalone questions, with how many it has", async () => {
+      const user = userEvent.setup();
+      const { onEditQuestions, onSubmit } = renderForm(SAVED_EXAM);
+
+      await user.click(
+        screen.getByRole("button", { name: "Perguntas avulsas (3)" })
+      );
+
+      expect(onEditQuestions).toHaveBeenCalledWith(
+        expect.objectContaining({ moduleIds: ["b"], title: "Prova 1" })
+      );
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it("on a new exam, needs the form filled, and says the exam is saved first", async () => {
+      const user = userEvent.setup();
+      const { onEditQuestions } = renderForm();
+      const questions = screen.getByRole("button", {
+        name: i18n.t("examQuestionsAction"),
+      });
+
+      expect(questions).toBeDisabled();
+      expect(
+        screen.getByText(i18n.t("examQuestionsSavesFirstHint"))
+      ).toBeInTheDocument();
+      await user.type(screen.getByLabelText(i18n.t("examTitleLabel")), "P1");
+      await user.click(screen.getByRole("checkbox", { name: ANATOMY }));
+      await user.click(questions);
+
+      expect(onEditQuestions).toHaveBeenCalledWith(
+        expect.objectContaining({ moduleIds: ["a"], title: "P1" })
+      );
+    });
+  });
+
+  it("steps the numbers with the app's own − and +", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    const [countMinus] = screen.getAllByRole("button", {
+      name: i18n.t("decreaseAction"),
+    });
+    await user.click(countMinus);
+
+    expect(screen.getByLabelText(i18n.t("examQuestionCountLabel"))).toHaveValue(
+      "9"
+    );
   });
 });

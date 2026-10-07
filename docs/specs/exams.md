@@ -89,9 +89,12 @@ Cada PR tem a sua seção de critérios abaixo.
 3. O formulário da prova tem: título; a lista de módulos com caixas de marcar, cada um com quantas perguntas
    de quiz tem; os sem quiz aparecem desligados e dizem "Sem quiz"; **Quantas perguntas sortear** (com
    quantas há nos módulos marcados); **Tempo limite (minutos)**, opcional; **Nota para passar (%)**, 70 por
-   padrão. Salvar exige título e ao menos um módulo.
-4. **Perguntas avulsas** abre o gerenciador de perguntas de sempre, para as perguntas da prova. Criar uma
-   prova abre as perguntas avulsas logo depois, como criar um quiz abre as perguntas.
+   padrão. Os números têm **−** e **+** do próprio app (e as setas do teclado), não as setas do navegador.
+   Salvar exige título e ao menos um módulo, e só salva: não abre mais nada.
+4. **Perguntas avulsas** é um botão à parte no formulário (com quantas a prova tem) e também uma ação da
+   tabela; abre o gerenciador de perguntas de sempre, para as perguntas da prova. Numa prova nova, o botão
+   pede o formulário preenchido e salva a prova antes ("A prova é salva antes, para as perguntas ficarem
+   nela"); fechadas as perguntas, o formulário continua aberto, editando a prova.
 
 ## 3. Fazer a prova — critérios de aceite
 

@@ -41,6 +41,7 @@ export default function ExamsSection({
   const [modules, setModules] = useState<ExamModuleOption[]>([]);
   const [formExam, setFormExam] = useState<Exam | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formStandaloneCount, setFormStandaloneCount] = useState(0);
   const [questionsExam, setQuestionsExam] = useState<Exam | null>(null);
 
   const refreshExams = useCallback(() => {
@@ -65,6 +66,7 @@ export default function ExamsSection({
       listEligibleExamModules(programId).then((loaded) => {
         setModules(loaded);
         setFormExam(exam);
+        setFormStandaloneCount(exam?.standaloneCount ?? 0);
         setIsFormOpen(true);
       });
     },
@@ -75,28 +77,60 @@ export default function ExamsSection({
 
   const handleFormSubmit = useCallback(
     (fields: ExamFields) => {
-      if (formExam) {
-        updateExam(formExam.id, fields).then(() => {
-          setIsFormOpen(false);
-          changed();
-        });
-        return;
-      }
-      // A new exam goes on to its standalone questions (AC-4).
-      createExam(programId, fields).then((created) => {
+      const save = formExam
+        ? updateExam(formExam.id, fields)
+        : createExam(programId, fields);
+      save.then(() => {
         setIsFormOpen(false);
         changed();
-        setQuestionsExam({
+      });
+    },
+    [changed, formExam, programId]
+  );
+
+  // Standalone questions, apart from Save (docs/specs/exams.md §2 AC-4):
+  // a new exam is saved first, and the form goes on editing it.
+  const handleEditQuestionsFromForm = useCallback(
+    (fields: ExamFields) => {
+      if (formExam) {
+        setQuestionsExam(formExam);
+        return;
+      }
+      createExam(programId, fields).then((created) => {
+        const exam: Exam = {
           ...created,
+          availableCount: 0,
           bestScore: null,
           lastAttemptAt: null,
           moduleIds: fields.moduleIds,
           passed: false,
           standaloneCount: 0,
-        });
+        };
+        changed();
+        setFormExam(exam);
+        setQuestionsExam(exam);
       });
     },
     [changed, formExam, programId]
+  );
+
+  // The form's button shows how many standalone questions there are now.
+  const handleQuestionsOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        return;
+      }
+      const editedId = questionsExam?.id;
+      setQuestionsExam(null);
+      listExams(programId).then((loaded) => {
+        setExams(loaded);
+        const fresh = loaded.find((exam) => exam.id === editedId);
+        if (fresh) {
+          setFormStandaloneCount(fresh.standaloneCount);
+        }
+      });
+    },
+    [programId, questionsExam]
   );
 
   // Brings back what was just deleted (docs/specs/safety-net.md AC-2).
@@ -120,16 +154,6 @@ export default function ExamsSection({
       });
     },
     [changed, t, undoDelete]
-  );
-
-  const handleQuestionsOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        setQuestionsExam(null);
-        refreshExams();
-      }
-    },
-    [refreshExams]
   );
 
   return (
@@ -159,9 +183,11 @@ export default function ExamsSection({
       <ExamFormDialog
         exam={formExam}
         modules={modules}
+        onEditQuestions={handleEditQuestionsFromForm}
         onOpenChange={setIsFormOpen}
         onSubmit={handleFormSubmit}
         open={isFormOpen}
+        standaloneCount={formStandaloneCount}
       />
       <QuizQuestionManagerDialog
         activity={null}

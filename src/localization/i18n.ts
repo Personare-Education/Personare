@@ -156,6 +156,7 @@ i18n.use(initReactI18next).init({
         createModuleTitle: "New module",
         createProgramAction: "New program",
         createProgramTitle: "New program",
+        decreaseAction: "Decrease",
         deleteAccountAction: "Delete my account",
         deleteAccountConfirmAction: "Delete my account permanently",
         deleteAccountWarningMessage:
@@ -224,6 +225,9 @@ i18n.use(initReactI18next).init({
         examQuestionCountLabel: "How many questions to draw",
         examQuestionsAction: "Standalone questions",
         examQuestionsColumnLabel: "Questions",
+        examQuestionsCountAction: "Standalone questions ({{count}})",
+        examQuestionsSavesFirstHint:
+          "The exam is saved first, so the questions belong to it.",
         examSourcesColumnLabel: "Questions from",
         examStandaloneCount_one: "+ {{count}} standalone",
         examStandaloneCount_other: "+ {{count}} standalone",
@@ -263,6 +267,7 @@ i18n.use(initReactI18next).init({
         goBackAction: "Back",
         imageAttachedLabel: "Image attached",
         importBackupAction: "Import backup",
+        increaseAction: "Increase",
         keyEnterLabel: "Enter",
         keySpaceLabel: "Space",
         languageLabel: "Language",
@@ -696,6 +701,7 @@ i18n.use(initReactI18next).init({
         createModuleTitle: "Novo módulo",
         createProgramAction: "Novo programa",
         createProgramTitle: "Novo programa",
+        decreaseAction: "Diminuir",
         deleteAccountAction: "Excluir minha conta",
         deleteAccountConfirmAction: "Excluir minha conta permanentemente",
         deleteAccountWarningMessage:
@@ -765,6 +771,9 @@ i18n.use(initReactI18next).init({
         examQuestionCountLabel: "Quantas perguntas sortear",
         examQuestionsAction: "Perguntas avulsas",
         examQuestionsColumnLabel: "Perguntas",
+        examQuestionsCountAction: "Perguntas avulsas ({{count}})",
+        examQuestionsSavesFirstHint:
+          "A prova é salva antes, para as perguntas ficarem nela.",
         examSourcesColumnLabel: "Perguntas de",
         examStandaloneCount_one: "+ {{count}} avulsa",
         examStandaloneCount_other: "+ {{count}} avulsas",
@@ -804,6 +813,7 @@ i18n.use(initReactI18next).init({
         goBackAction: "Voltar",
         imageAttachedLabel: "Imagem anexada",
         importBackupAction: "Importar backup",
+        increaseAction: "Aumentar",
         keyEnterLabel: "Enter",
         keySpaceLabel: "Espaço",
         languageLabel: "Idioma",
