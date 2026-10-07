@@ -124,12 +124,21 @@ test("an exam drawn from a quiz unlocks the module that waits for it", async () 
   ).toBeDisabled();
   await form.getByRole("checkbox", { name: new RegExp(basics) }).check();
   await form.getByLabel("How many questions to draw").fill("2");
+  await form.getByRole("button", { name: "Decrease" }).first().click();
+  await expect(form.getByLabel("How many questions to draw")).toHaveValue("1");
+  await form.getByRole("button", { name: "Increase" }).first().click();
   await shot("1-exam-form");
-  await form.getByRole("button", { name: "Save" }).click();
 
-  // Creating it goes on to its standalone questions (§2 AC-4).
+  // Standalone questions sit apart from Save; on a new exam they save it
+  // first, and the form goes on editing it (§2 AC-4).
+  await form.getByRole("button", { name: "Standalone questions" }).click();
   await expect(page.getByRole("dialog", { name: examName })).toBeVisible();
   await page.keyboard.press("Escape");
+  const editForm = page.getByRole("dialog", { name: "Edit exam" });
+  await expect(editForm).toBeVisible();
+  // Save only saves.
+  await editForm.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   const examRow = exams.getByRole("row", { name: new RegExp(examName) });
   await expect(examRow.getByText("Not taken yet")).toBeVisible();
 
