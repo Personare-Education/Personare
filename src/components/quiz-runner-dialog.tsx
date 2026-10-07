@@ -1,6 +1,7 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { awardQuizPoints } from "@/actions/points";
 import { listQuizQuestionsWithOptions } from "@/actions/quiz";
 import {
   armPendingActivityRating,
@@ -461,7 +462,12 @@ export default function QuizRunnerDialog({
       return;
     }
 
-    setResult(calculateQuizScore(questions, answers));
+    const score = calculateQuizScore(questions, answers);
+    setResult(score);
+    // Its right answers earn points (docs/specs/gamification.md §3).
+    if (activity) {
+      awardQuizPoints(activity.id, score.correct).catch(() => undefined);
+    }
     // Taken but not rated yet: asked again on launch until it is (AC-5).
     if (activity && !asStep) {
       armPendingActivityRating(activity.id);

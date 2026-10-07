@@ -15,6 +15,19 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   ser criado, o que já existe e fica de fora, e cada trecho com problema, com a linha. Se já existe um
   programa com o mesmo nome, o arquivo o **completa** em vez de criar outro (e um módulo que já existia
   mantém a regra dele). Depois de importar, **Desfazer** tira tudo o que o import criou.
+- **Sequência acesa:** a primeira revisão do dia acende a chama da barra lateral (ela cresce, brilha e solta
+  faíscas) e avisa "Sequência acesa: 6 dias". Com "reduzir movimento", só a cor muda.
+- **Sons de acerto e erro:** no quiz, uma resposta certa toca duas notas subindo e uma errada, duas notas
+  descendo, mais graves e baixas. Na prova, silêncio até entregar; no resultado, um som por acerto enquanto a
+  nota sobe e um acorde de vitória se você passou. Os sons são gerados no app. **Configurações → Geral →
+  Sons** liga e desliga.
+- **Pontos e ranking:** revisões (mais no prazo), acertos em quiz e provas dão pontos, com um bônus que
+  cresce com a sequência; revisões que vencem sem ser feitas e uma sequência quebrada tiram pontos. Os pontos
+  sobem uma escada de **7 tiers com 3 divisões** (Ferro, Bronze, Prata, Ouro, Platina, Esmeralda, Diamante) e
+  o topo, **Magnum**: 22 degraus. O emblema fica na barra lateral, com o progresso até o próximo; clicar abre
+  o **Ranking**, com a escada, os últimos pontos e as temporadas passadas. Subir avisa (um tier novo
+  comemora com som); descer avisa sem som. As temporadas são trimestrais, e cada uma começa 6 degraus abaixo
+  de onde a anterior terminou.
 
 - **Provas:** na página do programa, abaixo dos módulos, a seção **Provas**. Uma prova sorteia perguntas dos
   quizzes dos módulos escolhidos (só entram módulos com quiz), um total que você define, dividido por igual

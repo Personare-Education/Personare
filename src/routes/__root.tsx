@@ -1,5 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { settlePoints } from "@/actions/points";
 import { getPendingActivityRating } from "@/actions/review";
 import { getSettings } from "@/actions/settings";
 import ActivityDifficultyDialog from "@/components/activity-difficulty-dialog";
@@ -22,6 +23,27 @@ function Root() {
     getSettings()
       .then((settings) => setSoundsEnabled(settings.soundsEnabled))
       .catch(() => undefined);
+  }, []);
+
+  // What the days away cost, once on launch and again as each day turns
+  // (docs/specs/gamification.md §3 AC-2).
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const settleAndWait = () => {
+      settlePoints().catch(() => undefined);
+      const now = new Date();
+      const midnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0,
+        0,
+        5
+      );
+      timeout = setTimeout(settleAndWait, midnight.getTime() - now.getTime());
+    };
+    settleAndWait();
+    return () => clearTimeout(timeout);
   }, []);
 
   const handleOpenChange = useCallback((open: boolean) => {

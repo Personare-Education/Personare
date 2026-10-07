@@ -141,6 +141,22 @@ test("finishing a quiz rates it right on its result", async () => {
       path: `${process.env.EXAMS_SCREENSHOTS}/streak-ignite.png`,
     });
   }
+
+  // The rating's points put a fresh profile on Iron III (§3, §4).
+  await page.getByRole("button", { name: "Rank: Iron III" }).click();
+  const ranking = page.getByRole("dialog", { name: "Ranking" });
+  await expect(ranking.getByText("Review", { exact: true })).toBeVisible();
+  await expect(
+    ranking.getByRole("listitem").filter({ hasText: "Magnum" })
+  ).toBeVisible();
+  if (process.env.EXAMS_SCREENSHOTS) {
+    // Past the dialog's fade-in.
+    await page.waitForTimeout(500);
+    await page.screenshot({
+      path: `${process.env.EXAMS_SCREENSHOTS}/ranking.png`,
+    });
+  }
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(quizRow.getByText("Struggled")).toBeVisible();
 });
