@@ -3,8 +3,9 @@ import type { RankTier } from "@/utils/ranks";
 
 /**
  * A rank's emblem, drawn here (docs/specs/gamification.md §4): each tier
- * its own shape and color, and a frame that grows with the division --
- * III plain, II with brackets, I fully framed. Magnum is a crown in rays.
+ * its own shape and color, growing with the division -- III the plain
+ * shape, II with a star, I with the star and a double outline. Magnum is a
+ * crown.
  */
 
 /** Each tier's color, the same in light and dark. */
@@ -41,12 +42,14 @@ function TierShape({
   fill,
   scale = 1,
   stroke,
+  strokeOpacity,
   strokeWidth,
   tier,
 }: {
   fill: string;
   scale?: number;
   stroke?: string;
+  strokeOpacity?: number;
   strokeWidth?: number;
   tier: RankTier;
 }) {
@@ -54,6 +57,7 @@ function TierShape({
     fill,
     stroke,
     strokeLinejoin: "round" as const,
+    strokeOpacity,
     strokeWidth,
     transform: `translate(${CENTER} ${CENTER}) scale(${scale}) translate(${-CENTER} ${-CENTER})`,
     vectorEffect: "non-scaling-stroke" as const,
@@ -82,12 +86,6 @@ function TierShape({
       );
   }
 }
-
-/** Magnum's twelve rays, evenly around it. */
-const RAY_ANGLES = Array.from(
-  { length: 12 },
-  (_, index) => (index / 12) * Math.PI * 2
-);
 
 const SPARKLE =
   "M32 25 L33.6 30.4 L39 32 L33.6 33.6 L32 39 L30.4 33.6 L25 32 L30.4 30.4 Z";
@@ -132,42 +130,25 @@ export default function RankEmblem({
         </linearGradient>
       </defs>
 
-      {/* Magnum's rays. */}
-      {isMagnum
-        ? RAY_ANGLES.map((angle) => (
-            <line
-              key={angle}
-              stroke={light}
-              strokeLinecap="round"
-              strokeOpacity={0.7}
-              strokeWidth={2}
-              x1={CENTER + 25 * Math.cos(angle)}
-              x2={CENTER + 30 * Math.cos(angle)}
-              y1={CENTER + 25 * Math.sin(angle)}
-              y2={CENTER + 30 * Math.sin(angle)}
-            />
-          ))
-        : null}
-
-      {/* Division I: a full frame of the tier's shape, and a spark on top. */}
+      {/* Division I: a double outline of the tier's shape, a solid one and
+          a finer, fainter one around it. */}
       {division === 1 ? (
-        <>
+        <g data-part="frame">
           <TierShape
             fill="none"
-            scale={1.32}
+            scale={1.26}
             stroke={light}
             strokeWidth={2.5}
             tier={tier}
           />
-          <path d="M32 0.5 L34 4 L32 7.5 L30 4 Z" fill={light} />
-        </>
-      ) : null}
-
-      {/* Division II: brackets on both sides. */}
-      {division === 2 ? (
-        <g fill="none" stroke={light} strokeLinecap="round" strokeWidth={2.5}>
-          <path d="M9 18 Q3 32 9 46" />
-          <path d="M55 18 Q61 32 55 46" />
+          <TierShape
+            fill="none"
+            scale={1.44}
+            stroke={light}
+            strokeOpacity={0.55}
+            strokeWidth={1.25}
+            tier={tier}
+          />
         </g>
       ) : null}
 
@@ -188,9 +169,11 @@ export default function RankEmblem({
       </g>
       {isMagnum ? (
         <rect fill={dark} height={5} rx={1.5} width={34} x={15} y={45} />
-      ) : (
-        <path d={SPARKLE} fill="white" opacity={0.85} />
-      )}
+      ) : null}
+      {/* The star marks divisions II and I; III is the plain shape. */}
+      {division === 1 || division === 2 ? (
+        <path d={SPARKLE} data-part="sparkle" fill="white" opacity={0.85} />
+      ) : null}
     </svg>
   );
 }
