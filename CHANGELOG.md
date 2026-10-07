@@ -8,6 +8,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Importar um programa inteiro:** em Programas, **Importar programa** gera um prompt para você colar no
+  ChatGPT, no Claude ou no Gemini (com o tema e o que mais quiser pedir) e lê de volta o arquivo `.md` que a
+  IA devolve, solto ou colado. O arquivo traz módulos (com ou sem regra de desbloqueio), quizzes,
+  flashcards, links, sequências e provas (com ou sem regra). Antes de importar, uma prévia mostra o que vai
+  ser criado, o que já existe e fica de fora, e cada trecho com problema, com a linha. Se já existe um
+  programa com o mesmo nome, o arquivo o **completa** em vez de criar outro (e um módulo que já existia
+  mantém a regra dele). Depois de importar, **Desfazer** tira tudo o que o import criou.
+
 - **Provas:** na página do programa, abaixo dos módulos, a seção **Provas**. Uma prova sorteia perguntas dos
   quizzes dos módulos escolhidos (só entram módulos com quiz), um total que você define, dividido por igual
   entre eles, além das **perguntas avulsas**, que são só da prova. Cada tentativa sorteia de novo.

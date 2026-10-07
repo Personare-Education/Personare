@@ -17,42 +17,18 @@ import {
   useFileUpload,
 } from "@/hooks/reui/use-file-upload";
 import {
+  AI_PROVIDERS,
+  type AiProvider,
+  promptLanguage,
+} from "@/utils/ai-providers";
+import {
   buildQuizPrompt,
   type ParsedQuiz,
   type ParsedQuizQuestion,
   parseQuizMarkdown,
   type QuizMarkdownErrorReason,
-  type QuizPromptLanguage,
 } from "@/utils/quiz-markdown";
 import { cn } from "@/utils/tailwind";
-
-type AiProvider = "chatgpt" | "claude" | "gemini";
-
-interface AiProviderConfig {
-  label: string;
-  prefill: boolean;
-  /** Link to open; `prefill` means the prompt travels in the URL. */
-  url: (prompt: string) => string;
-}
-
-const AI_PROVIDERS: Record<AiProvider, AiProviderConfig> = {
-  chatgpt: {
-    label: "ChatGPT",
-    prefill: true,
-    url: (prompt) => `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`,
-  },
-  claude: {
-    label: "Claude",
-    prefill: true,
-    url: (prompt) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`,
-  },
-  // Gemini has no URL parameter to prefill a prompt; the clipboard carries it.
-  gemini: {
-    label: "Gemini",
-    prefill: false,
-    url: () => "https://gemini.google.com/app",
-  },
-};
 
 const ERROR_TRANSLATION_KEYS: Record<QuizMarkdownErrorReason, string> = {
   missingText: "quizImportErrorMissingText",
@@ -64,10 +40,6 @@ const ERROR_TRANSLATION_KEYS: Record<QuizMarkdownErrorReason, string> = {
 interface QuizImportPanelProps {
   /** Valid questions from the last file, or null while there is none. */
   onParsedChange: (questions: ParsedQuizQuestion[] | null) => void;
-}
-
-function promptLanguage(language: string): QuizPromptLanguage {
-  return language.startsWith("pt") ? "pt-BR" : "en";
 }
 
 /**

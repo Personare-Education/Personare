@@ -295,6 +295,8 @@ i18n.use(initReactI18next).init({
         goBackAction: "Back",
         imageAttachedLabel: "Image attached",
         importBackupAction: "Import backup",
+        importProgramAction: "Import program",
+        importProgramTitle: "Import a program",
         increaseAction: "Increase",
         keyEnterLabel: "Enter",
         keySpaceLabel: "Space",
@@ -350,6 +352,75 @@ i18n.use(initReactI18next).init({
         programDueCount: "{{count}} to review",
         programHeatmapEmptyMessage: "Your reviews will color this in.",
         programIconLabel: "Icon",
+        programImportAction: "Import",
+        programImportAlreadyThere: "already there, left out",
+        programImportBackToPromptAction: "Back to the prompt",
+        programImportCards_one: "{{count}} card",
+        programImportCards_other: "{{count}} cards",
+        programImportCompletes:
+          "Completes the program “{{name}}”, which already exists.",
+        programImportCreates: "Creates the program “{{name}}”.",
+        programImportDroppedModules:
+          "Left out of the exam (not found, or no quiz): {{names}}",
+        programImportExamNoModules: "Left out: none of its modules has a quiz.",
+        programImportExisting: "already exists",
+        programImportExtraLabel: "Anything else for the AI? (optional)",
+        programImportExtraPlaceholder:
+          "e.g. 5 modules, focused on exercises, with a final exam",
+        programImportedMessage: "Program “{{name}}” imported",
+        programImportHaveFileAction: "I have the file",
+        programImportMissingProgram:
+          "This file has no “# Program:” line at the top, so there is nothing to import. Ask the AI again with the prompt.",
+        programImportNew: "new",
+        programImportPasteLabel: "Or paste the text",
+        programImportPreviewAction: "See preview",
+        programImportPromptCopied:
+          "Prompt copied. Send it in {{ai}}, save the answer as a .md file and come back with “I have the file”.",
+        programImportPromptCopiedPaste:
+          "Prompt copied. Paste it in {{ai}}, save the answer as a .md file and come back with “I have the file”.",
+        programImportRuleAny: "any of {{names}}",
+        programImportRuleExam: "passing {{name}}",
+        programImportRuleExamDrawsFromModule:
+          "Ignored: that exam draws from this module, which would never unlock.",
+        programImportRuleKeptExisting:
+          "It already existed, so it keeps its own rule.",
+        programImportRuleLabel: "Unlocks after:",
+        programImportRulePrevious: "the modules before it",
+        programImportRuleSources: "the exam's modules",
+        programImportRuleUnknownName:
+          "Ignored: it names something that does not exist.",
+        programImportRuleWouldLockForGood:
+          "Ignored: it would keep it locked for good.",
+        programImportStep_file: "Drop the AI's file here, or paste its text.",
+        programImportStep_preview:
+          "Check what will be created before importing.",
+        programImportStep_prompt:
+          "Ask an AI for the program: say what it is about, send the prompt and save the answer as a .md file.",
+        programImportSteps_one: "{{count}} step",
+        programImportSteps_other: "{{count}} steps",
+        programImportTopicLabel: "What is the program about?",
+        programImportTopicPlaceholder: "e.g. Data structures for interviews",
+        programImportWarningEmptyActivity:
+          "Line {{line}}: an activity with nothing valid in it.",
+        programImportWarningInvalidRule:
+          "Line {{line}}: an unlock rule that does not fit here; it stays free.",
+        programImportWarningMissingBack:
+          "Line {{line}}: a flashcard without its back.",
+        programImportWarningMissingText:
+          "Line {{line}}: a question without its statement.",
+        programImportWarningMissingUrl:
+          "Line {{line}}: a link without its address.",
+        programImportWarningMultipleCorrectOptions:
+          "Line {{line}}: a question with more than one right answer.",
+        programImportWarningNoCorrectOption:
+          "Line {{line}}: a question with no right answer.",
+        programImportWarningNotInSequence:
+          "Line {{line}}: a sequence only takes links and quizzes.",
+        programImportWarningsTitle: "Left out of the file",
+        programImportWarningTooFewOptions:
+          "Line {{line}}: a question with fewer than two answers.",
+        programImportWarningUnknownBlock:
+          "Line {{line}}: a block the app does not know.",
         programNameLabel: "Name",
         programsEmptyMessage:
           "A program is an area of study: a course, a subject, an exam. Its modules go inside it, and in them, what you study.",
@@ -879,6 +950,8 @@ i18n.use(initReactI18next).init({
         goBackAction: "Voltar",
         imageAttachedLabel: "Imagem anexada",
         importBackupAction: "Importar backup",
+        importProgramAction: "Importar programa",
+        importProgramTitle: "Importar programa",
         increaseAction: "Aumentar",
         keyEnterLabel: "Enter",
         keySpaceLabel: "Espaço",
@@ -934,6 +1007,74 @@ i18n.use(initReactI18next).init({
         programDueCount: "{{count}} para revisar",
         programHeatmapEmptyMessage: "Suas revisões vão colorir este quadro.",
         programIconLabel: "Ícone",
+        programImportAction: "Importar",
+        programImportAlreadyThere: "já existe, fica de fora",
+        programImportBackToPromptAction: "Voltar ao prompt",
+        programImportCards_one: "{{count}} card",
+        programImportCards_other: "{{count}} cards",
+        programImportCompletes:
+          "Completa o programa “{{name}}”, que já existe.",
+        programImportCreates: "Cria o programa “{{name}}”.",
+        programImportDroppedModules:
+          "Fora da prova (não encontrados ou sem quiz): {{names}}",
+        programImportExamNoModules:
+          "Fica de fora: nenhum módulo dela tem quiz.",
+        programImportExisting: "já existe",
+        programImportExtraLabel: "Algo mais para a IA? (opcional)",
+        programImportExtraPlaceholder:
+          "ex.: 5 módulos, foco em exercícios, com uma prova final",
+        programImportedMessage: "Programa “{{name}}” importado",
+        programImportHaveFileAction: "Já tenho o arquivo",
+        programImportMissingProgram:
+          "Este arquivo não tem a linha “# Programa:” no topo, então não há o que importar. Peça de novo à IA com o prompt.",
+        programImportNew: "novo",
+        programImportPasteLabel: "Ou cole o texto",
+        programImportPreviewAction: "Ver prévia",
+        programImportPromptCopied:
+          "Prompt copiado. Envie no {{ai}}, salve a resposta como arquivo .md e volte em “Já tenho o arquivo”.",
+        programImportPromptCopiedPaste:
+          "Prompt copiado. Cole no {{ai}}, salve a resposta como arquivo .md e volte em “Já tenho o arquivo”.",
+        programImportRuleAny: "qualquer um de {{names}}",
+        programImportRuleExam: "passar em {{name}}",
+        programImportRuleExamDrawsFromModule:
+          "Ignorada: essa prova tira perguntas deste módulo, que nunca liberaria.",
+        programImportRuleKeptExisting: "Já existia, então fica a regra dele.",
+        programImportRuleLabel: "Libera depois de:",
+        programImportRulePrevious: "os módulos anteriores",
+        programImportRuleSources: "os módulos da prova",
+        programImportRuleUnknownName: "Ignorada: cita algo que não existe.",
+        programImportRuleWouldLockForGood:
+          "Ignorada: deixaria trancado para sempre.",
+        programImportStep_file:
+          "Solte aqui o arquivo da IA, ou cole o texto dela.",
+        programImportStep_preview:
+          "Confira o que será criado antes de importar.",
+        programImportStep_prompt:
+          "Peça o programa a uma IA: diga do que se trata, envie o prompt e salve a resposta como arquivo .md.",
+        programImportSteps_one: "{{count}} etapa",
+        programImportSteps_other: "{{count}} etapas",
+        programImportTopicLabel: "Sobre o que é o programa?",
+        programImportTopicPlaceholder:
+          "ex.: Estruturas de dados para entrevistas",
+        programImportWarningEmptyActivity:
+          "Linha {{line}}: atividade sem nada válido.",
+        programImportWarningInvalidRule:
+          "Linha {{line}}: regra de desbloqueio que não cabe aqui; fica livre.",
+        programImportWarningMissingBack: "Linha {{line}}: flashcard sem verso.",
+        programImportWarningMissingText:
+          "Linha {{line}}: pergunta sem enunciado.",
+        programImportWarningMissingUrl: "Linha {{line}}: link sem endereço.",
+        programImportWarningMultipleCorrectOptions:
+          "Linha {{line}}: pergunta com mais de uma alternativa certa.",
+        programImportWarningNoCorrectOption:
+          "Linha {{line}}: pergunta sem alternativa certa.",
+        programImportWarningNotInSequence:
+          "Linha {{line}}: uma sequência só aceita links e quizzes.",
+        programImportWarningsTitle: "Ficou de fora do arquivo",
+        programImportWarningTooFewOptions:
+          "Linha {{line}}: pergunta com menos de duas alternativas.",
+        programImportWarningUnknownBlock:
+          "Linha {{line}}: bloco que o app não conhece.",
         programNameLabel: "Nome",
         programsEmptyMessage:
           "Um programa é uma área de estudo: um curso, uma disciplina, um concurso. Dentro dele ficam os módulos, e neles, o que você estuda.",

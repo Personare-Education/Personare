@@ -7,12 +7,27 @@ interface OnboardingEmptyStateProps {
   onCreate: () => void;
 }
 
-/** No programs yet: what a program is (docs/specs/onboard-empty-states.md AC-3). */
-export function ProgramsEmptyState({ onCreate }: OnboardingEmptyStateProps) {
+/**
+ * No programs yet: what a program is (docs/specs/onboard-empty-states.md
+ * AC-3), and importing a whole one (docs/specs/program-import.md §3 AC-1).
+ */
+export function ProgramsEmptyState({
+  onCreate,
+  onImport,
+}: OnboardingEmptyStateProps & { onImport?: () => void }) {
   const { t } = useTranslation();
   return (
     <EmptyState
-      action={<Button onClick={onCreate}>{t("createProgramAction")}</Button>}
+      action={
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onCreate}>{t("createProgramAction")}</Button>
+          {onImport ? (
+            <Button onClick={onImport} variant="outline">
+              {t("importProgramAction")}
+            </Button>
+          ) : null}
+        </div>
+      }
       icon={BookOpen}
       message={t("programsEmptyMessage")}
       title={t("programsEmptyTitle")}
