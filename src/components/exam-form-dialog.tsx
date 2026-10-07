@@ -185,9 +185,8 @@ export default function ExamFormDialog({
                 <Input
                   id={countId}
                   inputMode="numeric"
-                  min={1}
                   onChange={handleCountChange}
-                  type="number"
+                  type="text"
                   value={count}
                 />
                 <p className="text-muted-foreground text-xs">
@@ -199,10 +198,8 @@ export default function ExamFormDialog({
                 <Input
                   id={scoreId}
                   inputMode="numeric"
-                  max={100}
-                  min={1}
                   onChange={handleScoreChange}
-                  type="number"
+                  type="text"
                   value={passingScore}
                 />
               </div>
@@ -212,9 +209,8 @@ export default function ExamFormDialog({
                   aria-describedby={timeHintId}
                   id={timeId}
                   inputMode="numeric"
-                  min={1}
                   onChange={handleTimeChange}
-                  type="number"
+                  type="text"
                   value={timeLimit}
                 />
                 <p className="text-muted-foreground text-xs" id={timeHintId}>

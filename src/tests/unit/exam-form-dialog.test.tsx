@@ -139,11 +139,27 @@ describe("ExamFormDialog (exams.md §2 AC-3)", () => {
     expect(screen.getByRole("checkbox", { name: PHYSIOLOGY })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: ANATOMY })).not.toBeChecked();
     expect(screen.getByLabelText(i18n.t("examQuestionCountLabel"))).toHaveValue(
-      5
+      "5"
     );
-    expect(screen.getByLabelText(i18n.t("examTimeLimitLabel"))).toHaveValue(20);
+    expect(screen.getByLabelText(i18n.t("examTimeLimitLabel"))).toHaveValue(
+      "20"
+    );
     expect(screen.getByLabelText(i18n.t("examPassingScoreLabel"))).toHaveValue(
-      80
+      "80"
     );
+  });
+
+  it("has number fields without the browser's arrows, in the app's style", () => {
+    renderForm();
+
+    for (const key of [
+      "examQuestionCountLabel",
+      "examPassingScoreLabel",
+      "examTimeLimitLabel",
+    ]) {
+      const input = screen.getByLabelText(i18n.t(key));
+      expect(input).toHaveAttribute("type", "text");
+      expect(input).toHaveAttribute("inputmode", "numeric");
+    }
   });
 });
