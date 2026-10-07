@@ -34,6 +34,7 @@ import {
   QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
 import { useDialogShake } from "@/hooks/use-dialog-shake";
+import { notifyPointsChanged } from "@/utils/points-events";
 import {
   calculateQuizScore,
   type QuizAnswers,
@@ -271,7 +272,11 @@ export default function ExamRunnerDialog({
           total: score.total,
         })
       )
-        .then(() => onSubmitted?.())
+        .then(() => {
+          // The attempt's points are in (docs/specs/gamification.md §3).
+          notifyPointsChanged();
+          onSubmitted?.();
+        })
         .catch(() => undefined);
     },
     [answers, exam, limitMs, onSubmitted, questions, startedAt]

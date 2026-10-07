@@ -298,6 +298,33 @@
   animation-delay: calc(var(--spark) * 25ms + 120ms);
 }
 
+/* A new tier (docs/specs/gamification.md §4 AC-3): the badge pops twice. */
+@keyframes rank-celebrate {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.6) rotate(-12deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(8deg);
+  }
+  70% {
+    transform: scale(1.4) rotate(0deg);
+  }
+}
+
+.rank-celebrate {
+  animation: rank-celebrate 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-celebrate {
+    animation: none;
+  }
+}
+
 /* Reduced motion: the flame only changes color (§1 AC-3). */
 @media (prefers-reduced-motion: reduce) {
   .streak-ignite {

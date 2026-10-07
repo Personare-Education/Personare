@@ -22,6 +22,9 @@ import type { Activity } from "@/components/activities-data-table";
 vi.mock("@/actions/quiz", () => ({
   listQuizQuestionsWithOptions: vi.fn(),
 }));
+vi.mock("@/actions/points", () => ({
+  awardQuizPoints: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("@/utils/sounds", () => ({
   playCorrect: vi.fn(),
   playWrong: vi.fn(),
@@ -38,6 +41,7 @@ vi.mock("@/actions/review", () => ({
 
 const { listQuizQuestionsWithOptions } = await import("@/actions/quiz");
 const { playCorrect, playWrong } = await import("@/utils/sounds");
+const { awardQuizPoints } = await import("@/actions/points");
 const { getAttachmentImageDataUrl } = await import("@/actions/attachments");
 const {
   armPendingActivityRating,
@@ -816,5 +820,24 @@ describe("QuizRunnerDialog as a sequence step", () => {
     await answer(user, 1);
     expect(playCorrect).toHaveBeenCalledTimes(1);
     expect(playWrong).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends its right answers to the points when it ends (gamification.md §3)", async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms),
+    });
+    renderRunner();
+    await screen.findByText(RUNNER_QUESTIONS[0].text);
+
+    await answer(user, 1);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("nextQuestionAction") })
+    );
+    await answer(user, 0);
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("finishQuizAction") })
+    );
+
+    expect(awardQuizPoints).toHaveBeenCalledWith(QUIZ_ACTIVITY.id, 1);
   });
 });
