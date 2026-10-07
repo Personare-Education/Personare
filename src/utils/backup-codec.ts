@@ -6,6 +6,7 @@ import type {
   exams,
   flashcards,
   modules,
+  pointEvents,
   programs,
   quizOptions,
   quizQuestions,
@@ -23,6 +24,8 @@ export interface BackupData {
   exportedAt: Date;
   flashcards: (typeof flashcards.$inferSelect)[];
   modules: (typeof modules.$inferSelect)[];
+  /** Missing in backups made before points (docs/specs/gamification.md §3 AC-4). */
+  pointEvents?: (typeof pointEvents.$inferSelect)[];
   programs: (typeof programs.$inferSelect)[];
   quizOptions: (typeof quizOptions.$inferSelect)[];
   quizQuestions: (typeof quizQuestions.$inferSelect)[];

@@ -207,6 +207,29 @@ export const examAttempts = sqliteTable("exam_attempts", {
 });
 
 /**
+ * The points ledger (docs/specs/gamification.md §3): every gain and loss,
+ * with the season it counts for. The season's points are the sum; nothing
+ * is worked out again from the reviews, so new rules never change what
+ * was already earned.
+ */
+export const pointEvents = sqliteTable("point_events", {
+  /** Negative for a loss. */
+  amount: integer("amount").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  /** The local day it counts for, "2026-10-07". */
+  dayKey: text("day_key").notNull(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  /** review | quiz | exam | overdue | streakBreak | season */
+  kind: text("kind").notNull(),
+  /** "2026-Q4". */
+  season: text("season").notNull(),
+  /** What it is about, so a gain or loss is never counted twice. */
+  sourceId: text("source_id"),
+});
+
+/**
  * ReviewItem is the first-class entity scheduled by FSRS, decoupled from the
  * content hierarchy: it references only the Flashcard or Activity that
  * schedules it, not the Module/Program above it. It preserves its review

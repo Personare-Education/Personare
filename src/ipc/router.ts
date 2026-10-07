@@ -11,6 +11,7 @@ import { driveBackup } from "./drive-backup";
 import { exams } from "./exams";
 import { flashcards } from "./flashcards";
 import { modules } from "./modules";
+import { points } from "./points";
 import { programs } from "./programs";
 import { quiz } from "./quiz";
 import { review } from "./review";
@@ -33,6 +34,7 @@ export const router = {
   exams,
   flashcards,
   modules,
+  points,
   programs,
   quiz,
   review,
