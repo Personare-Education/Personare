@@ -61,8 +61,28 @@ export function softDeleteQuizOption(id: string) {
   return ipc.client.quiz.softDeleteOption({ id });
 }
 
-export async function listQuizQuestionsWithOptions(activityId: string) {
-  const questions = await ipc.client.quiz.listQuestions({ activityId });
+/** A standalone question of an exam (docs/specs/exams.md §1 AC-6). */
+export function createExamQuestion(
+  examId: string,
+  text: string,
+  imagePath: string | null = null
+) {
+  return ipc.client.quiz.createQuestion({ examId, imagePath, text });
+}
+
+export function listQuizQuestionsWithOptions(activityId: string) {
+  return listQuestionsWithOptions({ activityId });
+}
+
+/** An exam's standalone questions, as a quiz's (docs/specs/exams.md §2 AC-4). */
+export function listExamQuestionsWithOptions(examId: string) {
+  return listQuestionsWithOptions({ examId });
+}
+
+async function listQuestionsWithOptions(
+  owner: { activityId: string } | { examId: string }
+) {
+  const questions = await ipc.client.quiz.listQuestions(owner);
 
   return Promise.all(
     questions.map(async (question) => {

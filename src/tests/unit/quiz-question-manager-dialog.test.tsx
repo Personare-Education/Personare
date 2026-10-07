@@ -28,8 +28,10 @@ import type { Activity } from "@/components/activities-data-table";
  */
 
 vi.mock("@/actions/quiz", () => ({
+  createExamQuestion: vi.fn(),
   createQuizOption: vi.fn(),
   createQuizQuestion: vi.fn(),
+  listExamQuestionsWithOptions: vi.fn(),
   listQuizQuestionsWithOptions: vi.fn(),
   restoreQuizQuestion: vi.fn().mockResolvedValue(undefined),
   softDeleteQuizOption: vi.fn(),
@@ -51,8 +53,10 @@ vi.mock("@/actions/attachments", () => ({
 }));
 
 const {
+  createExamQuestion,
   createQuizOption,
   createQuizQuestion,
+  listExamQuestionsWithOptions,
   listQuizQuestionsWithOptions,
   softDeleteQuizOption,
   restoreQuizQuestion,
@@ -359,5 +363,66 @@ describe("QuizQuestionManagerDialog (Issue #14)", () => {
     await waitFor(() =>
       expect(restoreQuizQuestion).toHaveBeenCalledWith(EXISTING_QUESTIONS[0].id)
     );
+  });
+});
+
+describe("QuizQuestionManagerDialog for an exam's standalone questions (exams.md §2 AC-4)", () => {
+  const EXAM = { id: "e1", title: "Prova 1" };
+
+  it("lists the exam's questions, not a quiz's", async () => {
+    vi.mocked(listExamQuestionsWithOptions).mockResolvedValue([
+      EXISTING_QUESTIONS[0],
+    ]);
+    render(
+      <QuizQuestionManagerDialog
+        activity={null}
+        exam={EXAM}
+        onOpenChange={vi.fn()}
+        open
+      />
+    );
+
+    expect(
+      await screen.findByText(EXISTING_QUESTIONS[0].text)
+    ).toBeInTheDocument();
+    expect(screen.getByText("Prova 1")).toBeInTheDocument();
+    expect(listExamQuestionsWithOptions).toHaveBeenCalledWith("e1");
+    expect(listQuizQuestionsWithOptions).not.toHaveBeenCalled();
+  });
+
+  it("creates new questions on the exam", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listExamQuestionsWithOptions).mockResolvedValue([]);
+    vi.mocked(createExamQuestion).mockResolvedValue({ id: "new" } as never);
+    render(
+      <QuizQuestionManagerDialog
+        activity={null}
+        exam={EXAM}
+        onOpenChange={vi.fn()}
+        open
+        startWithNewItem
+      />
+    );
+
+    await send(user, "Quantos ossos?");
+    await send(user, "206");
+    await send(user, "300");
+    await user.click(
+      screen.getAllByRole("button", {
+        name: i18n.t("markCorrectQuizOptionAction"),
+      })[0]
+    );
+    await user.click(
+      screen.getByRole("button", { name: i18n.t("concludeQuizEditingAction") })
+    );
+
+    await waitFor(() =>
+      expect(createExamQuestion).toHaveBeenCalledWith(
+        "e1",
+        "Quantos ossos?",
+        null
+      )
+    );
+    expect(createQuizQuestion).not.toHaveBeenCalled();
   });
 });

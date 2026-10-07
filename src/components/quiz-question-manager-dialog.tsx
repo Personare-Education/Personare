@@ -2,8 +2,10 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  createExamQuestion,
   createQuizOption,
   createQuizQuestion,
+  listExamQuestionsWithOptions,
   listQuizQuestionsWithOptions,
   restoreQuizQuestion,
   softDeleteQuizOption,
@@ -91,6 +93,11 @@ function QuizQuestionRow({
 
 interface QuizQuestionManagerDialogProps {
   activity: Activity | null;
+  /**
+   * In place of a quiz: an exam, for its standalone questions
+   * (docs/specs/exams.md §2 AC-4).
+   */
+  exam?: { id: string; title: string } | null;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   /**
@@ -103,6 +110,7 @@ interface QuizQuestionManagerDialogProps {
 
 export default function QuizQuestionManagerDialog({
   activity,
+  exam = null,
   onOpenChange,
   open,
   startWithNewItem = false,
@@ -114,12 +122,12 @@ export default function QuizQuestionManagerDialog({
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const refreshQuestions = useCallback(() => {
-    if (!activity) {
-      return;
+    if (activity) {
+      listQuizQuestionsWithOptions(activity.id).then(setQuestions);
+    } else if (exam) {
+      listExamQuestionsWithOptions(exam.id).then(setQuestions);
     }
-
-    listQuizQuestionsWithOptions(activity.id).then(setQuestions);
-  }, [activity]);
+  }, [activity, exam]);
 
   useEffect(() => {
     refreshQuestions();
@@ -187,7 +195,7 @@ export default function QuizQuestionManagerDialog({
       imagePath: string | null,
       options: QuizQuestionSubmitOption[]
     ) => {
-      if (!activity) {
+      if (!(activity || exam)) {
         return;
       }
 
@@ -201,7 +209,9 @@ export default function QuizQuestionManagerDialog({
         await Promise.all(staleOptionIds.map((id) => softDeleteQuizOption(id)));
         savedQuestionId = questionId;
       } else {
-        const created = await createQuizQuestion(activity.id, text, imagePath);
+        const created = activity
+          ? await createQuizQuestion(activity.id, text, imagePath)
+          : await createExamQuestion(exam?.id ?? "", text, imagePath);
         savedQuestionId = created.id;
       }
 
@@ -220,7 +230,7 @@ export default function QuizQuestionManagerDialog({
 
       refreshQuestions();
     },
-    [activity, formQuestion, refreshQuestions]
+    [activity, exam, formQuestion, refreshQuestions]
   );
 
   return (
@@ -229,7 +239,7 @@ export default function QuizQuestionManagerDialog({
         {/* Capped to the window: the question list scrolls, the header stays put. */}
         <DialogContent className="max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{activity?.title}</DialogTitle>
+            <DialogTitle>{activity?.title ?? exam?.title}</DialogTitle>
           </DialogHeader>
           <div className="flex justify-end">
             <Button onClick={handleAddClick}>

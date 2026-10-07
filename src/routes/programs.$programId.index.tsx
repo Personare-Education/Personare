@@ -20,6 +20,7 @@ import {
 } from "@/actions/modules";
 import { listPrograms } from "@/actions/programs";
 import DeleteModuleDialog from "@/components/delete-module-dialog";
+import ExamsSection from "@/components/exams-section";
 import ModuleFormDialog from "@/components/module-form-dialog";
 import ModulesDataTable, { type Module } from "@/components/modules-data-table";
 import { ModulesEmptyState } from "@/components/onboarding-empty-states";
@@ -257,6 +258,10 @@ function ProgramModulesPage() {
   );
 
   const isEmpty = hasLoaded && modules.length === 0;
+  const moduleNames = useMemo(
+    () => Object.fromEntries(modules.map((row) => [row.id, row.name])),
+    [modules]
+  );
 
   return (
     <div className="flex h-full flex-col gap-4 p-2">
@@ -292,6 +297,14 @@ function ProgramModulesPage() {
           onUnlockRule={handleUnlockRule}
         />
       )}
+      {/* Below the modules, which it draws from (docs/specs/exams.md §2 AC-1). */}
+      {modules.length > 0 ? (
+        <ExamsSection
+          moduleNames={moduleNames}
+          onExamsChange={refreshLocks}
+          programId={programId}
+        />
+      ) : null}
       <UnlockRuleDialog
         candidates={ruleCandidates}
         mode={ruleSubject?.mode ?? "none"}
