@@ -28,7 +28,6 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   o **Ranking**, com a escada, os últimos pontos e as temporadas passadas. Subir avisa (um tier novo
   comemora com som); descer avisa sem som. As temporadas são trimestrais, e cada uma começa 6 degraus abaixo
   de onde a anterior terminou.
-
 - **Provas:** na página do programa, abaixo dos módulos, a seção **Provas**. Uma prova sorteia perguntas dos
   quizzes dos módulos escolhidos (só entram módulos com quiz), um total que você define, dividido por igual
   entre eles, além das **perguntas avulsas**, que são só da prova. Cada tentativa sorteia de novo.

@@ -408,7 +408,7 @@ function AllRanks({ summary }: { summary: PointsSummary }) {
                 aria-label={rankName(step)}
                 className={cn(
                   "flex items-center justify-center rounded-lg py-1.5",
-                  isCurrent && "bg-muted ring-2",
+                  isCurrent && "bg-muted ring-2 ring-inset",
                   !reached && "opacity-55"
                 )}
                 data-reached={reached}
