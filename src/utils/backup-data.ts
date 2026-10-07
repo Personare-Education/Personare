@@ -7,6 +7,7 @@ import {
   exams,
   flashcards,
   modules,
+  pointEvents,
   programs,
   quizOptions,
   quizQuestions,
@@ -27,6 +28,7 @@ export function collectBackupData(
     exams: db.select().from(exams).all(),
     flashcards: db.select().from(flashcards).all(),
     modules: db.select().from(modules).all(),
+    pointEvents: db.select().from(pointEvents).all(),
     programs: db.select().from(programs).all(),
     quizOptions: db.select().from(quizOptions).all(),
     quizQuestions: db.select().from(quizQuestions).all(),
@@ -57,6 +59,9 @@ function restoreLaterTables(
   if (data.unlockRequirements && data.unlockRequirements.length > 0) {
     tx.insert(unlockRequirements).values(data.unlockRequirements).run();
   }
+  if (data.pointEvents && data.pointEvents.length > 0) {
+    tx.insert(pointEvents).values(data.pointEvents).run();
+  }
 }
 
 export function restoreBackupData(
@@ -65,6 +70,7 @@ export function restoreBackupData(
 ): void {
   db.transaction((tx) => {
     tx.delete(unlockRequirements).run();
+    tx.delete(pointEvents).run();
     tx.delete(reviewItems).run();
     tx.delete(quizOptions).run();
     tx.delete(quizQuestions).run();

@@ -13,8 +13,8 @@
     a um leaderboard global vêm numa etapa seguinte, com o Study-Butler-Backend.
   - **Temporadas e perda:** temporadas com reset suave alguns degraus abaixo; perde pontos quando revisões
     vencem sem ser feitas ou quando a ofensiva quebra.
-- **Propostas desta spec (o usuário pode ajustar):** os valores de pontos, os limites de cada divisão, a
-  duração da temporada e os nomes dos tiers, marcados com *(proposta)*.
+- **Valores aprovados pelo usuário (2026-10-07):** os pontos, os limites de cada divisão e a temporada abaixo
+  (marcados *(proposta)* quando foram escritos).
 - **Metodologia:** Spec Driven Development + TDD, em PRs empilhados a partir de `main`, CHANGELOG no último.
 
 ## 1. Ofensiva acesa
@@ -75,13 +75,13 @@
 
 ## 4. Tiers, divisões e temporadas
 
-- **7 tiers × 3 divisões (III → II → I) = 21 degraus**, mais **Mestre** (um degrau, sem divisão, por pontos) =
+- **7 tiers × 3 divisões (III → II → I) = 21 degraus**, mais **Magnum** (um degrau, sem divisão, por pontos) =
   **22 degraus locais**. Na etapa global, entram **Grão-Mestre** e **Desafiante** (os melhores do leaderboard),
   totalizando **24**.
-- **Nomes** *(proposta)*: Ferro, Bronze, Prata, Ouro, Platina, Esmeralda, Diamante, Mestre.
+- **Nomes:** Ferro, Bronze, Prata, Ouro, Platina, Esmeralda, Diamante e **Magnum** (nome do usuário, 2026-10-07).
 - **Tamanho de cada divisão** *(proposta)*, crescente: Ferro 100, Bronze 150, Prata 200, Ouro 300,
-  Platina 400, Esmeralda 500, Diamante 700. Mestre a partir de **7.050** pontos. Quem faz ~25 revisões por
-  dia no prazo, com ofensiva, ganha ~400 por dia: Mestre em cerca de 3 semanas de constância.
+  Platina 400, Esmeralda 500, Diamante 700. Magnum a partir de **7.050** pontos. Quem faz ~25 revisões por
+  dia no prazo, com ofensiva, ganha ~400 por dia: Magnum em cerca de 3 semanas de constância.
 - **Temporada** *(proposta)*: **trimestral** (jan–mar, abr–jun, jul–set, out–dez). Ao começar uma nova, os
   pontos voltam ao início do degrau **6 abaixo** do final (dois tiers), no mínimo Ferro III. A temporada
   anterior fica no histórico com o degrau alcançado.

@@ -16,6 +16,7 @@ import {
   saveExamUnlockRule,
 } from "@/ipc/shared/exams";
 import { loadLocks } from "@/ipc/shared/locks";
+import { recordExamPoints } from "@/ipc/shared/points";
 import { drawExamQuestions } from "@/utils/exam-draw";
 import {
   createExamInputSchema,
@@ -341,13 +342,31 @@ export const draw = os.input(examRefInputSchema).handler(({ input }) => {
 
 export const saveAttempt = os
   .input(saveAttemptInputSchema)
-  .handler(({ input }) =>
-    requireDatabaseClient()
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    const attempt = db
       .insert(examAttemptsTable)
       .values(input)
       .returning()
-      .get()
-  );
+      .get();
+    // The day's first attempt earns points (docs/specs/gamification.md §3).
+    const exam = db
+      .select({ passingScore: examsTable.passingScore })
+      .from(examsTable)
+      .where(eq(examsTable.id, input.examId))
+      .get();
+    if (exam) {
+      recordExamPoints(db, {
+        correct: input.correct,
+        examId: input.examId,
+        now: new Date(),
+        passed:
+          input.total > 0 &&
+          input.correct * 100 >= exam.passingScore * input.total,
+      });
+    }
+    return attempt;
+  });
 
 /** Newest first (docs/specs/exams.md §1 AC-9). */
 export const listAttempts = os

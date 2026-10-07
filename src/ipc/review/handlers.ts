@@ -1,6 +1,5 @@
 import { os } from "@orpc/server";
-import { and, asc, eq, isNull, lte, sql } from "drizzle-orm";
-import { unionAll } from "drizzle-orm/sqlite-core";
+import { and, asc, eq, isNull, lte } from "drizzle-orm";
 import type { Grade, StateType } from "ts-fsrs";
 import { Rating } from "ts-fsrs";
 import type { DatabaseClient } from "@/database/client";
@@ -14,6 +13,8 @@ import {
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
 import { loadLocks } from "@/ipc/shared/locks";
+import { recordReviewPoints } from "@/ipc/shared/points";
+import { loadActivityCounts, loadSchedule } from "@/ipc/shared/schedule";
 import {
   activityOfFlashcard,
   markActivityCompleted,
@@ -25,7 +26,6 @@ import {
   previewRatings as previewFsrsRatings,
   type ReviewItemRow,
 } from "@/utils/fsrs";
-import { lockedActivityIds } from "@/utils/unlock";
 import {
   activityIdInputSchema,
   ensureReviewItemsInputSchema,
@@ -192,78 +192,9 @@ export const listDue = os.input(listDueInputSchema).handler(({ input }) => {
  * there, so it's a literal NULL). Both branches join the same way from
  * Activity up to Module/Program.
  */
-export const listSchedule = os.handler(() => {
-  const db = requireDatabaseClient();
-
-  const viaFlashcard = db
-    .select({
-      activityFilePath: activitiesTable.filePath,
-      activityId: activitiesTable.id,
-      activityTitle: activitiesTable.title,
-      activityType: activitiesTable.type,
-      activityUrl: activitiesTable.url,
-      dueDate: reviewItemsTable.dueDate,
-      // Widened to string | null (flashcards.front is actually never null
-      // here) only so this branch's shape matches viaActivity's for
-      // unionAll -- Activity-scoped rows have no Flashcard to project a
-      // front from.
-      front: sql<string | null>`${flashcardsTable.front}`,
-      id: reviewItemsTable.id,
-      moduleId: modulesTable.id,
-      moduleName: modulesTable.name,
-      // The "Today" screen paints each item in its program's color
-      // (docs/specs/today-review-queue.md).
-      programColor: programsTable.color,
-      programId: programsTable.id,
-      programName: programsTable.name,
-    })
-    .from(reviewItemsTable)
-    .innerJoin(
-      flashcardsTable,
-      eq(reviewItemsTable.flashcardId, flashcardsTable.id)
-    )
-    .innerJoin(
-      activitiesTable,
-      eq(flashcardsTable.activityId, activitiesTable.id)
-    )
-    .innerJoin(modulesTable, eq(activitiesTable.moduleId, modulesTable.id))
-    .innerJoin(programsTable, eq(modulesTable.programId, programsTable.id))
-    .where(isNull(flashcardsTable.deletedAt));
-
-  const viaActivity = db
-    .select({
-      activityFilePath: activitiesTable.filePath,
-      activityId: activitiesTable.id,
-      activityTitle: activitiesTable.title,
-      activityType: activitiesTable.type,
-      activityUrl: activitiesTable.url,
-      dueDate: reviewItemsTable.dueDate,
-      front: sql<string | null>`NULL`,
-      id: reviewItemsTable.id,
-      moduleId: modulesTable.id,
-      moduleName: modulesTable.name,
-      // The "Today" screen paints each item in its program's color
-      // (docs/specs/today-review-queue.md).
-      programColor: programsTable.color,
-      programId: programsTable.id,
-      programName: programsTable.name,
-    })
-    .from(reviewItemsTable)
-    .innerJoin(
-      activitiesTable,
-      eq(reviewItemsTable.activityId, activitiesTable.id)
-    )
-    .innerJoin(modulesTable, eq(activitiesTable.moduleId, modulesTable.id))
-    .innerJoin(programsTable, eq(modulesTable.programId, programsTable.id))
-    .where(isNull(activitiesTable.deletedAt));
-
-  // What is locked waits until it unlocks: off Today, the badges and the
-  // calendar (docs/specs/sequences-and-locks.md §2 AC-6).
-  const locked = lockedActivityIds(loadLocks(db));
-  return unionAll(viaFlashcard, viaActivity)
-    .all()
-    .filter((row) => !locked.has(row.activityId));
-});
+export const listSchedule = os.handler(() =>
+  loadSchedule(requireDatabaseClient())
+);
 
 /** What is locked, and what each still needs (§2 AC-5). */
 export const listLocks = os.handler(() => loadLocks(requireDatabaseClient()));
@@ -321,6 +252,13 @@ export const submitRating = os
 
     const now = new Date();
     const rated = applyRatingToReviewItem(db, row, input.rating, now);
+    // Its points, on time or not by when it was due (gamification.md §3).
+    recordReviewPoints(db, {
+      dueDate: row.reps === 0 ? null : row.dueDate,
+      itemId: row.id,
+      now,
+      rating: input.rating,
+    });
     // A deck is done once its first card is rated
     // (docs/specs/sequences-and-locks.md §1 AC-6).
     const deckId = row.flashcardId
@@ -380,14 +318,15 @@ export const markActivityDifficulty = os
       shortTermEnabled: false,
     });
     markActivityCompleted(db, input.activityId, now);
+    // Its points, on time or not by when it was due (gamification.md §3).
+    recordReviewPoints(db, {
+      dueDate: row.reps === 0 ? null : row.dueDate,
+      itemId: row.id,
+      now,
+      rating: input.rating,
+    });
     return rated;
   });
-
-function toLocalDateKey(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
 
 /**
  * Powers the Programs page's per-card activity heatmap (Issue #99): one row
@@ -399,91 +338,9 @@ function toLocalDateKey(date: Date): string {
  * reusing listSchedule's Flashcard-scoped/Activity-scoped union to reach
  * each review_item's program.
  */
-export const listActivityCounts = os.handler(() => {
-  const db = requireDatabaseClient();
-
-  const viaFlashcard = db
-    .select({
-      activityId: activitiesTable.id,
-      programId: programsTable.id,
-      ratingHistory: reviewItemsTable.ratingHistory,
-    })
-    .from(reviewItemsTable)
-    .innerJoin(
-      flashcardsTable,
-      eq(reviewItemsTable.flashcardId, flashcardsTable.id)
-    )
-    .innerJoin(
-      activitiesTable,
-      eq(flashcardsTable.activityId, activitiesTable.id)
-    )
-    .innerJoin(modulesTable, eq(activitiesTable.moduleId, modulesTable.id))
-    .innerJoin(programsTable, eq(modulesTable.programId, programsTable.id))
-    .where(isNull(flashcardsTable.deletedAt));
-
-  const viaActivity = db
-    .select({
-      activityId: activitiesTable.id,
-      programId: programsTable.id,
-      ratingHistory: reviewItemsTable.ratingHistory,
-    })
-    .from(reviewItemsTable)
-    .innerJoin(
-      activitiesTable,
-      eq(reviewItemsTable.activityId, activitiesTable.id)
-    )
-    .innerJoin(modulesTable, eq(activitiesTable.moduleId, modulesTable.id))
-    .innerJoin(programsTable, eq(modulesTable.programId, programsTable.id))
-    .where(isNull(activitiesTable.deletedAt));
-
-  const rows = unionAll(viaFlashcard, viaActivity).all();
-
-  // `count` is every rating (the heatmap's); `activities` each activity once
-  // (docs/specs/clarify-daily-count.md AC-4).
-  const byProgramAndDate = new Map<
-    string,
-    Map<string, { activities: Set<string>; count: number }>
-  >();
-
-  for (const row of rows) {
-    const history = JSON.parse(row.ratingHistory) as { reviewedAt: number }[];
-
-    for (const entry of history) {
-      const dateKey = toLocalDateKey(new Date(entry.reviewedAt));
-      const byDate =
-        byProgramAndDate.get(row.programId) ??
-        new Map<string, { activities: Set<string>; count: number }>();
-      const day = byDate.get(dateKey) ?? {
-        activities: new Set<string>(),
-        count: 0,
-      };
-      day.count += 1;
-      day.activities.add(row.activityId);
-      byDate.set(dateKey, day);
-      byProgramAndDate.set(row.programId, byDate);
-    }
-  }
-
-  const result: {
-    activities: number;
-    count: number;
-    date: string;
-    programId: string;
-  }[] = [];
-
-  for (const [programId, byDate] of byProgramAndDate) {
-    for (const [date, day] of byDate) {
-      result.push({
-        activities: day.activities.size,
-        count: day.count,
-        date,
-        programId,
-      });
-    }
-  }
-
-  return result;
-});
+export const listActivityCounts = os.handler(() =>
+  loadActivityCounts(requireDatabaseClient())
+);
 
 export const listActivityReviewState = os
   .input(listActivityReviewStateInputSchema)
