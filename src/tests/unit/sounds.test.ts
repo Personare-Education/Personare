@@ -5,12 +5,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * made in the app with Web Audio, and when the exam result plays them.
  */
 
-const { examTickFrequency, playCorrect, scheduleExamResult, setSoundsEnabled } =
-  await import("@/utils/sounds");
+const { examTickFrequency, scheduleExamResult } = await import(
+  "@/utils/sounds"
+);
+
+/**
+ * The module keeps its audio context once made, so each test that plays
+ * loads it afresh, with its own stand-in.
+ */
+async function loadSounds() {
+  vi.resetModules();
+  return await import("@/utils/sounds");
+}
 
 /** A stand-in for Web Audio: it records the notes it is asked to play. */
 function fakeAudio() {
   const started: number[] = [];
+  /** The pitch of each oscillator, in the order they were made. */
+  const pitches: number[] = [];
   const param = () => ({
     exponentialRampToValueAtTime: vi.fn(),
     linearRampToValueAtTime: vi.fn(),
@@ -24,7 +36,10 @@ function fakeAudio() {
     createOscillator() {
       return {
         connect: vi.fn(),
-        frequency: param(),
+        frequency: {
+          ...param(),
+          setValueAtTime: (value: number) => pitches.push(value),
+        },
         start: (at: number) => started.push(at),
         stop: vi.fn(),
         type: "sine",
@@ -34,47 +49,60 @@ function fakeAudio() {
       return { connect: vi.fn(), gain: param() };
     }
   }
-  const constructed = vi.fn();
   const Ctor = vi.fn(function (this: unknown) {
-    constructed();
     return new FakeAudioContext();
   });
-  return { Ctor, constructed, started };
+  return { Ctor, pitches, started };
 }
 
 describe("sounds (gamification.md §2)", () => {
-  beforeEach(() => {
-    setSoundsEnabled(true);
-  });
-
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
-  it("plays a short rising pair of notes on a correct answer (AC-1)", () => {
+  it("plays a short rising pair of notes on a correct answer (AC-1)", async () => {
     const audio = fakeAudio();
     vi.stubGlobal("AudioContext", audio.Ctor);
+    const { playCorrect } = await loadSounds();
 
     playCorrect();
 
     expect(audio.started.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("plays nothing when sounds are off (AC-3)", () => {
+  it("plays a lower pair of notes going down on a wrong answer (AC-1)", async () => {
+    const right = fakeAudio();
+    vi.stubGlobal("AudioContext", right.Ctor);
+    (await loadSounds()).playCorrect();
+    const wrong = fakeAudio();
+    vi.stubGlobal("AudioContext", wrong.Ctor);
+    (await loadSounds()).playWrong();
+
+    expect(wrong.started.length).toBeGreaterThanOrEqual(2);
+    // Going down, and below every note of a right answer.
+    expect(wrong.pitches[0]).toBeGreaterThan(wrong.pitches.at(-1) ?? 0);
+    expect(Math.max(...wrong.pitches)).toBeLessThan(Math.min(...right.pitches));
+  });
+
+  it("plays nothing when sounds are off (AC-3)", async () => {
     const audio = fakeAudio();
     vi.stubGlobal("AudioContext", audio.Ctor);
+    const { playCorrect, playWrong, setSoundsEnabled } = await loadSounds();
     setSoundsEnabled(false);
 
     playCorrect();
+    playWrong();
 
     expect(audio.started).toEqual([]);
   });
 
-  it("goes on without sound when there is no audio (AC-4)", () => {
+  it("goes on without sound when there is no audio (AC-4)", async () => {
     vi.stubGlobal("AudioContext", undefined);
+    const { playCorrect, playWrong } = await loadSounds();
 
     expect(() => playCorrect()).not.toThrow();
+    expect(() => playWrong()).not.toThrow();
   });
 
   it("raises each exam tick a little above the last", () => {

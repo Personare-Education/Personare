@@ -41,6 +41,8 @@ interface Note {
   /** Seconds. */
   duration: number;
   frequency: number;
+  /** Without the octave above: rounder and duller, for a wrong answer. */
+  soft?: boolean;
   /** 0 to 1. */
   volume?: number;
 }
@@ -55,10 +57,13 @@ function play(notes: Note[]): void {
     for (const note of notes) {
       const start = ctx.currentTime + note.at;
       const peak = note.volume ?? 0.16;
-      for (const [type, multiple, share] of [
-        ["triangle", 1, 1],
-        ["sine", 2, 0.35],
-      ] as const) {
+      const layers = note.soft
+        ? ([["triangle", 1, 1]] as const)
+        : ([
+            ["triangle", 1, 1],
+            ["sine", 2, 0.35],
+          ] as const);
+      for (const [type, multiple, share] of layers) {
         const oscillator = ctx.createOscillator();
         const gain = ctx.createGain();
         oscillator.type = type;
@@ -85,6 +90,20 @@ export function playCorrect(): void {
   play([
     { at: 0, duration: 0.14, frequency: C6 },
     { at: 0.07, duration: 0.26, frequency: G6 },
+  ]);
+}
+
+const E4 = 329.63;
+const C4 = 261.63;
+
+/**
+ * A wrong answer: two notes going down, lower and quieter than a right
+ * one -- it says "no" without sounding like a punishment (AC-1).
+ */
+export function playWrong(): void {
+  play([
+    { at: 0, duration: 0.14, frequency: E4, soft: true, volume: 0.13 },
+    { at: 0.1, duration: 0.32, frequency: C4, soft: true, volume: 0.11 },
   ]);
 }
 

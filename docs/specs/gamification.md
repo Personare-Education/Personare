@@ -35,8 +35,9 @@
 
 - **Sons gerados no app** (Web Audio: notas curtas com envelope), sem arquivos de áudio nem licenças.
 - **Critérios de aceite:**
-  1. No **quiz**, confirmar uma resposta certa toca um som de acerto (duas notas subindo, curto, ~250 ms). A
-     errada não toca nada *(proposta: silêncio no erro, para não punir)*.
+  1. No **quiz**, confirmar uma resposta certa toca um som de acerto (duas notas subindo, curto, ~250 ms), e
+     uma errada toca um som de erro (pedido do usuário, 2026-10-07): duas notas descendo, mais graves e mais
+     baixas, que dizem "não" sem soar como castigo.
   2. Na **prova**, nenhum som até entregar. No resultado, enquanto a nota sobe, um som por acerto (notas que
      sobem um pouco a cada acerto, num ritmo que acompanha a contagem) e, se passou, um acorde de vitória no
      fim.
