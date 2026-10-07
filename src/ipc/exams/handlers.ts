@@ -2,7 +2,6 @@ import { os } from "@orpc/server";
 import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { DatabaseClient } from "@/database/client";
 import {
-  activities as activitiesTable,
   examAttempts as examAttemptsTable,
   examModules as examModulesTable,
   exams as examsTable,
@@ -12,7 +11,11 @@ import {
   unlockRequirements as unlockRequirementsTable,
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
-import { assertNoLockCycle, loadLocks } from "@/ipc/shared/locks";
+import {
+  quizQuestionIdsByModule,
+  saveExamUnlockRule,
+} from "@/ipc/shared/exams";
+import { loadLocks } from "@/ipc/shared/locks";
 import { drawExamQuestions } from "@/utils/exam-draw";
 import {
   createExamInputSchema,
@@ -32,47 +35,6 @@ function requireDatabaseClient() {
   }
 
   return db;
-}
-
-/**
- * The live quiz questions of each live module, in creation order: from
- * every live quiz in it, first level or inside a sequence
- * (docs/specs/exams.md §1 AC-4, AC-8).
- */
-function quizQuestionIdsByModule(
-  db: DatabaseClient,
-  moduleIds: string[]
-): Map<string, string[]> {
-  const byModule = new Map<string, string[]>(moduleIds.map((id) => [id, []]));
-  if (moduleIds.length === 0) {
-    return byModule;
-  }
-  const rows = db
-    .select({
-      id: quizQuestionsTable.id,
-      moduleId: activitiesTable.moduleId,
-    })
-    .from(quizQuestionsTable)
-    .innerJoin(
-      activitiesTable,
-      eq(activitiesTable.id, quizQuestionsTable.activityId)
-    )
-    .innerJoin(modulesTable, eq(modulesTable.id, activitiesTable.moduleId))
-    .where(
-      and(
-        inArray(activitiesTable.moduleId, moduleIds),
-        eq(activitiesTable.type, "quiz"),
-        isNull(quizQuestionsTable.deletedAt),
-        isNull(activitiesTable.deletedAt),
-        isNull(modulesTable.deletedAt)
-      )
-    )
-    .orderBy(asc(quizQuestionsTable.createdAt))
-    .all();
-  for (const row of rows) {
-    byModule.get(row.moduleId)?.push(row.id);
-  }
-  return byModule;
 }
 
 function standaloneQuestionIds(db: DatabaseClient, examId: string): string[] {
@@ -399,101 +361,15 @@ export const listAttempts = os
       .all()
   );
 
-/**
- * What an exam's rule can take (docs/specs/exam-locks.md AC-1): live
- * modules of its program for "all"/"any" (at least one), one other live
- * exam of its program for "exam", nothing otherwise.
- */
-function examRuleList(
-  db: DatabaseClient,
-  exam: { id: string; programId: string },
-  mode: string,
-  requiredIds: string[]
-): string[] {
-  const ids = [...new Set(requiredIds)];
-  if (mode === "all" || mode === "any") {
-    const found = db
-      .select({ id: modulesTable.id })
-      .from(modulesTable)
-      .where(
-        and(
-          inArray(modulesTable.id, ids.length > 0 ? ids : [""]),
-          eq(modulesTable.programId, exam.programId),
-          isNull(modulesTable.deletedAt)
-        )
-      )
-      .all();
-    if (ids.length === 0 || found.length !== ids.length) {
-      throw new Error("The rule takes modules of the exam's program");
-    }
-    return ids;
-  }
-  if (mode === "exam") {
-    const [requiredId] = ids;
-    const found =
-      ids.length === 1 && requiredId !== exam.id
-        ? db
-            .select({ id: examsTable.id })
-            .from(examsTable)
-            .where(
-              and(
-                eq(examsTable.id, requiredId),
-                eq(examsTable.programId, exam.programId),
-                isNull(examsTable.deletedAt)
-              )
-            )
-            .get()
-        : undefined;
-    if (!found) {
-      throw new Error("The rule takes one other exam of the program");
-    }
-    return ids;
-  }
-  return [];
-}
-
 export const setUnlockRule = os
   .input(setExamUnlockRuleInputSchema)
   .handler(({ input }) => {
-    const db = requireDatabaseClient();
-    const exam = db
-      .select({ id: examsTable.id, programId: examsTable.programId })
-      .from(examsTable)
-      .where(and(eq(examsTable.id, input.id), isNull(examsTable.deletedAt)))
-      .get();
-    if (!exam) {
-      throw new Error("The exam does not exist");
-    }
-    const requiredIds = examRuleList(db, exam, input.mode, input.requiredIds);
-    assertNoLockCycle(
-      db,
-      { id: exam.id, kind: "exam" },
+    saveExamUnlockRule(
+      requireDatabaseClient(),
+      input.id,
       input.mode,
-      requiredIds
+      input.requiredIds
     );
-
-    const now = new Date();
-    db.transaction((tx) => {
-      tx.update(examsTable)
-        .set({ unlockMode: input.mode, updatedAt: now })
-        .where(eq(examsTable.id, exam.id))
-        .run();
-      tx.delete(unlockRequirementsTable)
-        .where(eq(unlockRequirementsTable.subjectId, exam.id))
-        .run();
-      if (requiredIds.length > 0) {
-        tx.insert(unlockRequirementsTable)
-          .values(
-            requiredIds.map((requiredId) => ({
-              createdAt: now,
-              requiredId,
-              subjectId: exam.id,
-              subjectKind: "exam",
-            }))
-          )
-          .run();
-      }
-    });
   });
 
 /** The exam's rule as saved, for its dialog (docs/specs/exam-locks.md AC-5). */

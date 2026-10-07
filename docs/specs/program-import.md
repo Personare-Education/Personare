@@ -158,13 +158,16 @@ O leitor nunca recusa o arquivo inteiro por um trecho. Cada problema vira um avi
 
 ## 2. Gravar — critérios de aceite
 
-1. `programs.import(parsed)` acha o programa pelo nome (sem diferenciar maiúsculas e espaços) ou cria um, e
-   devolve o relatório: o que foi criado e o que ficou de fora por já existir.
+1. `programs.import({ markdown })` lê o arquivo (com o leitor do PR 1), acha o programa pelo nome (sem
+   diferenciar maiúsculas e espaços) ou cria um, e devolve o relatório: o que foi criado, o que ficou de fora
+   por já existir, as regras ignoradas e por quê, e os avisos do leitor. `programs.previewImport({ markdown })`
+   faz o mesmo import numa transação que é desfeita no fim: a prévia mostra exatamente o que o import faria.
 2. Módulos, atividades, sequências (com etapas e a ordem), flashcards (cada card com o seu agendamento, como
    ao criar à mão), quizzes com perguntas e alternativas, e provas com módulos e perguntas avulsas, na ordem
    do arquivo, no fim das listas que já existem.
 3. Completar não duplica: módulo com o mesmo nome é reaproveitado; atividade com o mesmo tipo e título no
-   mesmo lugar, e prova com o mesmo título, ficam de fora.
+   mesmo lugar, e prova com o mesmo título, ficam de fora. Uma sequência que já existe recebe as etapas novas,
+   na ordem dela (travadas se as dela já esperam umas pelas outras).
 4. Regras resolvidas por nome, contra o arquivo **e** o programa (um módulo do arquivo pode esperar um que já
    existia); "anteriores" usa a ordem final. Só módulos e provas **novos** recebem regra; um que já existia
    mantém a sua. Nomes que não se resolvem, ou uma regra que trancaria algo para sempre (exam-locks.md AC-4):
