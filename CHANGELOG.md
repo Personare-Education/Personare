@@ -6,6 +6,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Provas:** na página do programa, abaixo dos módulos, a seção **Provas**. Uma prova sorteia perguntas dos
+  quizzes dos módulos escolhidos (só entram módulos com quiz), um total que você define, dividido por igual
+  entre eles, além das **perguntas avulsas**, que são só da prova. Cada tentativa sorteia de novo.
+- **Fazer prova:** as respostas só aparecem no fim; dá para voltar e trocar uma resposta até entregar.
+  Perguntas em branco contam como erradas, e a prova pergunta antes de entregar com alguma em branco. Com
+  **tempo limite** (opcional), o tempo restante fica no topo e a prova é entregue sozinha quando ele acaba. O
+  resultado mostra a nota de 0 a 1000, os acertos, os tempos, as respostas certas e se você passou (70% por
+  padrão, ajustável). **Histórico** lista as tentativas.
+- **Desbloquear um módulo com uma prova:** a regra de desbloqueio de um módulo ganha **Depois de passar na
+  prova**. O módulo (e as atividades dele) fica trancado até uma tentativa atingir a nota para passar; o
+  cadeado diz "Libera depois de passar em Prova 1 (70%)".
+
 ## [0.1.0-alpha.11] - 2026-10-05
 
 ### Added

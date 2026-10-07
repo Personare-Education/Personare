@@ -6,10 +6,13 @@ import {
   modules as modulesTable,
   unlockRequirements as unlockRequirementsTable,
 } from "@/database/schema";
+import { assertUnlockExam } from "@/ipc/shared/exams";
 
 /** How an activity or module unlocks (docs/specs/sequences-and-locks.md). */
 export const UNLOCK_MODES = ["none", "previous", "any", "all"] as const;
-export type UnlockMode = (typeof UNLOCK_MODES)[number];
+/** A module can also wait for an exam (docs/specs/exams.md §4). */
+export const MODULE_UNLOCK_MODES = [...UNLOCK_MODES, "exam"] as const;
+export type UnlockMode = (typeof MODULE_UNLOCK_MODES)[number];
 
 /** The activity type of a group of sub-activities. */
 export const GROUP_ACTIVITY_TYPE = "group";
@@ -127,9 +130,20 @@ export function setUnlockRule(
   if (!programId) {
     throw new Error(`The ${kind} does not exist`);
   }
-  const list =
-    mode === "any" || mode === "all" ? [...new Set(requiredIds)] : [];
-  for (const requiredId of list) {
+  if (mode === "exam") {
+    if (kind !== "module") {
+      throw new Error("Only a module can wait for an exam");
+    }
+    assertUnlockExam(db, id, programId, requiredIds);
+  }
+  const takesActivitiesOrModules = mode === "any" || mode === "all";
+  let list: string[] = [];
+  if (takesActivitiesOrModules) {
+    list = [...new Set(requiredIds)];
+  } else if (mode === "exam") {
+    list = requiredIds;
+  }
+  for (const requiredId of takesActivitiesOrModules ? list : []) {
     if (requiredId === id || programOf(db, kind, requiredId) !== programId) {
       throw new Error(
         `An unlock rule takes ${kind}s of the same program, not itself`

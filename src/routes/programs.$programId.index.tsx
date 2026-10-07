@@ -8,6 +8,7 @@ import {
   useTransition,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { listExams } from "@/actions/exams";
 import {
   createModule,
   getModuleUnlockRule,
@@ -20,6 +21,7 @@ import {
 } from "@/actions/modules";
 import { listPrograms } from "@/actions/programs";
 import DeleteModuleDialog from "@/components/delete-module-dialog";
+import type { Exam } from "@/components/exams-data-table";
 import ExamsSection from "@/components/exams-section";
 import ModuleFormDialog from "@/components/module-form-dialog";
 import ModulesDataTable, { type Module } from "@/components/modules-data-table";
@@ -189,6 +191,19 @@ function ProgramModulesPage() {
   // Locked modules, in words, and their rules
   // (docs/specs/sequences-and-locks.md §4).
   const { locks, refresh: refreshLocks } = useLocks();
+  // What a module can wait for, and the padlock names
+  // (docs/specs/exams.md §4).
+  const [exams, setExams] = useState<Exam[]>([]);
+  const refreshExams = useCallback(() => {
+    listExams(programId).then(setExams);
+  }, [programId]);
+  useEffect(() => {
+    refreshExams();
+  }, [refreshExams]);
+  const handleExamsChange = useCallback(() => {
+    refreshExams();
+    refreshLocks();
+  }, [refreshExams, refreshLocks]);
   const [ruleSubject, setRuleSubject] = useState<{
     id: string;
     mode: string;
@@ -197,7 +212,13 @@ function ProgramModulesPage() {
   } | null>(null);
 
   const lockLabelById = useMemo(() => {
-    const names = Object.fromEntries(modules.map((row) => [row.id, row.name]));
+    const names = Object.fromEntries([
+      ...modules.map((row) => [row.id, row.name]),
+      ...exams.map((exam) => [exam.id, exam.title]),
+    ]);
+    const examScores = Object.fromEntries(
+      exams.map((exam) => [exam.id, exam.passingScore])
+    );
     return Object.fromEntries(
       modules.flatMap((row) => {
         const lock = locks.modules[row.id];
@@ -210,14 +231,15 @@ function ProgramModulesPage() {
                   i18n.language,
                   lock,
                   row.unlockMode ?? "none",
-                  names
+                  names,
+                  examScores
                 ),
               ],
             ]
           : [];
       })
     ) as Record<string, string | undefined>;
-  }, [i18n.language, locks, modules, t]);
+  }, [exams, i18n.language, locks, modules, t]);
 
   const ruleCandidates = useMemo(
     () => [
@@ -229,6 +251,16 @@ function ProgramModulesPage() {
       },
     ],
     [modules, ruleSubject]
+  );
+
+  // Not the exams that draw from the module itself: it would never unlock
+  // (docs/specs/exams.md §4 AC-1).
+  const ruleExams = useMemo(
+    () =>
+      exams
+        .filter((exam) => !exam.moduleIds.includes(ruleSubject?.id ?? ""))
+        .map((exam) => ({ id: exam.id, title: exam.title })),
+    [exams, ruleSubject]
   );
 
   const handleUnlockRule = useCallback((module: Module) => {
@@ -301,12 +333,13 @@ function ProgramModulesPage() {
       {modules.length > 0 ? (
         <ExamsSection
           moduleNames={moduleNames}
-          onExamsChange={refreshLocks}
+          onExamsChange={handleExamsChange}
           programId={programId}
         />
       ) : null}
       <UnlockRuleDialog
         candidates={ruleCandidates}
+        exams={ruleExams}
         mode={ruleSubject?.mode ?? "none"}
         onOpenChange={handleRuleOpenChange}
         onSave={handleRuleSave}

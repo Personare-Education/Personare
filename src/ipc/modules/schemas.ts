@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UNLOCK_MODES } from "@/ipc/shared/sequences";
+import { MODULE_UNLOCK_MODES } from "@/ipc/shared/sequences";
 
 export const listModulesInputSchema = z.object({
   programId: z.string(),
@@ -22,7 +22,7 @@ export const reorderModulesInputSchema = z.object({
 
 export const setModuleUnlockRuleInputSchema = z.object({
   id: z.string(),
-  mode: z.enum(UNLOCK_MODES),
+  mode: z.enum(MODULE_UNLOCK_MODES),
   requiredIds: z.array(z.string()),
 });
 
