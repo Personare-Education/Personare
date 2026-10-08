@@ -34,8 +34,10 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # On Windows, without the C++ build tools, better-sqlite3's install script
+      # fails to recompile it; its prebuild already works (CONTRIBUTING.md).
       - name: Install dependencies
-        run: npm ci
+        run: npm ci ${{ runner.os == 'Windows' && '--ignore-scripts' || '' }}
       - name: Run the MCP tests
         run: npx vitest run src/tests/unit/mcp- src/tests/unit/use-data-changed
 
