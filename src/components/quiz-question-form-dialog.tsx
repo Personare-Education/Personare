@@ -600,7 +600,7 @@ export default function QuizQuestionFormDialog({
           {savedCount === undefined ? null : (
             <p
               aria-live="polite"
-              className="mr-auto self-center text-muted-foreground text-xs"
+              className="me-auto self-center text-muted-foreground text-xs"
             >
               {t("quizQuestionsSavedCount", { count: savedCount })}
             </p>

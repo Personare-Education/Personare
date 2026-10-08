@@ -8,6 +8,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Sete idiomas novos:** Español, 简体中文, العربية, Français, Deutsch, 日本語 e 한국어, além de English e
+  Português, com o app inteiro traduzido. Em árabe o app lê da direita para a esquerda: a barra lateral passa
+  para a direita e os componentes se espelham. As datas seguem o idioma escolhido.
+- **Versão nas Configurações:** o rodapé das Configurações mostra a versão do app em uso.
 - **Importar um programa inteiro:** em Programas, **Importar programa** gera um prompt para você colar no
   ChatGPT, no Claude ou no Gemini (com o tema e o que mais quiser pedir) e lê de volta o arquivo `.md` que a
   IA devolve, solto ou colado. O arquivo traz módulos (com ou sem regra de desbloqueio), quizzes,
@@ -45,6 +49,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Idioma numa caixa de seleção:** em **Configurações → Geral**, o idioma é escolhido numa lista com a
+  bandeira e o nome de cada um, com busca pelo nome; o título "Idioma" ganhou o ícone de idioma.
+- **Tamanho do texto em S, M, L e XL:** as quatro opções aparecem como tamanhos de roupa; passar o mouse (e o
+  leitor de tela) diz o nome por extenso.
+- **Seleção de texto:** só se seleciona o conteúdo das atividades (enunciados, flashcards, revisão das
+  respostas) e o que se digita; botões, títulos, menus e o resto da interface não se selecionam mais, nem as
+  alternativas de uma pergunta.
+- **Barras de rolagem:** toda área que rola usa a barra fina do app, e a do painel principal não invade mais
+  os cantos arredondados.
 - **Nenhuma regra de desbloqueio tranca algo para sempre:** uma regra que faria um módulo ou uma prova
   esperar por si mesmo (a prova A espera a B, que espera a A) é recusada, e o diálogo diz por quê.
 

@@ -68,12 +68,12 @@ export default function ReviewHighlightTableFrame({
 
   return (
     <div
-      className={cn("relative", overdueIds.length > 0 && "pl-8")}
+      className={cn("relative", overdueIds.length > 0 && "ps-8")}
       ref={frameRef}
     >
       {overdueIds.map((id) => (
         <span
-          className="absolute left-0 flex size-6 -translate-y-1/2 items-center justify-center text-destructive"
+          className="absolute start-0 flex size-6 -translate-y-1/2 items-center justify-center text-destructive"
           data-slot="overdue-review-marker"
           key={id}
           style={{ top: topById[id] ?? 0 }}

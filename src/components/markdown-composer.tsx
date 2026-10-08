@@ -306,7 +306,7 @@ export default function MarkdownComposer({
         <div className="flex items-center gap-0.5 pb-1">
           {TOOLBAR.map((group, groupIndex) => (
             <div
-              className="flex items-center gap-0.5 border-input not-first:border-l not-first:pl-1"
+              className="flex items-center gap-0.5 border-input not-first:border-s not-first:ps-1"
               // biome-ignore lint/suspicious/noArrayIndexKey: a fixed list of button groups.
               key={groupIndex}
             >
@@ -322,7 +322,7 @@ export default function MarkdownComposer({
               ))}
             </div>
           ))}
-          <div className="flex items-center border-input border-l pl-1">
+          <div className="flex items-center border-input border-s ps-1">
             <Button
               aria-label={t("attachImageAction")}
               disabled={disabled}
@@ -382,7 +382,7 @@ export default function MarkdownComposer({
             <SiMarkdown className="size-4" />
             {t("markdownSupportedHint")}
           </span>
-          <span aria-hidden="true" className="h-4 border-input border-l" />
+          <span aria-hidden="true" className="h-4 border-input border-s" />
           <button
             className="flex items-center gap-1.5 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             disabled={disabled}

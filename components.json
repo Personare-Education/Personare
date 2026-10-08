@@ -22,5 +22,6 @@
   "iconLibrary": "lucide",
   "registries": {
     "@reui": "https://reui.io/r/{style}/{name}.json"
-  }
+  },
+  "rtl": true
 }

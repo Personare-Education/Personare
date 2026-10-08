@@ -31,7 +31,7 @@ describe("resolveEventCalendarLocale", () => {
   });
 
   it("falls back to enUS for an unconfigured language", () => {
-    expect(resolveEventCalendarLocale("fr")).toBe(enUS);
+    expect(resolveEventCalendarLocale("it")).toBe(enUS);
   });
 });
 

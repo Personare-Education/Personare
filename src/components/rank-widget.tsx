@@ -313,7 +313,7 @@ function MyRank({ name, summary }: { name: string; summary: PointsSummary }) {
                   {timeFormat.format(event.createdAt)}
                   <span
                     className={cn(
-                      "w-10 text-right font-semibold text-sm",
+                      "w-10 text-end font-semibold text-sm",
                       event.amount > 0
                         ? "text-success-text"
                         : "text-destructive-text"

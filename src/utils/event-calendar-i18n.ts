@@ -1,5 +1,5 @@
 import type { Locale } from "date-fns";
-import { enUS, ptBR } from "date-fns/locale";
+import { ar, de, enUS, es, fr, ja, ko, ptBR, zhCN } from "date-fns/locale";
 import type { TFunction } from "i18next";
 import type { EventCalendarI18nOverrides } from "@/components/reui/event-calendar/event-calendar-i18n";
 
@@ -10,8 +10,15 @@ import type { EventCalendarI18nOverrides } from "@/components/reui/event-calenda
  * labels), not date formatting.
  */
 const EVENT_CALENDAR_LOCALES: Record<string, Locale> = {
+  ar,
+  de,
   en: enUS,
+  es,
+  fr,
+  ja,
+  ko,
   "pt-BR": ptBR,
+  "zh-CN": zhCN,
 };
 
 export function resolveEventCalendarLocale(language: string): Locale {

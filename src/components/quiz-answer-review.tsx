@@ -152,7 +152,7 @@ export function QuizAnswerReview({
         {t("quizReviewHeading")}
       </h3>
       <ol
-        className="relative flex min-h-0 flex-col gap-3 overflow-y-auto pr-2 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
+        className="relative flex min-h-0 flex-col gap-3 overflow-y-auto pe-2 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]"
         ref={reviewListRef}
         style={{ maxHeight: reviewListMaxHeight }}
       >
