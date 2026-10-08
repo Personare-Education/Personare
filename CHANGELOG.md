@@ -49,6 +49,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Configurações só no menu da conta:** o item Configurações saiu do rodapé da barra lateral, onde repetia o
+  que o menu da conta já oferece.
 - **Idioma numa caixa de seleção:** em **Configurações → Geral**, o idioma é escolhido numa lista com a
   bandeira e o nome de cada um, com busca pelo nome; o título "Idioma" ganhou o ícone de idioma.
 - **Tamanho do texto em S, M, L e XL:** as quatro opções aparecem como tamanhos de roupa; passar o mouse (e o
