@@ -6,6 +6,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.12] - 2026-10-07
+
 ### Added
 
 - **Sete idiomas novos:** Español, 简体中文, العربية, Français, Deutsch, 日本語 e 한국어, além de English e
