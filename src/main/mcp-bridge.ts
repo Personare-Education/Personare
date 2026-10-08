@@ -1,9 +1,14 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
 import { RPCHandler } from "@orpc/server/node";
-import { MCP_BRIDGE_FILE, type McpBridgeInfo } from "@/mcp/bridge-protocol";
+import {
+  MCP_BRIDGE_FILE,
+  type McpBridgeInfo,
+  pathFor,
+} from "@/mcp/bridge-protocol";
 import { createBridgeRouter, type DataTopic } from "./mcp-bridge-router";
 
 export type { BridgeRouter, DataTopic } from "./mcp-bridge-router";
@@ -27,11 +32,30 @@ interface StartMcpBridgeOptions {
   platform?: NodeJS.Platform;
 }
 
-function bridgeAddress(platform: NodeJS.Platform, dataDir: string): string {
-  // A new pipe name each session: another process can't hold it in advance.
-  return platform === "win32"
-    ? `\\\\.\\pipe\\personare-mcp-${randomUUID()}`
-    : path.join(dataDir, "mcp.sock");
+/** macOS's sun_path is 104 bytes, the terminating NUL included. */
+const MAX_SOCKET_BYTES = 103;
+
+/**
+ * Where the bridge listens (docs/specs/mcp-release.md AC-2): a named pipe on
+ * Windows, new each session so no other process can hold it in advance; a
+ * Unix socket in the data folder elsewhere, or in the temp folder when that
+ * path would pass the socket path limit.
+ */
+export function bridgeAddress(
+  platform: NodeJS.Platform,
+  dataDir: string
+): string {
+  if (platform === "win32") {
+    return `\\\\.\\pipe\\personare-mcp-${randomUUID()}`;
+  }
+  const inData = pathFor(platform).join(dataDir, "mcp.sock");
+  if (Buffer.byteLength(inData) <= MAX_SOCKET_BYTES) {
+    return inData;
+  }
+  // One per user, so two people on one machine don't share it.
+  const user =
+    os.userInfo().uid >= 0 ? String(os.userInfo().uid) : os.userInfo().username;
+  return pathFor(platform).join(os.tmpdir(), `personare-mcp-${user}.sock`);
 }
 
 function hasToken(request: http.IncomingMessage, token: string): boolean {
@@ -75,6 +99,10 @@ export async function startMcpBridge({
       resolve();
     });
   });
+  if (platform !== "win32") {
+    // Only the user may connect; the token still guards every call.
+    fs.chmodSync(info.address, 0o600);
+  }
 
   const notePath = path.join(dataDir, MCP_BRIDGE_FILE);
   fs.writeFileSync(notePath, JSON.stringify(info), { mode: 0o600 });

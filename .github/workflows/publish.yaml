@@ -45,3 +45,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: npm run publish -- ${{ matrix.arch && format('--arch={0}', matrix.arch) || '' }}
+
+      # The Claude Desktop extension (docs/specs/mcp-release.md AC-1): one file
+      # for every system, so only the Linux job attaches it. The draft has no
+      # tag yet, so it is found by its tag name through the API; an asset left
+      # by an earlier run is replaced.
+      - name: Attach the MCP extension
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        shell: bash
+        run: |
+          npm run build:mcp
+          version=$(node -p "require('./package.json').version")
+          name="personare-${version}.mcpb"
+          repo="Personare-Education/personare-releases"
+          releases_jq=".[] | select(.draft and .tag_name == \"v${version}\") | .id"
+          release_id=$(gh api "repos/$repo/releases" --paginate --jq "$releases_jq" | head -n1)
+          if [ -z "$release_id" ]; then
+            echo "No draft release v${version} in $repo" >&2
+            exit 1
+          fi
+          assets_jq=".[] | select(.name == \"$name\") | .id"
+          for asset_id in $(gh api "repos/$repo/releases/$release_id/assets" --jq "$assets_jq"); do
+            gh api --method DELETE "repos/$repo/releases/assets/$asset_id"
+          done
+          upload_url="https://uploads.github.com/repos/$repo/releases/$release_id/assets?name=$name"
+          gh api --method POST -H "Content-Type: application/octet-stream" "$upload_url" --input out/mcp/personare.mcpb > /dev/null
+          echo "Attached $name to the draft v${version}"

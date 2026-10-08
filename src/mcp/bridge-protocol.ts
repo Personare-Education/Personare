@@ -1,5 +1,10 @@
 import path from "node:path";
 
+/** The path rules of the given system, not of the one running this code. */
+export function pathFor(platform: NodeJS.Platform): typeof path.posix {
+  return platform === "win32" ? path.win32 : path.posix;
+}
+
 /**
  * What the app and the MCP server agree on (docs/specs/mcp-create-program.md):
  * the note the app leaves in its data folder while it is open, with where its
@@ -25,17 +30,15 @@ export function personareDataDir(
   env: NodeJS.ProcessEnv,
   homeDir: string
 ): string {
+  const { join } = pathFor(platform);
   if (platform === "win32") {
-    return path.join(
-      env.APPDATA ?? path.join(homeDir, "AppData", "Roaming"),
+    return join(
+      env.APPDATA ?? join(homeDir, "AppData", "Roaming"),
       "Personare"
     );
   }
   if (platform === "darwin") {
-    return path.join(homeDir, "Library", "Application Support", "Personare");
+    return join(homeDir, "Library", "Application Support", "Personare");
   }
-  return path.join(
-    env.XDG_CONFIG_HOME ?? path.join(homeDir, ".config"),
-    "Personare"
-  );
+  return join(env.XDG_CONFIG_HOME ?? join(homeDir, ".config"), "Personare");
 }
