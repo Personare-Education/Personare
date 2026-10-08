@@ -53,6 +53,7 @@ import { Input } from "@/components/ui/input";
 import UnlockRuleDialog, {
   type UnlockCandidateGroup,
 } from "@/components/unlock-rule-dialog";
+import { useDataChanged } from "@/hooks/use-data-changed";
 import { useLocks } from "@/hooks/use-locks";
 import { useRateOnReturn } from "@/hooks/use-rate-on-return";
 import { useReviewSchedule } from "@/hooks/use-review-schedule";
@@ -185,6 +186,14 @@ function ModuleActivitiesPage() {
     refreshActivities();
     refreshReviewState();
   }, [refreshActivities, refreshReviewState]);
+  // What Claude creates through the MCP bridge shows up here at once
+  // (docs/specs/mcp-content-tools.md AC-6).
+  const handleActivitiesChangedOutside = useCallback(() => {
+    refreshActivities();
+    refreshReviewState();
+    refreshLocks();
+  }, [refreshActivities, refreshReviewState, refreshLocks]);
+  useDataChanged("activities", handleActivitiesChangedOutside);
 
   useEffect(() => {
     listPrograms().then((programs) => {
