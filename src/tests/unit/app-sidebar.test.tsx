@@ -202,18 +202,27 @@ test("active route indicator moves with the current location", async () => {
   expect(homeLinkAtCalendar).not.toHaveAttribute("aria-current");
 });
 
-/** docs/specs/settings-in-sidebar.md AC-1, AC-2 */
-test("opens Settings from the sidebar, not only from the account menu", async () => {
+/** docs/specs/settings-in-sidebar.md, revision: only in the account menu */
+test("opens Settings from the account menu, with no second button in the sidebar", async () => {
   const user = userEvent.setup();
   renderSidebarAt("/");
 
   await user.click(
-    await screen.findByRole("button", { name: i18n.t("settingsPageTitle") })
+    await screen.findByRole("button", {
+      name: new RegExp(i18n.t("accountMenuGuestLabel")),
+    })
+  );
+  await user.click(
+    await screen.findByRole("menuitem", { name: i18n.t("settingsPageTitle") })
   );
 
   expect(
     await screen.findByRole("dialog", { name: i18n.t("settingsPageTitle") })
   ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("button", { name: i18n.t("settingsPageTitle") })
+  ).not.toBeInTheDocument();
 });
 
 /** docs/specs/sidebar-current-page.md AC-1, AC-2 */
