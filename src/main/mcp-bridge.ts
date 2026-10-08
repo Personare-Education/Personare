@@ -2,11 +2,11 @@ import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { call, os } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/node";
-import { programs } from "@/ipc/programs";
-import { createProgramInputSchema } from "@/ipc/programs/schemas";
 import { MCP_BRIDGE_FILE, type McpBridgeInfo } from "@/mcp/bridge-protocol";
+import { createBridgeRouter, type DataTopic } from "./mcp-bridge-router";
+
+export type { BridgeRouter, DataTopic } from "./mcp-bridge-router";
 
 /**
  * The MCP bridge (docs/specs/mcp-create-program.md): the main process serves
@@ -14,24 +14,6 @@ import { MCP_BRIDGE_FILE, type McpBridgeInfo } from "@/mcp/bridge-protocol";
  * process of its own. Only what the MCP tools need is exposed, and only to
  * calls carrying this session's token.
  */
-
-/** What changed, so the open window can reload it (AC-6). */
-export type DataTopic = "programs";
-
-function createBridgeRouter(onDataChanged: (topic: DataTopic) => void) {
-  return {
-    programs: {
-      create: os.input(createProgramInputSchema).handler(async ({ input }) => {
-        const program = await call(programs.create, input);
-        onDataChanged("programs");
-        return program;
-      }),
-      list: programs.list,
-    },
-  };
-}
-
-export type BridgeRouter = ReturnType<typeof createBridgeRouter>;
 
 export interface McpBridge {
   close: () => Promise<void>;
