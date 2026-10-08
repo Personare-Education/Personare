@@ -6,6 +6,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Travas longas nas tabelas:** nas tabelas de módulos e de atividades, uma regra de desbloqueio com muitos
+  itens ("Libera depois de Funções e Limites, Derivadas...") agora desce para a linha de baixo, como já fazia
+  na de provas. Antes, sobretudo nos tamanhos de texto L e XL, ela alargava a tabela e tirava as ações da
+  tela.
+
 ## [0.1.0-alpha.12] - 2026-10-07
 
 ### Added

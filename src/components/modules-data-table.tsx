@@ -148,8 +148,10 @@ function ModuleRow({
       onOpen={actions[0].onSelect}
       rowId={module.id}
     >
-      <TableCell className="font-medium">
-        <span className="flex items-center gap-2">
+      {/* Wraps, so a long name or padlock does not push the actions off
+          (docs/specs/lock-label-wrap.md). */}
+      <TableCell className="whitespace-normal font-medium">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           {module.name}
           {lockLabel ? <LockLabel label={lockLabel} /> : null}
           {/* Beside the name, not among the actions (docs/specs/layout-tables.md AC-3). */}
