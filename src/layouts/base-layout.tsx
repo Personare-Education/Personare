@@ -24,7 +24,12 @@ export default function BaseLayout({
         {/* The whole panel (its background and corners) is what slides in
             a stack navigation, see src/utils/stack-transition.ts. */}
         <SidebarInset className="stack-content">
-          <main className="h-full overflow-y-auto p-2">{children}</main>
+          {/* Inset by the panel's corner radius, so the scrollbar starts and
+              ends where the corners stop curving
+              (docs/specs/selection-and-scrollbars.md AC-5). */}
+          <main className="my-(--radius-xl) min-h-0 flex-1 overflow-y-auto px-2">
+            {children}
+          </main>
         </SidebarInset>
       </SidebarProvider>
     </div>

@@ -48,7 +48,11 @@ export default function MarkdownContent({
   return (
     // The study content reads in the serif, apart from the interface around
     // it (docs/specs/typography-newsreader-instrument-sans.md).
-    <div className={cn("min-w-0 font-serif text-[0.95rem]", className)}>
+    // An activity's content, which can be selected and copied
+    // (docs/specs/selection-and-scrollbars.md AC-2).
+    <div
+      className={cn("selectable min-w-0 font-serif text-[0.95rem]", className)}
+    >
       <ReactMarkdown
         components={components}
         rehypePlugins={[[rehypeKatex, katexOptions]]}
