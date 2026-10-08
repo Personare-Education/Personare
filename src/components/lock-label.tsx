@@ -9,10 +9,11 @@ export default function LockLabel({ label }: { label: string }) {
   const { t } = useTranslation();
 
   return (
-    <span className="inline-flex items-center gap-1 font-normal text-muted-foreground text-xs">
+    <span className="inline-flex items-start gap-1 font-normal text-muted-foreground text-xs">
       <Lock
         aria-label={t("lockedLabel")}
-        className="size-3.5 shrink-0"
+        // On the first line when a long label wraps.
+        className="mt-px size-3.5 shrink-0"
         role="img"
       />
       {label}

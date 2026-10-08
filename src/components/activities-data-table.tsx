@@ -313,7 +313,9 @@ function ActivityRow({
       onOpen={actions[0].onSelect}
       rowId={activity.id}
     >
-      <TableCell className="font-medium">
+      {/* Wraps, so a long name or padlock does not push the actions off
+          (docs/specs/lock-label-wrap.md). */}
+      <TableCell className="whitespace-normal font-medium">
         <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           {activity.title}
           {/* What a sequence holds, beside its name (§3 AC-3). */}
