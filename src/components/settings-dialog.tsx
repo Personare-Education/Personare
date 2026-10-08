@@ -1,7 +1,15 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Cloud, HardDrive, KeyRound, Settings2, User } from "lucide-react";
-import { useCallback, useState } from "react";
+import {
+  Cloud,
+  HardDrive,
+  KeyRound,
+  Languages,
+  Settings2,
+  User,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getAppVersion } from "@/actions/app";
 import AccountSection from "@/components/account-section";
 import BackupExportDialog from "@/components/backup-export-dialog";
 import BackupImportDialog from "@/components/backup-import-dialog";
@@ -59,7 +67,7 @@ function SettingsCategoryButton({
   return (
     <button
       className={cn(
-        "flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted",
+        "flex items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm transition-colors hover:bg-muted",
         active && "bg-muted font-medium text-foreground"
       )}
       onClick={handleClick}
@@ -71,6 +79,32 @@ function SettingsCategoryButton({
   );
 }
 
+/**
+ * The version in use, for the dialog's footer
+ * (docs/specs/settings-language-text-size-version.md AC-8).
+ */
+function useAppVersion() {
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAppVersion()
+      .then((value) => {
+        if (!cancelled) {
+          setVersion(value);
+        }
+      })
+      .catch(() => {
+        // No version to show: the footer stays empty.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return version;
+}
+
 export default function SettingsDialog({
   onOpenChange,
   open,
@@ -79,6 +113,7 @@ export default function SettingsDialog({
   const [activeCategory, setActiveCategory] =
     useState<SettingsCategory>("general");
   const navigate = useNavigate();
+  const version = useAppVersion();
 
   // docs/specs/replay-welcome.md AC-2: back to Today's welcome.
   const handleReplayWelcomeClick = useCallback(() => {
@@ -134,7 +169,7 @@ export default function SettingsDialog({
             <DialogTitle>{t("settingsPageTitle")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-1 overflow-hidden">
-            <nav className="flex w-44 shrink-0 flex-col gap-1 border-r bg-muted/30 p-2">
+            <nav className="flex w-44 shrink-0 flex-col gap-1 border-e bg-muted/30 p-2">
               {categories.map((category) => (
                 <SettingsCategoryButton
                   active={activeCategory === category.id}
@@ -150,7 +185,8 @@ export default function SettingsDialog({
               {activeCategory === "general" && (
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-2">
-                    <h3 className="font-semibold text-sm">
+                    <h3 className="flex items-center gap-1.5 font-semibold text-sm">
+                      <Languages aria-hidden className="size-4" />
                       {t("languageLabel")}
                     </h3>
                     <LangToggle />
@@ -251,6 +287,9 @@ export default function SettingsDialog({
                 ))}
             </div>
           </div>
+          <footer className="flex h-9 shrink-0 items-center justify-end border-t px-4 text-muted-foreground text-xs">
+            {version && t("settingsVersionLabel", { version })}
+          </footer>
         </DialogContent>
       </Dialog>
       <BackupExportDialog

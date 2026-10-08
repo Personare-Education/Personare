@@ -286,7 +286,7 @@ function ReviewedToday({ programs }: { programs: ProgramReviewedToday[] }) {
                     />
                   )
                 )}
-                <span className="ml-1.5 text-muted-foreground tabular-nums">
+                <span className="ms-1.5 text-muted-foreground tabular-nums">
                   {t("todaySessionProgramCount", {
                     count: program.activities,
                   })}

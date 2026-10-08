@@ -15,6 +15,14 @@ const TEXT_SIZE_LABEL_KEYS: Record<TextSize, string> = {
   small: "textSizeSmall",
 };
 
+/** Shown as clothing sizes (docs/specs/settings-language-text-size-version.md AC-7). */
+const TEXT_SIZE_SHORT_LABELS: Record<TextSize, string> = {
+  default: "M",
+  large: "L",
+  larger: "XL",
+  small: "S",
+};
+
 /**
  * Small, Default, Large, Larger: the whole app's text, applied at once and
  * remembered (docs/specs/text-size.md).
@@ -42,13 +50,16 @@ export default function TextSizeToggle() {
     >
       {TEXT_SIZE_ORDER.map((key) => (
         <ToggleGroupItem
+          // Read aloud, and shown on hover, by the full name: "Small", not "S".
+          aria-label={t(TEXT_SIZE_LABEL_KEYS[key])}
           className="data-[state=on]:border-brand/40 data-[state=on]:bg-brand/10 data-[state=on]:text-brand-text"
           key={key}
           size="lg"
+          title={t(TEXT_SIZE_LABEL_KEYS[key])}
           value={key}
           variant="outline"
         >
-          {t(TEXT_SIZE_LABEL_KEYS[key])}
+          {TEXT_SIZE_SHORT_LABELS[key]}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

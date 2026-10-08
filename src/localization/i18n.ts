@@ -1,9 +1,18 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import ar from "./locales/ar";
+import de from "./locales/de";
+import es from "./locales/es";
+import fr from "./locales/fr";
+import ja from "./locales/ja";
+import ko from "./locales/ko";
+import zhCN from "./locales/zh-cn";
 
 i18n.use(initReactI18next).init({
   fallbackLng: "en",
   resources: {
+    ar: { translation: ar },
+    de: { translation: de },
     en: {
       translation: {
         accountDeletionErrorMessage:
@@ -300,7 +309,9 @@ i18n.use(initReactI18next).init({
         increaseAction: "Increase",
         keyEnterLabel: "Enter",
         keySpaceLabel: "Space",
+        languageEmptyMessage: "No language found",
         languageLabel: "Language",
+        languageSearchPlaceholder: "Search language",
         lockExamLabel: "Unlocks after passing {{exam}} ({{score}}%)",
         lockedLabel: "Locked",
         lockMissingLabel: "Unlocks after {{items}}",
@@ -583,6 +594,7 @@ i18n.use(initReactI18next).init({
         sequenceStepProgress: "Step {{current}} of {{total}}",
         settingsGeneralCategoryLabel: "General",
         settingsPageTitle: "Settings",
+        settingsVersionLabel: "Version {{version}}",
         skipStepAction: "Skip step",
         soundsDescription:
           "A sound on each right answer, in quizzes and on an exam's result.",
@@ -700,6 +712,10 @@ i18n.use(initReactI18next).init({
           "Waiting for you to finish signing in with Google in your browser...",
       },
     },
+    es: { translation: es },
+    fr: { translation: fr },
+    ja: { translation: ja },
+    ko: { translation: ko },
     "pt-BR": {
       translation: {
         accountDeletionErrorMessage:
@@ -800,6 +816,7 @@ i18n.use(initReactI18next).init({
         calendarDropNotAllowedLabel: "Não é possível soltar aqui",
         calendarEventLabel: "evento",
         calendarEventsCountLabel: "{{count}} eventos",
+        calendarEventTitle_many: "{{moduleName}} · {{count}} atividades",
         calendarEventTitle_one: "{{moduleName}} · {{count}} atividade",
         calendarEventTitle_other: "{{moduleName}} · {{count}} atividades",
         calendarGoToDateLabel: "Ir para data",
@@ -923,8 +940,10 @@ i18n.use(initReactI18next).init({
         examLeaveStayAction: "Continuar a prova",
         examLeaveTitle: "Sair da prova?",
         examModuleNoQuiz: "Sem quiz",
+        examModuleQuestionCount_many: "{{count}} perguntas",
         examModuleQuestionCount_one: "{{count}} pergunta",
         examModuleQuestionCount_other: "{{count}} perguntas",
+        examModulesAvailable_many: "{{count}} perguntas nos módulos marcados",
         examModulesAvailable_one: "{{count}} pergunta nos módulos marcados",
         examModulesAvailable_other: "{{count}} perguntas nos módulos marcados",
         examModulesLabel: "Módulos de onde sortear",
@@ -933,6 +952,7 @@ i18n.use(initReactI18next).init({
         examNotTaken: "Ainda não feita",
         examPassedResult: "Aprovada · nota para passar {{score}}%",
         examPassingScoreLabel: "Nota para passar (%)",
+        examQuestionCount_many: "{{count}} perguntas",
         examQuestionCount_one: "{{count}} pergunta",
         examQuestionCount_other: "{{count}} perguntas",
         examQuestionCountLabel: "Quantas perguntas sortear",
@@ -942,6 +962,7 @@ i18n.use(initReactI18next).init({
         examQuestionsSavesFirstHint:
           "A prova é salva antes, para as perguntas ficarem nela.",
         examSourcesColumnLabel: "Perguntas de",
+        examStandaloneCount_many: "+ {{count}} avulsas",
         examStandaloneCount_one: "+ {{count}} avulsa",
         examStandaloneCount_other: "+ {{count}} avulsas",
         examSubmitConfirmTitle: "Entregar a prova?",
@@ -950,6 +971,7 @@ i18n.use(initReactI18next).init({
         examsSectionTitle: "Provas",
         examTimeColumnLabel: "Tempo",
         examTimeLastMinute: "Menos de um minuto restante",
+        examTimeLeftAnnouncement_many: "{{count}} minutos restantes",
         examTimeLeftAnnouncement_one: "{{count}} minuto restante",
         examTimeLeftAnnouncement_other: "{{count}} minutos restantes",
         examTimeLeftLabel: "Tempo restante",
@@ -960,6 +982,8 @@ i18n.use(initReactI18next).init({
         examTimeUpMessage:
           "O tempo acabou: a prova foi entregue com o que foi respondido.",
         examTitleLabel: "Título",
+        examUnansweredConfirm_many:
+          "Faltam {{count}} perguntas. Entregar assim mesmo?",
         examUnansweredConfirm_one:
           "Falta {{count}} pergunta. Entregar assim mesmo?",
         examUnansweredConfirm_other:
@@ -985,6 +1009,7 @@ i18n.use(initReactI18next).init({
         flashcardFormMissingFrontError: "Adicione a frente do cartão.",
         flashcardFrontLabel: "Frente",
         flashcardsEmptyMessage: "Nenhum flashcard ainda.",
+        flashcardsSavedCount_many: "{{count}} cards salvos neste baralho",
         flashcardsSavedCount_one: "{{count}} card salvo neste baralho",
         flashcardsSavedCount_other: "{{count}} cards salvos neste baralho",
         flashcardsSavedCount_zero: "Nenhum card salvo ainda",
@@ -997,7 +1022,9 @@ i18n.use(initReactI18next).init({
         increaseAction: "Aumentar",
         keyEnterLabel: "Enter",
         keySpaceLabel: "Espaço",
+        languageEmptyMessage: "Nenhum idioma encontrado",
         languageLabel: "Idioma",
+        languageSearchPlaceholder: "Buscar idioma",
         lockExamLabel: "Libera depois de passar em {{exam}} ({{score}}%)",
         lockedLabel: "Bloqueada",
         lockMissingLabel: "Libera depois de {{items}}",
@@ -1052,6 +1079,7 @@ i18n.use(initReactI18next).init({
         programImportAction: "Importar",
         programImportAlreadyThere: "já existe, fica de fora",
         programImportBackToPromptAction: "Voltar ao prompt",
+        programImportCards_many: "{{count}} cards",
         programImportCards_one: "{{count}} card",
         programImportCards_other: "{{count}} cards",
         programImportCompletes:
@@ -1093,6 +1121,7 @@ i18n.use(initReactI18next).init({
           "Confira o que será criado antes de importar.",
         programImportStep_prompt:
           "Peça o programa a uma IA: diga do que se trata, envie o prompt e salve a resposta como arquivo .md.",
+        programImportSteps_many: "{{count}} etapas",
         programImportSteps_one: "{{count}} etapa",
         programImportSteps_other: "{{count}} etapas",
         programImportTopicLabel: "Sobre o que é o programa?",
@@ -1156,6 +1185,7 @@ i18n.use(initReactI18next).init({
         quizImportErrorTooFewOptions:
           "Pergunta {{question}}: precisa de pelo menos 2 alternativas.",
         quizImportInvalidFileMessage: "Escolha um arquivo Markdown (.md).",
+        quizImportPreviewCount_many: "{{count}} perguntas lidas",
         quizImportPreviewCount_one: "{{count}} pergunta lida",
         quizImportPreviewCount_other: "{{count}} perguntas lidas",
         quizImportPromptCopied:
@@ -1174,6 +1204,7 @@ i18n.use(initReactI18next).init({
         quizQuestionDeletedMessage: "Pergunta excluída",
         quizQuestionProgressLabel: "Pergunta {{current}} de {{total}}",
         quizQuestionsEmptyMessage: "Nenhuma pergunta ainda.",
+        quizQuestionsSavedCount_many: "{{count}} perguntas salvas neste quiz",
         quizQuestionsSavedCount_one: "{{count}} pergunta salva neste quiz",
         quizQuestionsSavedCount_other: "{{count}} perguntas salvas neste quiz",
         quizQuestionsSavedCount_zero: "Nenhuma pergunta salva ainda",
@@ -1209,6 +1240,7 @@ i18n.use(initReactI18next).init({
         rankLadderTitle: "A escada",
         rankMyRankTab: "Meu rank",
         rankPastSeasonsTitle: "Temporadas passadas",
+        rankPoints_many: "{{count}} pontos",
         rankPoints_one: "{{count}} ponto",
         rankPoints_other: "{{count}} pontos",
         rankProgressLabel: "Progresso até o próximo rank",
@@ -1219,6 +1251,7 @@ i18n.use(initReactI18next).init({
         rankSeasonLabel: "Temporada {{season}}",
         rankSeasonName: "T{{quarter}} {{year}}",
         rankSeasonPointsLabel: "Pontos da temporada",
+        rankStartsAt_many: "A partir de {{count}} pontos",
         rankStartsAt_one: "A partir de {{count}} ponto",
         rankStartsAt_other: "A partir de {{count}} pontos",
         rankTier_bronze: "Bronze",
@@ -1230,6 +1263,7 @@ i18n.use(initReactI18next).init({
         rankTier_platinum: "Platina",
         rankTier_silver: "Prata",
         rankTierUpMessage: "Novo tier: {{rank}}!",
+        rankToNext_many: "Faltam {{count}} pontos para {{rank}}",
         rankToNext_one: "Falta {{count}} ponto para {{rank}}",
         rankToNext_other: "Faltam {{count}} pontos para {{rank}}",
         rankTopMessage: "Você está no topo.",
@@ -1248,8 +1282,10 @@ i18n.use(initReactI18next).init({
         replayWelcomeTitle: "Introdução",
         restoreFromDriveAction: "Restaurar do Google Drive",
         revealAnswerAction: "Revelar resposta",
+        reviewCardsLeftLabel_many: "{{count}} cards restantes",
         reviewCardsLeftLabel_one: "{{count}} card restante",
         reviewCardsLeftLabel_other: "{{count}} cards restantes",
+        reviewDueInDays_many: "Em {{count}} dias",
         reviewDueInDays_one: "Em {{count}} dia",
         reviewDueInDays_other: "Em {{count}} dias",
         reviewDueToday: "Hoje",
@@ -1258,6 +1294,7 @@ i18n.use(initReactI18next).init({
         reviewFocusLabel: "Revisão agendada",
         reviewNothingDueMessage: "Nada para revisar agora.",
         reviewOverdueLabel: "Revisão atrasada",
+        reviewSessionCompleteCount_many: "{{count}} cards revisados.",
         reviewSessionCompleteCount_one: "{{count}} card revisado.",
         reviewSessionCompleteCount_other: "{{count}} cards revisados.",
         reviewSessionCompleteMessage: "Sessão de revisão concluída",
@@ -1275,11 +1312,13 @@ i18n.use(initReactI18next).init({
         sequenceModeSuggest: "Só sugerir",
         sequenceRatePrompt:
           "Como foi a sequência inteira? Uma avaliação define quando ela volta.",
+        sequenceStepCount_many: "{{count}} atividades",
         sequenceStepCount_one: "{{count}} atividade",
         sequenceStepCount_other: "{{count}} atividades",
         sequenceStepProgress: "Etapa {{current}} de {{total}}",
         settingsGeneralCategoryLabel: "Geral",
         settingsPageTitle: "Configurações",
+        settingsVersionLabel: "Versão {{version}}",
         skipStepAction: "Pular etapa",
         soundsDescription:
           "Um som a cada acerto, nos quizzes e no resultado das provas.",
@@ -1288,6 +1327,7 @@ i18n.use(initReactI18next).init({
         streakBestLabel: "Melhor Sequência",
         streakCurrentLabel: "Sequência Atual",
         streakDayOfMonthLabel: "Dia {{day}}",
+        streakDaysLabel_many: "{{count}} dias",
         streakDaysLabel_one: "{{count}} dia",
         streakDaysLabel_other: "{{count}} dias",
         streakDaysLabel_zero: "$t(streakNoneYetLabel)",
@@ -1312,18 +1352,23 @@ i18n.use(initReactI18next).init({
         themeLabel: "Tema",
         titleHomePage: "Página Inicial",
         titleSecondPage: "Segunda Página",
+        todayCardCount_many: "{{count}} cards",
         todayCardCount_one: "{{count}} card",
         todayCardCount_other: "{{count}} cards",
         todayDayDoneTitle: "Dia concluído",
         todayDoneByProgramLabel: "Revisado hoje",
+        todayDueCardsDetail_many: "{{count}} cards",
         todayDueCardsDetail_one: "{{count}} card",
         todayDueCardsDetail_other: "{{count}} cards",
+        todayDueSummary_many: "{{count}} atividades para hoje",
         todayDueSummary_one: "{{count}} atividade para hoje",
         todayDueSummary_other: "{{count}} atividades para hoje",
         todayFreeDayTitle: "Nada para hoje",
         todayGoToProgramsAction: "Ir para Programas",
         todayLoadError: "Não foi possível carregar as revisões de hoje.",
         todayNextReview: "Próxima revisão: {{date}}",
+        todayNextReviewWithCount_many:
+          "Próxima revisão: {{date}} · {{count}} atividades",
         todayNextReviewWithCount_one:
           "Próxima revisão: {{date}} · {{count}} atividade",
         todayNextReviewWithCount_other:
@@ -1332,30 +1377,38 @@ i18n.use(initReactI18next).init({
           "As revisões aparecem aqui depois que você estuda uma atividade e diz como foi.",
         todayOpenLinkAction: "Abrir link",
         todayOpenPdfAction: "Abrir PDF",
+        todayOverdueSummary_many: "{{count}} atrasadas",
         todayOverdueSummary_one: "{{count}} atrasada",
         todayOverdueSummary_other: "{{count}} atrasadas",
         todayPageTitle: "Hoje",
         todayRatePrompt: "Como foi? Avalie quando terminar.",
         todayRetryAction: "Tentar de novo",
+        todayReviewedToday_many: "{{count}} atividades revisadas hoje",
         todayReviewedToday_one: "{{count}} atividade revisada hoje",
         todayReviewedToday_other: "{{count}} atividades revisadas hoje",
         todaySessionByProgramLabel: "Revisado por programa",
+        todaySessionDoneMessage_many:
+          "{{count}} atividades revisadas nesta sessão.",
         todaySessionDoneMessage_one:
           "{{count}} atividade revisada nesta sessão.",
         todaySessionDoneMessage_other:
           "{{count}} atividades revisadas nesta sessão.",
         todaySessionDoneTitle: "Tudo revisado",
+        todaySessionProgramCount_many: "{{count}} atividades",
         todaySessionProgramCount_one: "{{count}} atividade",
         todaySessionProgramCount_other: "{{count}} atividades",
         todaySessionProgress: "{{current}} de {{total}}",
         todaySessionTitle: "Revisões de hoje",
         todaySkipAction: "Pular",
         todayStartAction: "Começar",
+        todayStreak_many: "{{count}} dias seguidos",
         todayStreak_one: "{{count}} dia seguido",
         todayStreak_other: "{{count}} dias seguidos",
+        todayStreakUnit_many: "dias seguidos",
         todayStreakUnit_one: "dia seguido",
         todayStreakUnit_other: "dias seguidos",
         todayUpcomingTitle: "Próximos 7 dias",
+        todayUrgencyOverdue_many: "Atrasada há {{count}} dias",
         todayUrgencyOverdue_one: "Atrasada há {{count}} dia",
         todayUrgencyOverdue_other: "Atrasada há {{count}} dias",
         todayUrgencyToday: "Hoje",
@@ -1399,5 +1452,6 @@ i18n.use(initReactI18next).init({
           "Aguardando você concluir o login com o Google no navegador...",
       },
     },
+    "zh-CN": { translation: zhCN },
   },
 });

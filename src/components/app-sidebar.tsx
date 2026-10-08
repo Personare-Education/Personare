@@ -6,6 +6,7 @@ import PersonareLogo from "@/components/personare-logo";
 import { RankWidget } from "@/components/rank-widget";
 import SettingsSidebarItem from "@/components/settings-sidebar-item";
 import { StreakWidget } from "@/components/streak-widget";
+import { useDirection } from "@/components/ui/direction";
 import {
   Sidebar,
   SidebarContent,
@@ -43,13 +44,16 @@ export function isCurrentNavItem(to: string, pathname: string): boolean {
 export default function AppSidebar() {
   const { t } = useTranslation();
   const { toggleSidebar } = useSidebar();
+  // At the reading start: on the right for Arabic
+  // (docs/specs/settings-language-text-size-version.md AC-5).
+  const side = useDirection() === "rtl" ? "right" : "left";
   const dueCount = useDueCount();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" side={side} variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -61,7 +65,7 @@ export default function AppSidebar() {
               <div className="flex aspect-square size-8 items-center justify-center">
                 <PersonareLogo className="size-6" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-medium">{t("appName")}</span>
               </div>
             </SidebarMenuButton>
@@ -87,7 +91,7 @@ export default function AppSidebar() {
                         <item.icon />
                         <span>{t(item.labelKey)}</span>
                         {item.to === "/" && dueCount > 0 ? (
-                          <span className="ml-auto rounded-full bg-brand px-1.5 font-medium text-[0.6875rem] text-white tabular-nums leading-5">
+                          <span className="ms-auto rounded-full bg-brand px-1.5 font-medium text-[0.6875rem] text-white tabular-nums leading-5">
                             {dueCount}
                           </span>
                         ) : null}

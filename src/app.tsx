@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { updateAppLanguage } from "./actions/language";
 import { applySavedTextSize } from "./actions/text-size";
 import { syncWithLocalTheme } from "./actions/theme";
+import AppDirection from "./components/app-direction";
 import { router } from "./utils/routes";
 import { installStackContentReveal } from "./utils/stack-content-reveal";
 import "./localization/i18n";
@@ -18,7 +19,11 @@ export default function App() {
     updateAppLanguage(i18n);
   }, [i18n]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <AppDirection>
+      <RouterProvider router={router} />
+    </AppDirection>
+  );
 }
 
 const container = document.getElementById("app");

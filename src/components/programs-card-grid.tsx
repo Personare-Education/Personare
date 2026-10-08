@@ -111,7 +111,7 @@ function ProgramCard({
         {/* biome-ignore lint/a11y/useSemanticElements: must not be a real <button> -- it wraps the three-dot menu's own <button>, and a button can't contain another button. */}
         <div
           aria-label={program.name}
-          className="flex cursor-pointer flex-col gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent/50"
+          className="flex cursor-pointer flex-col gap-3 rounded-lg border border-border bg-card p-4 text-start transition-colors hover:bg-accent/50"
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           role="button"

@@ -395,7 +395,7 @@ export default function FlashcardFormDialog({
           {savedCount === undefined ? null : (
             <p
               aria-live="polite"
-              className="mr-auto self-center text-muted-foreground text-xs"
+              className="me-auto self-center text-muted-foreground text-xs"
             >
               {t("flashcardsSavedCount", { count: savedCount })}
             </p>

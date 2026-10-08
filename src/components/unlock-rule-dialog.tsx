@@ -344,7 +344,7 @@ function ExamChoices({ exams, onChange, selectedId }: ExamChoicesProps) {
       </span>
       {exams.map((exam) => (
         <RadioGroupPrimitive.Item
-          className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring"
+          className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-sm outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring"
           key={exam.id}
           value={exam.id}
         >
