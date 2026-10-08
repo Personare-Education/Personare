@@ -19,6 +19,28 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
+  # The MCP bridge is a named pipe on Windows and a Unix socket elsewhere:
+  # its tests run on each system (docs/specs/mcp-release.md AC-4). Linux runs
+  # them with the rest, in tests-unit.
+  tests-mcp-bridge:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      # On Windows, without the C++ build tools, better-sqlite3's install script
+      # fails to recompile it; its prebuild already works (CONTRIBUTING.md).
+      - name: Install dependencies
+        run: npm ci ${{ runner.os == 'Windows' && '--ignore-scripts' || '' }}
+      - name: Run the MCP tests
+        run: npx vitest run src/tests/unit/mcp- src/tests/unit/use-data-changed
+
   test-e2e:
     timeout-minutes: 20
     runs-on: ubuntu-latest
