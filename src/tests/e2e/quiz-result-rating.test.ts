@@ -112,6 +112,28 @@ test("finishing a quiz rates it right on its result", async () => {
   const quizRow = page.getByRole("row", { name: new RegExp(quizName) });
   await quizRow.getByLabel("Take quiz").click();
   const runner = page.getByRole("dialog", { name: quizName });
+
+  // Only an activity's content selects; the interface and a choice do not;
+  // every scroll area has the thin scrollbar
+  // (docs/specs/selection-and-scrollbars.md).
+  const userSelect = (locator: ReturnType<Page["getByText"]>) =>
+    locator.evaluate((element) => getComputedStyle(element).userSelect);
+  await expect(runner.getByText("2 + 2?")).toBeVisible();
+  expect(await userSelect(runner.getByText("2 + 2?"))).toBe("text");
+  expect(
+    await userSelect(runner.getByRole("button", { name: "Check answer" }))
+  ).toBe("none");
+  expect(await userSelect(runner.getByText("4", { exact: true }).first())).toBe(
+    "none"
+  );
+  expect(
+    await page.evaluate(() => getComputedStyle(document.body).userSelect)
+  ).toBe("none");
+  expect(
+    await page.evaluate(
+      () => getComputedStyle(document.documentElement).scrollbarWidth
+    )
+  ).toBe("thin");
   // One right, one wrong: both chart sections must show up.
   await runner.getByRole("radio").first().click();
   await runner.getByRole("button", { name: "Check answer" }).click();

@@ -186,6 +186,8 @@
 
 @layer base {
   * {
+    scrollbar-color: var(--border) transparent;
+    scrollbar-width: thin;
     @apply border-border outline-ring;
   }
   /* What gets keyboard focus without a style of its own still shows it: a
@@ -196,7 +198,18 @@
     outline-offset: 2px;
   }
   body {
+    user-select: none;
     @apply bg-background text-foreground overflow-hidden font-sans antialiased;
+  }
+  input,
+  textarea,
+  [contenteditable="true"],
+  .selectable {
+    user-select: text;
+  }
+  /* A choice is clicked like a button, its text with it (AC-3). */
+  [data-slot="questionnaire-choice"] .selectable {
+    user-select: none;
   }
   html {
     @apply font-sans;
