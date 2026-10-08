@@ -32,6 +32,7 @@ import ProgramsCardGrid, {
   type Program,
 } from "@/components/programs-card-grid";
 import { Button } from "@/components/ui/button";
+import { useDataChanged } from "@/hooks/use-data-changed";
 import { useDueReviews } from "@/hooks/use-due-count";
 import type { ImportReport } from "@/ipc/shared/program-import";
 import { showUndoToast } from "@/utils/undo-toast";
@@ -82,6 +83,8 @@ export function ProgramsPage() {
   useEffect(() => {
     refreshPrograms();
   }, [refreshPrograms]);
+  // A program created from Claude shows up here at once (MCP bridge).
+  useDataChanged("programs", refreshPrograms);
 
   useEffect(() => {
     listProgramActivityCounts().then(setActivityCounts);

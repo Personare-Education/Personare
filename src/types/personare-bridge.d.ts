@@ -7,6 +7,11 @@ interface PersonareBridge {
    * longer carries `path`, only the preload's webUtils can tell it.
    */
   getPathForFile: (file: File) => string;
+  /**
+   * Called when the main process changed data outside this window (e.g. the
+   * MCP bridge created a program); returns the unsubscribe.
+   */
+  onDataChanged?: (callback: (topic: string) => void) => () => void;
 }
 
 interface Window {

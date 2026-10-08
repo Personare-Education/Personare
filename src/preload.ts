@@ -13,4 +13,14 @@ window.addEventListener("message", (event) => {
 // which only webUtils can read off a File since Electron 32.
 contextBridge.exposeInMainWorld("personare", {
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
+  // What the MCP bridge changed, so the open page reloads it
+  // (docs/specs/mcp-create-program.md AC-6).
+  onDataChanged: (callback: (topic: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, topic: string) =>
+      callback(topic);
+    ipcRenderer.on(IPC_CHANNELS.DATA_CHANGED, listener);
+    return () => {
+      ipcRenderer.off(IPC_CHANNELS.DATA_CHANGED, listener);
+    };
+  },
 });

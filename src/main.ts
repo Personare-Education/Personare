@@ -34,6 +34,7 @@ import { fetchCurrentUser } from "@/main/backend-client";
 import { countDueReviews } from "@/main/due-reviews";
 import { registerAppImageProtocolHandler } from "@/main/linux-protocol";
 import { startLinuxUpdates } from "@/main/linux-updates-electron";
+import { type McpBridge, startMcpBridge } from "@/main/mcp-bridge";
 import {
   findOAuthCallbackUrl,
   getProtocolCallbackHost,
@@ -257,6 +258,28 @@ function setupDatabase() {
   setDatabaseClient(db);
 }
 
+let mcpBridge: McpBridge | undefined;
+
+/**
+ * The MCP bridge (docs/specs/mcp-create-program.md): Claude Desktop runs
+ * Personare's MCP server, which calls these same IPC handlers through it.
+ * A bridge that fails to start never keeps the app from opening.
+ */
+async function setupMcpBridge() {
+  try {
+    mcpBridge = await startMcpBridge({
+      dataDir: app.getPath("userData"),
+      onDataChanged: (topic) => {
+        for (const window of BrowserWindow.getAllWindows()) {
+          window.webContents.send(IPC_CHANNELS.DATA_CHANGED, topic);
+        }
+      },
+    });
+  } catch (error) {
+    console.error("Could not start the MCP bridge:", error);
+  }
+}
+
 function getAuthTokenStoragePath() {
   return path.join(app.getPath("userData"), "auth-token.enc");
 }
@@ -397,6 +420,7 @@ if (gotTheSingleInstanceLock) {
       setupORPC();
       registerOAuthProtocolClient();
       setupDatabase();
+      await setupMcpBridge();
       syncLoginItemSettingsWithSavedPreference();
       await restoreSavedAuthSession();
       createTray();
@@ -422,6 +446,11 @@ if (gotTheSingleInstanceLock) {
     } catch (error) {
       console.error("Error during app initialization:", error);
     }
+  });
+
+  // The bridge's note goes with the app, so Claude says to open Personare.
+  app.on("will-quit", () => {
+    mcpBridge?.close().catch(() => undefined);
   });
 
   //osX only

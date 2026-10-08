@@ -1,0 +1,31 @@
+{
+  "$schema": "../node_modules/@anthropic-ai/mcpb/dist/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
+  "name": "personare",
+  "display_name": "Personare",
+  "version": "0.0.0",
+  "description": "Crie programas de estudo no Personare a partir do Claude.",
+  "long_description": "Conecta o Claude ao Personare, o app de estudos com repetição espaçada aberto no seu computador. O Claude cria programas direto no app; os dados ficam só no seu computador. O Personare precisa estar aberto.",
+  "author": { "name": "Personare" },
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.mjs"]
+    }
+  },
+  "tools": [
+    {
+      "name": "create_program",
+      "description": "Cria um programa (uma área de estudo) no Personare."
+    }
+  ],
+  "compatibility": {
+    "platforms": ["win32", "darwin", "linux"],
+    "runtimes": { "node": ">=18.0.0" }
+  },
+  "keywords": ["estudos", "repetição espaçada", "flashcards"],
+  "license": "UNLICENSED"
+}
