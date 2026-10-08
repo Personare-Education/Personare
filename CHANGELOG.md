@@ -6,14 +6,6 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
-### Added
-
-- **Personare no Claude Desktop:** uma extensão (`npm run build:mcp` gera `personare.mcpb`) deixa o Claude
-  criar programas no Personare aberto, por um servidor MCP local. A primeira ferramenta é **criar programa**
-  (nome, cor e ícone); o programa aparece na hora na tela de Programas. Os dados não saem do computador: o
-  servidor fala com o app por um canal local protegido por um token novo a cada abertura. Com o Personare
-  fechado, o Claude avisa para abri-lo.
-
 ## [0.1.0-alpha.12] - 2026-10-07
 
 ### Added
