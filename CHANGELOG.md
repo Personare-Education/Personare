@@ -6,6 +6,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.13] - 2026-10-08
+
 ### Added
 
 - **Personare no Claude Desktop:** uma extensão deixa o Claude montar seus estudos no Personare aberto, por um servidor MCP local. Ele cria **programas**, **módulos**,
