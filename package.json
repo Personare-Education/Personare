@@ -7,6 +7,7 @@
   "author": "Personare <contato@devfernandes.com>",
   "main": ".vite/build/main.js",
   "scripts": {
+    "build:mcp": "tsx ./scripts/build-mcp.ts",
     "bump-ui": "tsx ./scripts/bump-ui.ts",
     "check": "ultracite check",
     "fix": "ultracite fix",
@@ -35,6 +36,7 @@
     "@fontsource-variable/instrument-sans": "^5.3.0",
     "@fontsource-variable/newsreader": "^5.3.0",
     "@icons-pack/react-simple-icons": "^13.15.1",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@orpc/client": "^1.14.8",
     "@orpc/server": "^1.15.0",
     "@shadcn/react": "^0.3.1",
@@ -73,6 +75,7 @@
     "zstd-codec": "^0.1.5"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
     "@babel/core": "^8.0.1",
     "@biomejs/biome": "^2.5.7",
     "@electron-forge/cli": "^7.11.2",
