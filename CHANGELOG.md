@@ -6,6 +6,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Personare no Claude Desktop:** uma extensão (`npm run build:mcp` gera `personare.mcpb`) deixa o Claude
+  montar seus estudos no Personare aberto, por um servidor MCP local. Ele cria **programas**, **módulos**,
+  **atividades** (links, PDFs, quizzes com as perguntas, flashcards com os cards e sequências, travadas na
+  ordem ou não) e **provas** (com perguntas avulsas e tempo limite), cada um **com ou sem regra de
+  desbloqueio**, com as mesmas validações do app. Também lista os programas e mostra um programa por dentro,
+  para completar o que já existe. O que ele cria aparece na hora na tela aberta; se algo falha, nada fica pela
+  metade, e o Claude recebe o motivo. Os dados não saem do computador: o servidor fala com o app por um canal
+  local protegido por um token novo a cada abertura. Com o Personare fechado, o Claude avisa para abri-lo.
+
 ## [0.1.0-alpha.12] - 2026-10-07
 
 ### Added

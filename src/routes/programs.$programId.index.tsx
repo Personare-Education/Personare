@@ -30,6 +30,7 @@ import OrganizeHeader from "@/components/organize-header";
 import { BreadcrumbItem, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import UnlockRuleDialog from "@/components/unlock-rule-dialog";
+import { useDataChanged } from "@/hooks/use-data-changed";
 import { useFocusedModuleRedirect } from "@/hooks/use-focused-module-redirect";
 import { useLocks } from "@/hooks/use-locks";
 import { useReviewSchedule } from "@/hooks/use-review-schedule";
@@ -204,6 +205,14 @@ function ProgramModulesPage() {
     refreshExams();
     refreshLocks();
   }, [refreshExams, refreshLocks]);
+  // What Claude creates through the MCP bridge shows up here at once
+  // (docs/specs/mcp-content-tools.md AC-6).
+  const handleModulesChangedOutside = useCallback(() => {
+    refreshModules();
+    refreshLocks();
+  }, [refreshModules, refreshLocks]);
+  useDataChanged("modules", handleModulesChangedOutside);
+  useDataChanged("exams", handleExamsChange);
   const [ruleError, setRuleError] = useState<string | null>(null);
   const [ruleSubject, setRuleSubject] = useState<{
     id: string;

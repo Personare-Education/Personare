@@ -4,9 +4,11 @@
   "name": "personare",
   "display_name": "Personare",
   "version": "0.0.0",
-  "description": "Crie programas de estudo no Personare a partir do Claude.",
-  "long_description": "Conecta o Claude ao Personare, o app de estudos com repetição espaçada aberto no seu computador. O Claude cria programas direto no app; os dados ficam só no seu computador. O Personare precisa estar aberto.",
-  "author": { "name": "Personare" },
+  "description": "Crie programas, módulos, atividades e provas no Personare a partir do Claude.",
+  "long_description": "Conecta o Claude ao Personare, o app de estudos com repetição espaçada aberto no seu computador. O Claude cria programas, módulos, atividades (links, PDFs, quizzes, flashcards e sequências) e provas, com ou sem regra de desbloqueio, direto no app; os dados ficam só no seu computador. O Personare precisa estar aberto.",
+  "author": {
+    "name": "Personare"
+  },
   "icon": "icon.png",
   "server": {
     "type": "node",
@@ -19,12 +21,34 @@
   "tools": [
     {
       "name": "create_program",
-      "description": "Cria um programa (uma área de estudo) no Personare."
+      "description": "Cria um programa (uma área de estudo)."
+    },
+    {
+      "name": "list_programs",
+      "description": "Lista os programas, com os ids."
+    },
+    {
+      "name": "get_program",
+      "description": "Mostra os módulos, as atividades e as provas de um programa, com os ids."
+    },
+    {
+      "name": "create_module",
+      "description": "Cria um módulo num programa, com regra de desbloqueio opcional."
+    },
+    {
+      "name": "create_activity",
+      "description": "Cria um link, PDF, quiz, baralho de flashcards ou sequência num módulo, com regra opcional."
+    },
+    {
+      "name": "create_exam",
+      "description": "Cria uma prova que sorteia dos quizzes dos módulos, com perguntas avulsas e regra opcionais."
     }
   ],
   "compatibility": {
     "platforms": ["win32", "darwin", "linux"],
-    "runtimes": { "node": ">=18.0.0" }
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
   },
   "keywords": ["estudos", "repetição espaçada", "flashcards"],
   "license": "UNLICENSED"
