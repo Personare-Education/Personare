@@ -335,6 +335,48 @@ export const reviewItems = sqliteTable(
 );
 
 /**
+ * One row per rating of a review item (docs/architecture/scheduling.md D3):
+ * the memory state before and after, what the model predicted, and how long
+ * the review took when measured. What calibration (D4) and the simulator
+ * (D9) read. review_items.rating_history stays as it was.
+ */
+export const reviewLogs = sqliteTable(
+  "review_logs",
+  {
+    desiredRetention: real("desired_retention").notNull(),
+    difficultyAfter: real("difficulty_after").notNull(),
+    difficultyBefore: real("difficulty_before").notNull(),
+    dueAfter: integer("due_after", { mode: "timestamp_ms" }).notNull(),
+    /** From the item shown to the rating; null when not measured. */
+    durationMs: integer("duration_ms"),
+    /** Days since the previous rating; null for the first. */
+    elapsedDays: real("elapsed_days"),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    /** recall (a flashcard) | coverage (quiz, PDF, link): D5. */
+    itemKind: text("item_kind", { enum: ["recall", "coverage"] }).notNull(),
+    rating: text("rating").notNull(),
+    /** What the model predicted at the moment of rating; null if new. */
+    retrievabilityBefore: real("retrievability_before"),
+    reviewedAt: integer("reviewed_at", { mode: "timestamp_ms" }).notNull(),
+    reviewItemId: text("review_item_id")
+      .notNull()
+      .references(() => reviewItems.id),
+    stabilityAfter: real("stability_after").notNull(),
+    stabilityBefore: real("stability_before").notNull(),
+    stateAfter: text("state_after").notNull(),
+    stateBefore: text("state_before").notNull(),
+    /** The program's goal when rated (D1); null if it couldn't be found. */
+    studyGoal: text("study_goal", { enum: ["retain", "test_prep"] }),
+  },
+  (table) => [
+    index("review_logs_review_item_id_idx").on(table.reviewItemId),
+    index("review_logs_reviewed_at_idx").on(table.reviewedAt),
+  ]
+);
+
+/**
  * Singleton settings row -- id is always 1, never a UUID like the rest of
  * the schema. The row is created lazily on first read/write (AC-4), not
  * seeded by a migration.

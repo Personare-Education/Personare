@@ -255,7 +255,11 @@ describe("TodaySessionDialog", () => {
     await user.click(button(i18n.t("revealAnswerAction")));
     await user.click(button(i18n.t("ratingGoodAction")));
 
-    expect(submitRating).toHaveBeenCalledWith("card-1", "good");
+    expect(submitRating).toHaveBeenCalledWith(
+      "card-1",
+      "good",
+      expect.any(Number)
+    );
     expect(await screen.findByText(PDF.activityTitle)).toBeInTheDocument();
   });
 

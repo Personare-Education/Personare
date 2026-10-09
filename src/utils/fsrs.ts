@@ -128,6 +128,22 @@ export function applyRating(
   return schedulerFor(options).next(toFsrsCard(row), now, rating);
 }
 
+/**
+ * The model's predicted chance of recalling the item at `now`
+ * (docs/architecture/scheduling.md D3, D4); null for an item never reviewed,
+ * which has no memory yet to predict.
+ */
+export function retrievabilityAt(
+  row: ReviewItemRow,
+  now: Date,
+  options?: SchedulerOptions
+): number | null {
+  if (row.state === "New" || !row.lastReviewedAt) {
+    return null;
+  }
+  return schedulerFor(options).get_retrievability(toFsrsCard(row), now, false);
+}
+
 export type PreviewRating = "again" | "hard" | "good" | "easy";
 
 const PREVIEW_GRADES: Record<PreviewRating, Grade> = {
