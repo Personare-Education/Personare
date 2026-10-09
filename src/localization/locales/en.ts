@@ -165,6 +165,9 @@ export default {
     'This will delete "{{name}}" and its modules. You can undo it right after.',
   deleteProgramConfirmTitle: "Delete this program?",
   deleteQuizQuestionAction: "Delete question",
+  diagnosticsSectionDescription:
+    "When something goes wrong, Personare writes it down in a file on this computer. Nothing is sent anywhere: export it to send to whoever is helping you.",
+  diagnosticsSectionTitle: "Diagnostics",
   dragQuizOptionAction: "Drag to reorder",
   driveBackupErrorMessage:
     "Failed to back up to Google Drive. Please try again.",
@@ -193,6 +196,9 @@ export default {
   editQuizHeadingAction: "Edit question text",
   editQuizOptionAction: "Edit alternative",
   editQuizQuestionAction: "Edit question",
+  errorLogEmptyMessage: "No errors recorded.",
+  errorLogExportErrorMessage: "Failed to export the error log.",
+  errorLogExportedMessage: "Error log exported.",
   examAttemptCorrect: "{{correct}} of {{total}}",
   examAttemptCorrectColumnLabel: "Right",
   examAttemptDateColumnLabel: "Date",
@@ -253,6 +259,7 @@ export default {
   examUnansweredConfirm_other: "{{count}} questions are blank. Submit anyway?",
   exportAccountDataAction: "Export account data",
   exportBackupAction: "Export backup",
+  exportErrorLogAction: "Export error log",
   finishQuizAction: "Finish quiz",
   flashcardBackLabel: "Back",
   flashcardComposerAddBackAction: "Add back",

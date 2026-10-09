@@ -166,6 +166,9 @@ export default {
     'Isso vai excluir "{{name}}" e os módulos dele. Dá para desfazer logo em seguida.',
   deleteProgramConfirmTitle: "Excluir este programa?",
   deleteQuizQuestionAction: "Excluir pergunta",
+  diagnosticsSectionDescription:
+    "Quando algo dá errado, o Personare anota num arquivo neste computador. Nada é enviado: exporte para mandar a quem estiver te ajudando.",
+  diagnosticsSectionTitle: "Diagnóstico",
   dragQuizOptionAction: "Arraste para reordenar",
   driveBackupErrorMessage:
     "Falha ao fazer backup no Google Drive. Tente novamente.",
@@ -194,6 +197,9 @@ export default {
   editQuizHeadingAction: "Editar enunciado",
   editQuizOptionAction: "Editar alternativa",
   editQuizQuestionAction: "Editar pergunta",
+  errorLogEmptyMessage: "Nenhum erro registrado.",
+  errorLogExportErrorMessage: "Falha ao exportar o registro de erros.",
+  errorLogExportedMessage: "Registro de erros exportado.",
   examAttemptCorrect: "{{correct}} de {{total}}",
   examAttemptCorrectColumnLabel: "Acertos",
   examAttemptDateColumnLabel: "Data",
@@ -262,6 +268,7 @@ export default {
     "Faltam {{count}} perguntas. Entregar assim mesmo?",
   exportAccountDataAction: "Exportar dados da conta",
   exportBackupAction: "Exportar backup",
+  exportErrorLogAction: "Exportar registro de erros",
   finishQuizAction: "Finalizar quiz",
   flashcardBackLabel: "Verso",
   flashcardComposerAddBackAction: "Adicionar verso",

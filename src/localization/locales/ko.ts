@@ -164,6 +164,9 @@ export default {
     "“{{name}}”과(와) 그 안의 모듈을 삭제해요. 바로 다음에 되돌릴 수 있어요.",
   deleteProgramConfirmTitle: "이 프로그램을 삭제할까요?",
   deleteQuizQuestionAction: "문제 삭제",
+  diagnosticsSectionDescription:
+    "문제가 생기면 Personare가 이 컴퓨터의 파일에 기록합니다. 아무것도 전송되지 않습니다. 도와주는 사람에게 보내려면 내보내세요.",
+  diagnosticsSectionTitle: "진단",
   dragQuizOptionAction: "끌어서 순서 바꾸기",
   driveBackupErrorMessage:
     "Google Drive에 백업하지 못했어요. 다시 시도해 주세요.",
@@ -192,6 +195,9 @@ export default {
   editQuizHeadingAction: "문제 내용 편집",
   editQuizOptionAction: "선택지 편집",
   editQuizQuestionAction: "문제 편집",
+  errorLogEmptyMessage: "기록된 오류가 없습니다.",
+  errorLogExportErrorMessage: "오류 기록을 내보내지 못했습니다.",
+  errorLogExportedMessage: "오류 기록을 내보냈습니다.",
   examAttemptCorrect: "{{total}}문제 중 {{correct}}문제",
   examAttemptCorrectColumnLabel: "정답",
   examAttemptDateColumnLabel: "날짜",
@@ -246,6 +252,7 @@ export default {
     "{{count}}문제가 비어 있어요. 그래도 제출할까요?",
   exportAccountDataAction: "계정 데이터 내보내기",
   exportBackupAction: "백업 내보내기",
+  exportErrorLogAction: "오류 기록 내보내기",
   finishQuizAction: "퀴즈 끝내기",
   flashcardBackLabel: "뒷면",
   flashcardComposerAddBackAction: "뒷면 추가",

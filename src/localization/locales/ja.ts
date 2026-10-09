@@ -169,6 +169,9 @@ export default {
     "「{{name}}」とそのモジュールを削除します。直後なら元に戻せます。",
   deleteProgramConfirmTitle: "このプログラムを削除しますか?",
   deleteQuizQuestionAction: "問題を削除",
+  diagnosticsSectionDescription:
+    "問題が起きると、Personare はこのコンピューター上のファイルに記録します。どこにも送信されません。サポートしてくれる人に送るときはエクスポートしてください。",
+  diagnosticsSectionTitle: "診断",
   dragQuizOptionAction: "ドラッグして並べ替え",
   driveBackupErrorMessage:
     "Google Drive にバックアップできませんでした。もう一度お試しください。",
@@ -198,6 +201,9 @@ export default {
   editQuizHeadingAction: "問題文を編集",
   editQuizOptionAction: "選択肢を編集",
   editQuizQuestionAction: "問題を編集",
+  errorLogEmptyMessage: "記録されたエラーはありません。",
+  errorLogExportErrorMessage: "エラーログをエクスポートできませんでした。",
+  errorLogExportedMessage: "エラーログをエクスポートしました。",
   examAttemptCorrect: "{{total}} 問中 {{correct}} 問",
   examAttemptCorrectColumnLabel: "正解",
   examAttemptDateColumnLabel: "日付",
@@ -252,6 +258,7 @@ export default {
     "{{count}} 問が未解答です。このまま提出しますか?",
   exportAccountDataAction: "アカウントデータをエクスポート",
   exportBackupAction: "バックアップをエクスポート",
+  exportErrorLogAction: "エラーログをエクスポート",
   finishQuizAction: "クイズを終える",
   flashcardBackLabel: "裏面",
   flashcardComposerAddBackAction: "裏面を追加",

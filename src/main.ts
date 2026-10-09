@@ -28,10 +28,12 @@ import { setCalendarConnected } from "@/ipc/calendar-sync/state";
 import { ipcContext } from "@/ipc/context";
 import { getDatabaseClient, setDatabaseClient } from "@/ipc/database/state";
 import { setDriveConnected } from "@/ipc/drive-backup/state";
+import { setErrorLog } from "@/ipc/error-log/state";
 import { getOrCreateAppSettings } from "@/ipc/settings/handlers";
 import { loadToken, saveToken } from "@/main/auth-token-storage";
 import { fetchCurrentUser } from "@/main/backend-client";
 import { countDueReviews } from "@/main/due-reviews";
+import { captureMainProcessErrors, createErrorLog } from "@/main/error-log";
 import { registerAppImageProtocolHandler } from "@/main/linux-protocol";
 import { startLinuxUpdates } from "@/main/linux-updates-electron";
 import { type McpBridge, startMcpBridge } from "@/main/mcp-bridge";
@@ -394,7 +396,23 @@ async function restoreSavedAuthSession() {
   }
 }
 
+/**
+ * Errors go to a local file the student can export from Settings
+ * (docs/specs/error-log.md). Set up before anything else starts, so startup
+ * failures are caught too.
+ */
+function setupErrorLog() {
+  const errorLog = createErrorLog(
+    path.join(app.getPath("userData"), "logs", "errors.log"),
+    { appVersion: app.getVersion() }
+  );
+  setErrorLog(errorLog);
+  captureMainProcessErrors(errorLog, { app, console, process });
+}
+
 if (gotTheSingleInstanceLock) {
+  setupErrorLog();
+
   app.on("second-instance", (_event, argv) => {
     showMainWindow();
 

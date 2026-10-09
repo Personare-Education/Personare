@@ -2,6 +2,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
+import { reportWindowErrors } from "./actions/error-log";
 import { updateAppLanguage } from "./actions/language";
 import { applySavedTextSize } from "./actions/text-size";
 import { syncWithLocalTheme } from "./actions/theme";
@@ -31,6 +32,7 @@ if (!container) {
   throw new Error('Root element with id "app" not found');
 }
 installStackContentReveal(document);
+reportWindowErrors(window);
 
 const root = createRoot(container);
 root.render(

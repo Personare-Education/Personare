@@ -19,3 +19,7 @@ export function selectBackupImportFile() {
 export function selectAccountExportPath() {
   return ipc.client.dialog.selectAccountExportPath();
 }
+
+export function selectErrorLogExportPath() {
+  return ipc.client.dialog.selectErrorLogExportPath();
+}

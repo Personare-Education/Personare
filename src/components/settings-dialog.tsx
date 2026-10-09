@@ -4,6 +4,7 @@ import {
   HardDrive,
   KeyRound,
   Languages,
+  LifeBuoy,
   Settings2,
   User,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import BackupImportDialog from "@/components/backup-import-dialog";
 import BetaActivationSection from "@/components/beta-activation-section";
 import DriveBackupDialog from "@/components/drive-backup-dialog";
 import DriveRestoreDialog from "@/components/drive-restore-dialog";
+import ErrorLogSection from "@/components/error-log-section";
 import LangToggle from "@/components/lang-toggle";
 import PrereleaseUpdatesToggle from "@/components/prerelease-updates-toggle";
 import SoundsToggle from "@/components/sounds-toggle";
@@ -37,6 +39,7 @@ type SettingsCategory =
   | "account"
   | "backup"
   | "beta"
+  | "diagnostics"
   | "driveBackup"
   | "general";
 
@@ -158,6 +161,11 @@ export default function SettingsDialog({
       icon: Cloud,
       id: "driveBackup",
       label: t("driveBackupSectionTitle"),
+    },
+    {
+      icon: LifeBuoy,
+      id: "diagnostics",
+      label: t("diagnosticsSectionTitle"),
     },
   ];
 
@@ -285,6 +293,7 @@ export default function SettingsDialog({
                     {t("driveBackupNotConnectedHint")}
                   </p>
                 ))}
+              {activeCategory === "diagnostics" && <ErrorLogSection />}
             </div>
           </div>
           <footer className="flex h-9 shrink-0 items-center justify-end border-t px-4 text-muted-foreground text-xs">

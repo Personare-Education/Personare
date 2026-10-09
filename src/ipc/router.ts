@@ -8,6 +8,7 @@ import { calendarSync } from "./calendar-sync";
 import { database } from "./database";
 import { dialog } from "./dialog";
 import { driveBackup } from "./drive-backup";
+import { errorLog } from "./error-log";
 import { exams } from "./exams";
 import { flashcards } from "./flashcards";
 import { modules } from "./modules";
@@ -31,6 +32,7 @@ export const router = {
   database,
   dialog,
   driveBackup,
+  errorLog,
   exams,
   flashcards,
   modules,

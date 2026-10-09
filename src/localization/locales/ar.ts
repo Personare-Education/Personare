@@ -172,6 +172,9 @@ export default {
     "سيُحذف «{{name}}» ووحداته. يمكنك التراجع مباشرة بعد ذلك.",
   deleteProgramConfirmTitle: "حذف هذا البرنامج؟",
   deleteQuizQuestionAction: "حذف السؤال",
+  diagnosticsSectionDescription:
+    "عندما يحدث خطأ، يدوّنه Personare في ملف على هذا الحاسوب. لا يُرسَل أي شيء: صدّره لإرساله إلى من يساعدك.",
+  diagnosticsSectionTitle: "التشخيص",
   dragQuizOptionAction: "اسحب لإعادة الترتيب",
   driveBackupErrorMessage:
     "تعذّر النسخ الاحتياطي إلى Google Drive. يُرجى المحاولة مرة أخرى.",
@@ -201,6 +204,9 @@ export default {
   editQuizHeadingAction: "تعديل نص السؤال",
   editQuizOptionAction: "تعديل الخيار",
   editQuizQuestionAction: "تعديل السؤال",
+  errorLogEmptyMessage: "لا توجد أخطاء مسجّلة.",
+  errorLogExportErrorMessage: "تعذّر تصدير سجل الأخطاء.",
+  errorLogExportedMessage: "تم تصدير سجل الأخطاء.",
   examAttemptCorrect: "{{correct}} من {{total}}",
   examAttemptCorrectColumnLabel: "الصحيحة",
   examAttemptDateColumnLabel: "التاريخ",
@@ -283,6 +289,7 @@ export default {
   examUnansweredConfirm_zero: "كل الأسئلة مُجابة. هل تريد التسليم؟",
   exportAccountDataAction: "تصدير بيانات الحساب",
   exportBackupAction: "تصدير نسخة احتياطية",
+  exportErrorLogAction: "تصدير سجل الأخطاء",
   finishQuizAction: "إنهاء الاختبار",
   flashcardBackLabel: "الظهر",
   flashcardComposerAddBackAction: "إضافة الظهر",

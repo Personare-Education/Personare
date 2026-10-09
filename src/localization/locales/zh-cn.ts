@@ -157,6 +157,9 @@ export default {
     "将删除“{{name}}”及其模块。删除后可以立即撤销。",
   deleteProgramConfirmTitle: "删除这个计划？",
   deleteQuizQuestionAction: "删除题目",
+  diagnosticsSectionDescription:
+    "出现问题时，Personare 会把它记录在这台电脑上的一个文件里。不会发送到任何地方：导出后可发给正在帮助你的人。",
+  diagnosticsSectionTitle: "诊断",
   dragQuizOptionAction: "拖动以排序",
   driveBackupErrorMessage: "无法备份到 Google Drive，请重试。",
   driveBackupNotConnectedHint:
@@ -184,6 +187,9 @@ export default {
   editQuizHeadingAction: "编辑题干",
   editQuizOptionAction: "编辑选项",
   editQuizQuestionAction: "编辑题目",
+  errorLogEmptyMessage: "没有记录到错误。",
+  errorLogExportErrorMessage: "无法导出错误日志。",
+  errorLogExportedMessage: "错误日志已导出。",
   examAttemptCorrect: "{{total}} 题答对 {{correct}} 题",
   examAttemptCorrectColumnLabel: "答对",
   examAttemptDateColumnLabel: "日期",
@@ -236,6 +242,7 @@ export default {
   examUnansweredConfirm_other: "有 {{count}} 道题未作答。仍要提交吗？",
   exportAccountDataAction: "导出账号数据",
   exportBackupAction: "导出备份",
+  exportErrorLogAction: "导出错误日志",
   finishQuizAction: "结束测验",
   flashcardBackLabel: "背面",
   flashcardComposerAddBackAction: "添加背面",

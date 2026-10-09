@@ -49,6 +49,7 @@ vi.mock("electron", () => {
     app: {
       getLoginItemSettings: () => ({ wasOpenedAtLogin: false }),
       getPath: () => "/tmp",
+      getVersion: () => "0.0.0",
       isPackaged: true,
       on: vi.fn(),
       quit: vi.fn(),
