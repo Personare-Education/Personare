@@ -22,15 +22,38 @@ avaliação, mas cada um usa uma política de agendamento compatível com o pró
 | Pergunta da política | "Quando revisar para manter a recordação perto da meta?" | "Que revisões, até a prova, trazem o maior ganho esperado na prova, dado o tempo disponível?" |
 | Pessoa do `PRODUCT.md` | O aluno do semestre | O candidato com meta datada (concurso, vestibular, residência) |
 
+### Escolha do modo: ao criar o programa
+
+**Confirmado (decisão do usuário, 2026-10-09):** o modo é escolhido **por programa, na criação**, entre duas
+opções:
+
+- **"Nunca mais esquecer"**: Modo A.
+- **"Estudar para uma Prova"**: Modo B.
+
+Consequências desta decisão:
+
+- A data da avaliação $T$ (e os demais dados do Modo B, seção 5.3) pertence ao **programa**. O escopo do
+  Modo B é o conteúdo daquele programa.
+- Um aluno pode ter programas nos dois modos ao mesmo tempo, então a tela Hoje e o planejador combinam
+  itens de políticas diferentes no mesmo dia.
+
+**Proposta (a confirmar):**
+
+- Programas que já existem ficam em "Nunca mais esquecer", que é o comportamento atual.
+- O modo pode ser trocado depois, na edição do programa. Ao trocar, nada se perde: o histórico é o mesmo e
+  só a política muda.
+- Ao passar a data da prova, o programa volta a "Nunca mais esquecer" (seção 9).
+
 ### Terminologia: "Prova" já tem outro significado no app
 
 **Confirmado:** no Personare, **Prova** (`exams`, `docs/specs/exams.md`) é uma avaliação feita *dentro do
 app*: perguntas sorteadas dos quizzes de um programa, feitas sob demanda e **sem FSRS**. O Modo B trata de
 outra coisa: uma avaliação **externa** (o concurso, o vestibular) com data marcada.
 
-**Trabalho futuro:** escolher um nome para o Modo B na interface e no código que não colida com `exams`
-(por exemplo, "data-alvo" ou "modo prova com data"). Até lá, este documento chama o conceito de
-**avaliação com data** ou **Modo B**.
+Na interface, o rótulo do Modo B é **"Estudar para uma Prova"** (decisão acima), e convive com as Provas do
+app. **Proposta:** no código e no banco, usar um nome que não seja `exam` (por exemplo, um campo de objetivo
+do programa e uma `target_date`), para não confundir com a tabela `exams`. Na interface, quando as duas
+coisas aparecerem juntas, deixar claro que a data é da prova de fora do app.
 
 ## 2. Estado atual (Confirmado, no código)
 
@@ -237,12 +260,61 @@ projeto até aqui.**
 Restrição a considerar no desenho dos experimentos: os dados ficam só no computador do aluno (`PRODUCT.md`,
 princípio 3), e nada é enviado automaticamente. Qualquer coleta para avaliação precisa respeitar isso.
 
-## 9. Decisões pendentes
+## 9. Recomendações (Proposta, ainda não aceitas)
+
+Revisão da arquitetura acima, de 2026-10-09. Cada item é uma **proposta**: vira decisão só quando for aceito
+e registrado aqui como **Confirmado**.
+
+1. **Um registro por avaliação.** Uma tabela `review_logs`, com uma linha por avaliação: nota; momento;
+   estado, estabilidade e dificuldade antes e depois; dias desde a revisão anterior; **a recordação prevista
+   pelo modelo no momento da revisão**; e **quanto tempo a revisão levou** (o custo $c_i$, que hoje não
+   existe). O `rating_history` só guarda `{ rating, reviewedAt }`. Essa tabela só acrescenta dados e não
+   depende de nenhuma decisão sobre o Modo B.
+2. **Medir a calibração antes de usar $R_i(T)$.** Comparar a recordação prevista com a observada, usando as
+   métricas do benchmark do FSRS (log loss e RMSE por faixa de previsão). Se a previsão não for confiável, o
+   Modo B não tem base. A medida pode começar interna, ao lado do `computeRetention`.
+3. **Dois tipos de item.** Flashcards e perguntas de quiz passam por um teste de recordação. PDF e link
+   recebem uma nota de dificuldade percebida (Issue #77), em que $R_i$ não tem o mesmo significado.
+   Proposta: no Modo B, PDF e link entram como **cobertura** (ler ou reler antes da prova), não como
+   recordação estimada. Relacionado: hoje o acerto de cada pergunta do quiz é descartado, e ele é um sinal de
+   recordação que poderia alimentar o modelo.
+4. **Separar o modelo da política com o próprio `ts-fsrs`.** A biblioteca expõe `forgetting_curve` e
+   `get_retrievability`. $R_i(T \mid \text{não revisar agora})$ sai da curva de esquecimento até $T$.
+   $R_i(T \mid \text{revisar agora})$ sai da média dos resultados possíveis ("lembrou" e "esqueceu"),
+   ponderada pela recordação atual, seguida da curva até $T$. Isso torna testável a hipótese da seção 3.
+5. **Modo B em degraus, validado por simulação.**
+   - **Simulador offline** (TypeScript, com o mesmo modelo e os logs reais) para comparar políticas antes de
+     levar ao aluno: o FSRS atual, o FSRS com retenção de 95%, e as variantes abaixo.
+   - **v1:** nenhum vencimento depois da véspera da prova, um teto diário de revisões e o plano refeito todo
+     dia (horizonte deslizante). Refazer o plano diariamente reduz a miopia da heurística gulosa sem o
+     custo de uma otimização dinâmica.
+   - **v2, só se o simulador mostrar ganho:** ordenar o dia por $\operatorname{Score}(i,t)$; depois, se
+     justificar, um método de otimização dinâmica.
+   - **Pesos:** começar com **peso por módulo**, igual por padrão e opcionalmente vindo do edital. Peso por
+     item dificilmente seria preenchido.
+6. **Planejador compartilhado.** O teto diário e a distribuição de carga servem também ao Modo A: com
+   `enable_fuzz` desligado, os vencimentos tendem a se acumular nos mesmos dias. Com programas nos dois
+   modos (seção 1), o planejador também é quem junta as duas políticas no mesmo dia.
+7. **#228 antes do Modo B.** Parâmetros ajustados ao aluno melhoram a calibração (item 2), e o Modo B
+   depende dela.
+8. **Processo de decisão.** Transformar as decisões pendentes em registros curtos (ADR), cada um com status
+   (proposta, aceita, substituída). Para cada hipótese, escrever **como será testada** e que resultado a
+   confirmaria, antes do experimento.
+9. **Dados para pesquisa com privacidade.** Como nada sai do computador sozinho, oferecer uma exportação
+   anônima e voluntária do `review_logs`, no mesmo modelo do registro de erros
+   (`docs/specs/error-log.md`).
+
+**Ordem proposta:** `review_logs` → calibração → simulador → #228 → seletor de modo no programa com o
+Modo B v1 → v2, só se o simulador justificar.
+
+## 10. Decisões pendentes
 
 - Se o FSRS é o modelo de memória definitivo do Modo A (seção 4).
 - Se o Modo B usa o mesmo modelo de memória do Modo A, consultado de outra forma (seção 3, hipótese).
 - A política do Modo B: a heurística da seção 5.2, um método de otimização dinâmica ou outra abordagem.
 - De onde vêm os pesos $w_i$, como medir o custo $c_i$ e como o aluno informa a disponibilidade.
-- Como o aluno escolhe o modo: por programa, global ou automático quando há uma data.
-- O nome do Modo B na interface, sem colidir com as Provas do app (seção 1).
-- O que acontece depois da data da prova (volta ao Modo A?).
+- ~~Como o aluno escolhe o modo~~: **decidido**. É por programa, na criação (seção 1).
+- O que acontece com programas que já existem, se o modo pode ser trocado depois e o que acontece depois da
+  data da prova (seção 1, propostas).
+- O nome do Modo B no código e no banco, sem colidir com `exams` (seção 1, proposta).
+- Aceitar ou não as recomendações da seção 9.

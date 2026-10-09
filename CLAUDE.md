@@ -35,7 +35,9 @@ Antes de mexer no agendamento (`src/utils/fsrs.ts`, `src/ipc/review/`, retençã
 - **Modo B, só a formulação conceitual:** $\max_\pi \sum_i w_i R_i(T \mid \pi)$ e a heurística gulosa
   $\text{Score}(i,t)$ são pontos de partida, **não** o algoritmo. Não implemente uma fórmula definitiva sem
   uma decisão registrada.
+- **O modo é escolhido por programa, na criação (decidido):** "Nunca mais esquecer" (Modo A) ou "Estudar
+  para uma Prova" (Modo B). A data da prova pertence ao programa.
 - **"Prova" já é outra coisa no app:** `exams` (`docs/specs/exams.md`) é a prova feita dentro do app, sem
-  FSRS. Não reaproveite esse nome para o Modo B sem decidir antes.
+  FSRS. No código e no banco, não use `exam` para o Modo B; na interface, o rótulo é "Estudar para uma Prova".
 - Marque hipóteses como hipóteses. Nenhuma superioridade de algoritmo foi demonstrada pelo projeto. As
-  decisões pendentes estão na seção 9 do documento; issues #228 e #229.
+  recomendações (propostas) estão na seção 9 e as decisões pendentes na seção 10; issues #228 e #229.
