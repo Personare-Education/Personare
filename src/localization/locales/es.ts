@@ -170,7 +170,6 @@ export default {
     "Esto eliminará “{{name}}” y sus módulos. Puedes deshacerlo justo después.",
   deleteProgramConfirmTitle: "¿Eliminar este programa?",
   deleteQuizQuestionAction: "Eliminar pregunta",
-  documentation: "Documentación",
   dragQuizOptionAction: "Arrastra para reordenar",
   driveBackupErrorMessage:
     "No se pudo guardar la copia en Google Drive. Inténtalo de nuevo.",
@@ -623,8 +622,6 @@ export default {
   textSizeLarger: "Muy grande",
   textSizeSmall: "Pequeño",
   themeLabel: "Tema",
-  titleHomePage: "Página de inicio",
-  titleSecondPage: "Segunda página",
   todayCardCount_many: "{{count}} tarjetas",
   todayCardCount_one: "{{count}} tarjeta",
   todayCardCount_other: "{{count}} tarjetas",

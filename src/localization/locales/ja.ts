@@ -169,7 +169,6 @@ export default {
     "「{{name}}」とそのモジュールを削除します。直後なら元に戻せます。",
   deleteProgramConfirmTitle: "このプログラムを削除しますか?",
   deleteQuizQuestionAction: "問題を削除",
-  documentation: "ドキュメント",
   dragQuizOptionAction: "ドラッグして並べ替え",
   driveBackupErrorMessage:
     "Google Drive にバックアップできませんでした。もう一度お試しください。",
@@ -573,8 +572,6 @@ export default {
   textSizeLarger: "特大",
   textSizeSmall: "小",
   themeLabel: "テーマ",
-  titleHomePage: "ホーム",
-  titleSecondPage: "2 ページ目",
   todayCardCount_other: "{{count}} 枚",
   todayDayDoneTitle: "今日はおしまい",
   todayDoneByProgramLabel: "今日復習したもの",

@@ -9,6 +9,8 @@ import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
 import { freshProfileArg } from "./fresh-profile";
 
 /*
+ * Smoke test: the packaged app opens its first window.
+ *
  * Using Playwright with Electron:
  * https://www.electronjs.org/pt/docs/latest/tutorial/automated-testing#using-playwright
  */

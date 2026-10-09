@@ -171,7 +171,6 @@ export default {
     "„{{name}}“ und seine Module werden gelöscht. Du kannst es direkt danach rückgängig machen.",
   deleteProgramConfirmTitle: "Dieses Programm löschen?",
   deleteQuizQuestionAction: "Frage löschen",
-  documentation: "Dokumentation",
   dragQuizOptionAction: "Zum Umsortieren ziehen",
   driveBackupErrorMessage:
     "Sicherung in Google Drive fehlgeschlagen. Bitte versuche es erneut.",
@@ -614,8 +613,6 @@ export default {
   textSizeLarger: "Sehr groß",
   textSizeSmall: "Klein",
   themeLabel: "Design",
-  titleHomePage: "Startseite",
-  titleSecondPage: "Zweite Seite",
   todayCardCount_one: "{{count}} Karte",
   todayCardCount_other: "{{count}} Karten",
   todayDayDoneTitle: "Tag geschafft",

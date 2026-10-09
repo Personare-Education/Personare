@@ -164,7 +164,6 @@ export default {
     "“{{name}}”과(와) 그 안의 모듈을 삭제해요. 바로 다음에 되돌릴 수 있어요.",
   deleteProgramConfirmTitle: "이 프로그램을 삭제할까요?",
   deleteQuizQuestionAction: "문제 삭제",
-  documentation: "문서",
   dragQuizOptionAction: "끌어서 순서 바꾸기",
   driveBackupErrorMessage:
     "Google Drive에 백업하지 못했어요. 다시 시도해 주세요.",
@@ -559,8 +558,6 @@ export default {
   textSizeLarger: "아주 크게",
   textSizeSmall: "작게",
   themeLabel: "테마",
-  titleHomePage: "홈",
-  titleSecondPage: "두 번째 페이지",
   todayCardCount_other: "카드 {{count}}장",
   todayDayDoneTitle: "오늘 끝",
   todayDoneByProgramLabel: "오늘 복습함",

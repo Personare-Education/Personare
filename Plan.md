@@ -6,6 +6,11 @@ Construído a partir do boilerplate [`electron-shadcn`](https://github.com/LuanR
 
 Este plano é o resultado de duas rodadas de análise em conselho (5 perspectivas independentes + revisão cruzada + síntese), cobrindo tanto os requisitos iniciais quanto as decisões de arquitetura de OAuth, mobile-readiness, importação do Anki e backup.
 
+> **Status (2026-10):** as Fases 0 a 3 estão concluídas; o app está em beta fechado (`0.1.0-alpha.x`).
+> Só a Fase 4 segue aberta (issues #32 e #33). Este documento é o plano original e fica como registro
+> histórico: o que o produto é hoje está em [`PRODUCT.md`](./PRODUCT.md), e cada mudança desde então tem
+> sua spec em [`docs/specs/`](./docs/specs/). Onde o plano e o código divergem, vale o código.
+
 ---
 
 ## 1. Modelo de Domínio
@@ -26,7 +31,7 @@ Programa (ex-"Card" — renomeado para não colidir com "Flashcard")
 
 - **`ReviewItem`** é a entidade de primeira classe que o FSRS agenda — não a Atividade. Cada `ReviewItem` tem seu próprio estado: `stability`, `difficulty`, `due_date`, histórico de ratings (again/hard/good/easy).
 - Uma Atividade do tipo `flashcard_deck` é um **Baralho**: um agrupamento de UI/filtro sobre um conjunto de Flashcards. **O Baralho não tem estado FSRS próprio** — cada Flashcard dentro dele é um `ReviewItem` individual. A "sessão de revisão do baralho" é uma tela que itera sobre os `ReviewItem`s pendentes daquele baralho, mas o agendamento é sempre por Flashcard.
-- Atividades do tipo `quiz`, `pdf` e `link` **não geram `ReviewItem` automaticamente na V1** — são lembretes/conteúdo simples. Ficar em aberto (documentado, não implícito) se e como versões futuras gerarão itens revisáveis a partir delas (ex.: questões erradas de Quiz, trechos marcados de PDF).
+- *(Superado pela Issue #77, `docs/specs/issue-77-activity-difficulty-fsrs.md`: quiz, PDF e link ganharam um `ReviewItem` por atividade, agendado pela dificuldade que o aluno marca ao concluir.)* Texto original: atividades do tipo `quiz`, `pdf` e `link` **não geram `ReviewItem` automaticamente na V1** — são lembretes/conteúdo simples. Ficar em aberto (documentado, não implícito) se e como versões futuras gerarão itens revisáveis a partir delas (ex.: questões erradas de Quiz, trechos marcados de PDF).
 - V2 (fora deste plano, apenas registrado): Flashcards ganham uma Seção própria na UI, diferente de um Item padrão de Data Table, mas na mesma página do Baralho.
 
 ### 1.3 Persistência
@@ -128,5 +133,5 @@ Programa (ex-"Card" — renomeado para não colidir com "Flashcard")
 ## Decisões registradas como propositalmente adiadas
 
 - Protocolo de merge/conflito para sync multi-dispositivo → Fase 4.
-- Geração de `ReviewItem` a partir de Quiz/PDF/Link → não é V1, fica em aberto para avaliação futura.
+- ~~Geração de `ReviewItem` a partir de Quiz/PDF/Link~~ → resolvido na Issue #77 (um `ReviewItem` por atividade).
 - Frontend Mobile → planejamento próprio, após Fase 4.

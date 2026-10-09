@@ -44,7 +44,7 @@ Spaced repetition applied to **every** study activity, not just flashcards. A PD
 - **Backups:** an encrypted local backup file, plus an optional copy on Google Drive.
 - **Soft-delete:** content with review history is never hard-deleted, so the FSRS history is preserved.
 - **Privacy:** LGPD duties (account deletion, data export, explicit consent per Google scope).
-- **Languages:** Brazilian Portuguese and English (i18next).
+- **Languages:** nine interface languages (i18next), with Brazilian Portuguese and English as the reference ones.
 - **Terminology:** "Program" was chosen over "Card" so it does not collide with "Flashcard". The review entity is the `ReviewItem`, not the activity itself.
 - **Open:** how multi-device sync will resolve conflicts. This is deliberately deferred until the mobile client starts.
 

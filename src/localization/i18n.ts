@@ -185,7 +185,6 @@ i18n.use(initReactI18next).init({
           'This will delete "{{name}}" and its modules. You can undo it right after.',
         deleteProgramConfirmTitle: "Delete this program?",
         deleteQuizQuestionAction: "Delete question",
-        documentation: "Documentation",
         dragQuizOptionAction: "Drag to reorder",
         driveBackupErrorMessage:
           "Failed to back up to Google Drive. Please try again.",
@@ -624,8 +623,6 @@ i18n.use(initReactI18next).init({
         textSizeLarger: "Larger",
         textSizeSmall: "Small",
         themeLabel: "Theme",
-        titleHomePage: "Home Page",
-        titleSecondPage: "Second Page",
         todayCardCount_one: "{{count}} card",
         todayCardCount_other: "{{count}} cards",
         todayDayDoneTitle: "Day done",
@@ -889,7 +886,6 @@ i18n.use(initReactI18next).init({
           'Isso vai excluir "{{name}}" e os módulos dele. Dá para desfazer logo em seguida.',
         deleteProgramConfirmTitle: "Excluir este programa?",
         deleteQuizQuestionAction: "Excluir pergunta",
-        documentation: "Documentação",
         dragQuizOptionAction: "Arraste para reordenar",
         driveBackupErrorMessage:
           "Falha ao fazer backup no Google Drive. Tente novamente.",
@@ -1350,8 +1346,6 @@ i18n.use(initReactI18next).init({
         textSizeLarger: "Maior",
         textSizeSmall: "Pequeno",
         themeLabel: "Tema",
-        titleHomePage: "Página Inicial",
-        titleSecondPage: "Segunda Página",
         todayCardCount_many: "{{count}} cards",
         todayCardCount_one: "{{count}} card",
         todayCardCount_other: "{{count}} cards",
