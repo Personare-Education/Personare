@@ -21,10 +21,11 @@ avaliação, mas cada um usa uma política de agendamento compatível com o pró
 | Pergunta da política | "Quando revisar para manter a recordação perto da meta?" | "Que revisões, até a prova, trazem o maior ganho esperado na prova, dado o tempo disponível?" |
 | Pessoa do `PRODUCT.md` | O aluno do semestre | O candidato com meta datada (concurso, vestibular, residência) |
 
-### Escolha do modo: ao criar o programa
+### Escolha do modo: na página do programa
 
-**Confirmado (decisão do usuário, 2026-10-09):** o modo é escolhido **por programa, na criação**, entre duas
-opções:
+**Confirmado (decisão do usuário, 2026-10-09, revista no mesmo dia):** o modo é escolhido **por programa**,
+na **página do programa, acima da lista de módulos**, entre duas opções. Todo programa nasce em "Nunca mais
+esquecer"; o formulário de criar e editar continua só com ícone, nome e cor.
 
 - **"Nunca mais esquecer"**: Modo A.
 - **"Estudar para uma Prova"**: Modo B.
@@ -39,7 +40,7 @@ Consequências desta decisão:
 **Confirmado (D2):**
 
 - Programas que já existem ficam em "Nunca mais esquecer", que é o comportamento de antes.
-- O modo pode ser trocado depois, na edição do programa. Nada se perde: o histórico é o mesmo e só a
+- O modo pode ser trocado depois, no mesmo painel. Nada se perde: o histórico é o mesmo e só a
   política muda.
 - Passada a data da prova, o programa volta a se comportar como "Nunca mais esquecer", sem que nada precise
   ser gravado.
@@ -267,11 +268,13 @@ princípio 3), e nada é enviado automaticamente. Qualquer coleta para avaliaç�
 Vieram da revisão da arquitetura e foram aceitas pelo usuário ("quero que tudo isso seja documentado como
 arquitetura"). Mudar uma delas pede um registro novo aqui, dizendo qual substitui e por quê.
 
-**D1. O modo é do programa.** Ele é escolhido na criação: **"Nunca mais esquecer"** (`study_goal = "retain"`)
-ou **"Estudar para uma Prova"** (`study_goal = "test_prep"`, com `target_date` obrigatória). A data é um dia
-do calendário local, sem horário na v1.
+**D1. O modo é do programa.** É escolhido na **página do programa, acima dos módulos** (não no formulário de
+criação): **"Nunca mais esquecer"** (`study_goal = "retain"`, o padrão de todo programa novo) ou **"Estudar
+para uma Prova"** (`study_goal = "test_prep"`, com `target_date` obrigatória). A escolha salva na hora. A data
+é um dia do calendário local, sem horário na v1. *Revisão:* a primeira versão desta decisão punha a escolha
+no formulário de criação; o usuário pediu para movê-la para a página do programa.
 
-**D2. Transições.** Programas antigos ficam em `retain`. O modo pode ser trocado na edição. Depois da
+**D2. Transições.** Programas antigos ficam em `retain`. O modo pode ser trocado a qualquer momento, no mesmo painel. Depois da
 `target_date`, o programa é tratado como `retain`; a data continua gravada (para o histórico e para a tela
 mostrar "a prova foi em…").
 

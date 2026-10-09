@@ -27,6 +27,7 @@ import ModuleFormDialog from "@/components/module-form-dialog";
 import ModulesDataTable, { type Module } from "@/components/modules-data-table";
 import { ModulesEmptyState } from "@/components/onboarding-empty-states";
 import OrganizeHeader from "@/components/organize-header";
+import StudyGoalPanel from "@/components/study-goal-panel";
 import { BreadcrumbItem, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import UnlockRuleDialog from "@/components/unlock-rule-dialog";
@@ -40,6 +41,7 @@ import {
   summarizeReviewUrgency,
   toReviewHighlight,
 } from "@/utils/review-highlight";
+import type { StudyGoal } from "@/utils/study-goal";
 import { showUndoToast } from "@/utils/undo-toast";
 import type { UnlockMode } from "@/utils/unlock";
 
@@ -62,6 +64,11 @@ function ProgramModulesPage() {
   // The program's look, for the header (docs/specs/organize-identity.md).
   const [programColor, setProgramColor] = useState<string | null>(null);
   const [programIcon, setProgramIcon] = useState<string | null>(null);
+  // Its goal (docs/architecture/scheduling.md D1); null until loaded.
+  const [programGoal, setProgramGoal] = useState<{
+    studyGoal: StudyGoal;
+    targetDate: string | null;
+  } | null>(null);
   const [, startTransition] = useTransition();
   const [formModule, setFormModule] = useState<Module | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -82,14 +89,23 @@ function ProgramModulesPage() {
     refreshModules();
   }, [refreshModules]);
 
-  useEffect(() => {
+  const refreshProgram = useCallback(() => {
     listPrograms().then((programs) => {
       const program = programs.find((item) => item.id === programId);
       setProgramName(program?.name ?? "");
       setProgramColor(program?.color ?? null);
       setProgramIcon(program?.icon ?? null);
+      setProgramGoal(
+        program
+          ? { studyGoal: program.studyGoal, targetDate: program.targetDate }
+          : null
+      );
     });
   }, [programId]);
+
+  useEffect(() => {
+    refreshProgram();
+  }, [refreshProgram]);
 
   // Modules with pending reviews pulse, and so does the one in focus from
   // the calendar until it opens (docs/specs/calendar-module-review-highlight.md).
@@ -330,6 +346,14 @@ function ProgramModulesPage() {
         icon={programIcon}
         title={programName}
       />
+      {programGoal ? (
+        <StudyGoalPanel
+          onChange={refreshProgram}
+          programId={programId}
+          studyGoal={programGoal.studyGoal}
+          targetDate={programGoal.targetDate}
+        />
+      ) : null}
       {isEmpty ? (
         <ModulesEmptyState onCreate={handleCreateClick} />
       ) : (
