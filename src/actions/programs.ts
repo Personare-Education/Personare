@@ -1,4 +1,5 @@
 import { ipc } from "@/ipc/manager";
+import type { StudyGoal } from "@/utils/study-goal";
 
 export interface ProgramActivityCount {
   count: number;
@@ -72,4 +73,13 @@ export function undoProgramImport(created: {
   programId: string | null;
 }) {
   return ipc.client.programs.undoImport({ created });
+}
+
+/** The program's goal (docs/architecture/scheduling.md D1). */
+export function setProgramStudyGoal(
+  id: string,
+  studyGoal: StudyGoal,
+  targetDate: string | null
+) {
+  return ipc.client.programs.setStudyGoal({ id, studyGoal, targetDate });
 }

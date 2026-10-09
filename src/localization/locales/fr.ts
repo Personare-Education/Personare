@@ -632,10 +632,17 @@ export default {
   streakNoneYetLabel: "Pas encore de série",
   streakResetsAtMidnightMessage: "Remise à zéro à minuit",
   streakStartedMessage: "Votre série a commencé",
+  studyGoalLabel: "Objectif",
+  studyGoalRetainDescription:
+    "Des révisions au rythme de votre mémoire, sans date de fin.",
+  studyGoalRetainTitle: "Ne plus jamais oublier",
+  studyGoalTestDescription: "Tout revient avant le jour de l’examen.",
+  studyGoalTestTitle: "Préparer un examen",
   submitExamAction: "Rendre l’examen",
   syncCalendarAction: "Synchroniser maintenant",
   takeExamAction: "Passer l’examen",
   takeQuizAction: "Faire le quiz",
+  targetDateLabel: "Jour de l’examen",
   testPrereleasesDescription:
     "Recevez les versions de test (alphas) dès leur sortie. Désactivé, seulement les versions normales. S’applique à la prochaine ouverture de l’app.",
   testPrereleasesToggleLabel: "Versions de test",

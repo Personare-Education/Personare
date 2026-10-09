@@ -19,6 +19,7 @@ import {
   resolveProgramIcon,
 } from "@/constants/program-appearance";
 import { programTintStyle } from "@/utils/program-tint";
+import type { StudyGoal } from "@/utils/study-goal";
 
 export interface Program {
   color: string | null;
@@ -26,6 +27,9 @@ export interface Program {
   icon: string | null;
   id: string;
   name: string;
+  /** docs/architecture/scheduling.md D1. */
+  studyGoal?: StudyGoal;
+  targetDate?: string | null;
   updatedAt: Date;
 }
 

@@ -598,10 +598,17 @@ export default {
   streakNoneYetLabel: "No streak yet",
   streakResetsAtMidnightMessage: "Resets at midnight",
   streakStartedMessage: "Your streak has started",
+  studyGoalLabel: "Goal",
+  studyGoalRetainDescription:
+    "Reviews at your memory's pace, with no end date.",
+  studyGoalRetainTitle: "Never forget",
+  studyGoalTestDescription: "Everything comes back before the test day.",
+  studyGoalTestTitle: "Study for a test",
   submitExamAction: "Submit exam",
   syncCalendarAction: "Sync now",
   takeExamAction: "Take exam",
   takeQuizAction: "Take quiz",
+  targetDateLabel: "Test day",
   testPrereleasesDescription:
     "Get test versions (alphas) as soon as they are out. Off, only regular versions. Applies the next time the app opens.",
   testPrereleasesToggleLabel: "Test pre-releases",

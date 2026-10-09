@@ -21,6 +21,15 @@ export const programs = sqliteTable("programs", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  /**
+   * retain ("Nunca mais esquecer") | test_prep ("Estudar para uma Prova")
+   * (docs/architecture/scheduling.md D1).
+   */
+  studyGoal: text("study_goal", { enum: ["retain", "test_prep"] })
+    .notNull()
+    .default("retain"),
+  /** The test's local day, `yyyy-MM-dd`; only for test_prep. */
+  targetDate: text("target_date"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 

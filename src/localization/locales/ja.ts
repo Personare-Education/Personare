@@ -577,10 +577,17 @@ export default {
   streakNoneYetLabel: "まだ連続記録はありません",
   streakResetsAtMidnightMessage: "午前 0 時にリセット",
   streakStartedMessage: "連続記録が始まりました",
+  studyGoalLabel: "目標",
+  studyGoalRetainDescription:
+    "記憶のペースで復習します。終わりの日はありません。",
+  studyGoalRetainTitle: "二度と忘れない",
+  studyGoalTestDescription: "すべて試験日の前に戻ってきます。",
+  studyGoalTestTitle: "試験に向けて勉強する",
   submitExamAction: "試験を提出",
   syncCalendarAction: "今すぐ同期",
   takeExamAction: "試験を受ける",
   takeQuizAction: "クイズに挑戦",
+  targetDateLabel: "試験日",
   testPrereleasesDescription:
     "テスト版(アルファ)を公開と同時に受け取ります。オフにすると通常版のみ。次にアプリを開いたときから適用されます。",
   testPrereleasesToggleLabel: "テスト版を受け取る",
