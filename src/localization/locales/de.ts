@@ -171,6 +171,9 @@ export default {
     "„{{name}}“ und seine Module werden gelöscht. Du kannst es direkt danach rückgängig machen.",
   deleteProgramConfirmTitle: "Dieses Programm löschen?",
   deleteQuizQuestionAction: "Frage löschen",
+  diagnosticsSectionDescription:
+    "Wenn etwas schiefgeht, notiert Personare es in einer Datei auf diesem Computer. Nichts wird gesendet: Exportiere sie, um sie an die Person zu schicken, die dir hilft.",
+  diagnosticsSectionTitle: "Diagnose",
   dragQuizOptionAction: "Zum Umsortieren ziehen",
   driveBackupErrorMessage:
     "Sicherung in Google Drive fehlgeschlagen. Bitte versuche es erneut.",
@@ -201,6 +204,10 @@ export default {
   editQuizHeadingAction: "Fragetext bearbeiten",
   editQuizOptionAction: "Antwort bearbeiten",
   editQuizQuestionAction: "Frage bearbeiten",
+  errorLogEmptyMessage: "Keine Fehler aufgezeichnet.",
+  errorLogExportErrorMessage:
+    "Das Fehlerprotokoll konnte nicht exportiert werden.",
+  errorLogExportedMessage: "Fehlerprotokoll exportiert.",
   examAttemptCorrect: "{{correct}} von {{total}}",
   examAttemptCorrectColumnLabel: "Richtig",
   examAttemptDateColumnLabel: "Datum",
@@ -263,6 +270,7 @@ export default {
     "{{count}} Fragen sind unbeantwortet. Trotzdem abgeben?",
   exportAccountDataAction: "Kontodaten exportieren",
   exportBackupAction: "Sicherung exportieren",
+  exportErrorLogAction: "Fehlerprotokoll exportieren",
   finishQuizAction: "Quiz beenden",
   flashcardBackLabel: "Rückseite",
   flashcardComposerAddBackAction: "Rückseite hinzufügen",

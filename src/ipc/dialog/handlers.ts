@@ -71,3 +71,16 @@ export const selectAccountExportPath = os.handler(async () => {
 
   return filePath;
 });
+
+export const selectErrorLogExportPath = os.handler(async () => {
+  const { canceled, filePath } = await electronDialog.showSaveDialog({
+    defaultPath: `personare-errors-${new Date().toISOString().slice(0, 10)}.txt`,
+    filters: [{ extensions: ["txt"], name: "Text" }],
+  });
+
+  if (canceled || !filePath) {
+    return null;
+  }
+
+  return filePath;
+});

@@ -170,6 +170,9 @@ export default {
     "« {{name}} » et ses modules seront supprimés. Vous pourrez annuler juste après.",
   deleteProgramConfirmTitle: "Supprimer ce programme ?",
   deleteQuizQuestionAction: "Supprimer la question",
+  diagnosticsSectionDescription:
+    "Quand quelque chose ne va pas, Personare le note dans un fichier sur cet ordinateur. Rien n’est envoyé : exportez-le pour l’envoyer à la personne qui vous aide.",
+  diagnosticsSectionTitle: "Diagnostic",
   dragQuizOptionAction: "Glisser pour réordonner",
   driveBackupErrorMessage:
     "Échec de la sauvegarde sur Google Drive. Veuillez réessayer.",
@@ -201,6 +204,9 @@ export default {
   editQuizHeadingAction: "Modifier l’énoncé",
   editQuizOptionAction: "Modifier la réponse",
   editQuizQuestionAction: "Modifier la question",
+  errorLogEmptyMessage: "Aucune erreur enregistrée.",
+  errorLogExportErrorMessage: "Impossible d’exporter le journal des erreurs.",
+  errorLogExportedMessage: "Journal des erreurs exporté.",
   examAttemptCorrect: "{{correct}} sur {{total}}",
   examAttemptCorrectColumnLabel: "Justes",
   examAttemptDateColumnLabel: "Date",
@@ -269,6 +275,7 @@ export default {
     "{{count}} questions sont sans réponse. Rendre quand même ?",
   exportAccountDataAction: "Exporter les données du compte",
   exportBackupAction: "Exporter la sauvegarde",
+  exportErrorLogAction: "Exporter le journal des erreurs",
   finishQuizAction: "Terminer le quiz",
   flashcardBackLabel: "Verso",
   flashcardComposerAddBackAction: "Ajouter le verso",
