@@ -528,6 +528,11 @@ export default {
   replayWelcomeDescription: "Personare の使い方をもう一度見る。",
   replayWelcomeTitle: "紹介",
   restoreFromDriveAction: "Google Drive から復元",
+  retentionSummaryRemembered_other:
+    "過去 30 日間の {{count}} 回の復習で覚えていた割合",
+  retentionSummaryTarget:
+    "目標は {{target}}% です。復習はその近くになるように予定されます。",
+  retentionSummaryTitle: "あなたの記憶",
   revealAnswerAction: "答えを見る",
   reviewCardsLeftLabel_other: "残り {{count}} 枚",
   reviewDueInDays_other: "{{count}} 日後",

@@ -27,6 +27,7 @@ import {
   previewRatings as previewFsrsRatings,
   type ReviewItemRow,
 } from "@/utils/fsrs";
+import { computeRetention } from "@/utils/retention-stats";
 import {
   activityIdInputSchema,
   ensureReviewItemsInputSchema,
@@ -506,4 +507,21 @@ export const getPendingActivityRating = os.handler(() => {
       .limit(1)
       .get() ?? null
   );
+});
+
+/**
+ * How much the student remembered in the last 30 days, next to the target
+ * they set (docs/specs/retention-summary.md AC-2).
+ */
+export const retentionStats = os.handler(() => {
+  const db = requireDatabaseClient();
+  const histories = db
+    .select({ ratingHistory: reviewItemsTable.ratingHistory })
+    .from(reviewItemsTable)
+    .all()
+    .map((row) => row.ratingHistory);
+  return {
+    ...computeRetention(histories, new Date()),
+    desiredRetention: desiredRetentionOf(db),
+  };
 });

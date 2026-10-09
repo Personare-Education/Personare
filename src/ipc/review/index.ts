@@ -10,6 +10,7 @@ import {
   listSchedule,
   markActivityDifficulty,
   previewRatings,
+  retentionStats,
   submitRating,
 } from "./handlers";
 
@@ -25,5 +26,6 @@ export const review = {
   listSchedule,
   markActivityDifficulty,
   previewRatings,
+  retentionStats,
   submitRating,
 };

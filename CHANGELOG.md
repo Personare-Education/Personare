@@ -6,6 +6,28 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Meta de retenção:** em Configurações → Geral, escolha quanto do que vence você quer lembrar: 80% (menos
+  revisões), 85%, 90% (recomendado, o de antes) ou 95% (antes de uma prova). Mais alto traz as revisões
+  mais cedo. Vale a partir da próxima avaliação e vai junto no backup.
+- **Sua memória:** com o dia concluído, a tela Hoje mostra quanto você lembrou nas revisões dos últimos 30
+  dias, numa barra com a sua meta marcada. Aparece a partir de 20 revisões no período.
+- **Registro de erros:** quando algo dá errado, o Personare anota num arquivo no seu computador. Em
+  Configurações → Diagnóstico, **Exportar registro de erros** salva uma cópia para você mandar a quem
+  estiver te ajudando. Nada é enviado sozinho.
+
+### Changed
+
+- **Mais rápido com muitos cards:** o banco ganhou índices nas colunas que as listas, as revisões do dia, o
+  calendário e os pontos consultam. Faz diferença depois de importar um baralho grande do Anki.
+- **README** reescrito para descrever o Personare (o que faz, como é feito e como contribuir), e o
+  `Plan.md` ganhou o status atual.
+
+### Removed
+
+- A página de exemplo que sobrou do modelo inicial do projeto, que nenhum menu abria.
+
 ## [0.1.0-alpha.13] - 2026-10-08
 
 ### Added

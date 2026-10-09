@@ -177,3 +177,46 @@ describe("rating with the saved retention (AC-3)", () => {
     expect(strict).toBeLessThan(relaxed);
   });
 });
+
+describe("review.retentionStats (docs/specs/retention-summary.md AC-2)", () => {
+  let tmpDir: string;
+  let db: DatabaseClient;
+  const settings = createRouterClient(settingsNamespace);
+  const review = createRouterClient(reviewNamespace);
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "personare-stats-"));
+    db = createDatabaseClient(path.join(tmpDir, "test.sqlite"));
+    runMigrations(db);
+    setDatabaseClient(db);
+  });
+
+  afterEach(() => {
+    db.$client.close();
+    fs.rmSync(tmpDir, { force: true, recursive: true });
+  });
+
+  it("counts the last 30 days' reviews and returns the target", async () => {
+    const day = 86_400_000;
+    const now = Date.now();
+    db.insert(reviewItems)
+      .values({
+        ...REVIEWED,
+        createdAt: new Date(now),
+        ratingHistory: JSON.stringify([
+          { rating: "good", reviewedAt: now - 9 * day },
+          { rating: "good", reviewedAt: now - 3 * day },
+          { rating: "again", reviewedAt: now - day },
+        ]),
+        updatedAt: new Date(now),
+      })
+      .run();
+    await settings.setDesiredRetention({ desiredRetention: 0.85 });
+
+    expect(await review.retentionStats()).toEqual({
+      attempts: 2,
+      desiredRetention: 0.85,
+      remembered: 1,
+    });
+  });
+});

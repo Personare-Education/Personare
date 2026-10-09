@@ -541,6 +541,13 @@ export default {
   replayWelcomeDescription: "See how Personare works again.",
   replayWelcomeTitle: "Introduction",
   restoreFromDriveAction: "Restore from Google Drive",
+  retentionSummaryRemembered_one:
+    "remembered, across {{count}} review in the last 30 days",
+  retentionSummaryRemembered_other:
+    "remembered, across {{count}} reviews in the last 30 days",
+  retentionSummaryTarget:
+    "Your target is {{target}}%. Reviews are scheduled to land near it.",
+  retentionSummaryTitle: "Your memory",
   revealAnswerAction: "Reveal answer",
   reviewCardsLeftLabel_one: "{{count}} card left",
   reviewCardsLeftLabel_other: "{{count}} cards left",

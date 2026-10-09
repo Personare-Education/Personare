@@ -568,6 +568,15 @@ export default {
   replayWelcomeDescription: "Revoyez comment fonctionne Personare.",
   replayWelcomeTitle: "Présentation",
   restoreFromDriveAction: "Restaurer depuis Google Drive",
+  retentionSummaryRemembered_many:
+    "retenu sur {{count}} révisions ces 30 derniers jours",
+  retentionSummaryRemembered_one:
+    "retenu sur {{count}} révision ces 30 derniers jours",
+  retentionSummaryRemembered_other:
+    "retenu sur {{count}} révisions ces 30 derniers jours",
+  retentionSummaryTarget:
+    "Votre objectif est de {{target}} %. Les révisions sont planifiées pour s’en approcher.",
+  retentionSummaryTitle: "Votre mémoire",
   revealAnswerAction: "Afficher la réponse",
   reviewCardsLeftLabel_many: "{{count}} cartes restantes",
   reviewCardsLeftLabel_one: "{{count}} carte restante",

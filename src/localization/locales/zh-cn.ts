@@ -498,6 +498,10 @@ export default {
   replayWelcomeDescription: "再看一遍 Personare 的使用方式。",
   replayWelcomeTitle: "介绍",
   restoreFromDriveAction: "从 Google Drive 恢复",
+  retentionSummaryRemembered_other: "过去 30 天 {{count}} 次复习中记住的比例",
+  retentionSummaryTarget:
+    "你的目标是 {{target}}%。复习会安排在接近这个目标的时间。",
+  retentionSummaryTitle: "你的记忆",
   revealAnswerAction: "显示答案",
   reviewCardsLeftLabel_other: "还剩 {{count}} 张卡片",
   reviewDueInDays_other: "{{count}} 天后",

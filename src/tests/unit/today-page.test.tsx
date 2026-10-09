@@ -37,6 +37,13 @@ vi.mock("@/actions/review", () => ({
   previewItemRatings: vi.fn().mockResolvedValue({}),
   submitRating: vi.fn().mockResolvedValue({}),
 }));
+vi.mock("@/actions/stats", () => ({
+  getRetentionStats: vi.fn().mockResolvedValue({
+    attempts: 0,
+    desiredRetention: 0.9,
+    remembered: 0,
+  }),
+}));
 vi.mock("@/actions/shell", () => ({
   openActivityFile: vi.fn().mockResolvedValue({ errorMessage: "" }),
   openExternalLink: vi.fn().mockResolvedValue(undefined),
