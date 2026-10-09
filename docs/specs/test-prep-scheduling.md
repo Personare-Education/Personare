@@ -18,7 +18,8 @@
    limitado (e os `scheduledDays` coerentes com ele). O `review_logs` registra esse vencimento. O modelo de
    memória (estabilidade, dificuldade) não muda: só a política.
 3. **A prévia dos botões** mostra o mesmo vencimento limitado.
-4. **Contagem regressiva** no cartão do programa: "Prova em N dias", "Prova hoje" e, depois, "A prova foi
+4. **Contagem regressiva** no cartão do programa e ao lado do dia, no painel de objetivo da página do
+   programa: "Prova em N dias", "Prova hoje" e, depois, "A prova foi
    em …" (em cinza). Nada aparece em "Nunca mais esquecer".
 5. Vale para os dois tipos de item (D5): flashcards e atividades inteiras.
 6. Os textos novos existem nos nove idiomas, com os plurais de cada um.

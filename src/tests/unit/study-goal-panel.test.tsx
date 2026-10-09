@@ -97,4 +97,21 @@ describe("StudyGoalPanel", () => {
       "2026-11-20"
     );
   });
+
+  it("counts the days to the test next to its day", () => {
+    const inTwelve = new Date();
+    inTwelve.setDate(inTwelve.getDate() + 12);
+    const key = [
+      inTwelve.getFullYear(),
+      String(inTwelve.getMonth() + 1).padStart(2, "0"),
+      String(inTwelve.getDate()).padStart(2, "0"),
+    ].join("-");
+    render(
+      <StudyGoalPanel programId="p1" studyGoal="test_prep" targetDate={key} />
+    );
+
+    expect(
+      screen.getByText(i18n.t("testCountdown", { count: 12 }))
+    ).toBeInTheDocument();
+  });
 });

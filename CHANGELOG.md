@@ -8,12 +8,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
-- **Nunca mais esquecer ou Estudar para uma Prova:** ao criar um programa, você escolhe o objetivo. "Nunca
-  mais esquecer" revisa no ritmo da sua memória, sem data para acabar, como antes. "Estudar para uma Prova"
-  pede o dia da prova, e nenhuma revisão do programa fica para depois da véspera; os botões de avaliação já
-  mostram a data limitada. O cartão do programa conta os dias até a prova. Passada a data, o programa volta a
-  revisar no ritmo da memória. Programas que já existiam ficam em "Nunca mais esquecer", e o objetivo pode
-  ser trocado ao editar o programa.
+- **Nunca mais esquecer ou Estudar para uma Prova:** na página de cada programa, acima dos módulos, você
+  escolhe o objetivo. "Nunca mais esquecer", o padrão, revisa no ritmo da sua memória, sem data para acabar,
+  como antes. "Estudar para uma Prova" pede o dia da prova, e nenhuma revisão do programa fica para depois
+  da véspera; os botões de avaliação já mostram a data limitada. O programa conta os dias até a prova, na
+  página e no cartão. Passada a data, ele volta a revisar no ritmo da memória. A escolha salva na hora e
+  pode ser trocada quando quiser.
 - **Registro de cada revisão:** toda avaliação passa a guardar o que o algoritmo previa e quanto tempo a
   revisão levou (nos flashcards). É a base para medir se as previsões acertam e melhorar o agendamento.
   Fica só no seu computador e vai junto no backup.

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { setProgramStudyGoal } from "@/actions/programs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { daysUntilTest } from "@/utils/scheduling-policy";
 import { isDayKey, STUDY_GOALS, type StudyGoal } from "@/utils/study-goal";
 import { cn } from "@/utils/tailwind";
 
@@ -19,6 +20,23 @@ const STUDY_GOAL_TEXT: Record<
     title: "studyGoalTestTitle",
   },
 };
+
+/** How many days are left, next to the day (docs/specs/test-prep-scheduling.md AC-4). */
+function TestCountdownText({ day }: { day: string }) {
+  const { t } = useTranslation();
+  if (!isDayKey(day)) {
+    return null;
+  }
+  const days = daysUntilTest(day, new Date());
+  if (days < 0) {
+    return null;
+  }
+  return (
+    <span className="font-medium text-brand-text text-xs tabular-nums">
+      {days === 0 ? t("testToday") : t("testCountdown", { count: days })}
+    </span>
+  );
+}
 
 interface StudyGoalPanelProps {
   /** Called after a change is saved. */
@@ -125,6 +143,7 @@ export default function StudyGoalPanel({
               type="date"
               value={day}
             />
+            <TestCountdownText day={day} />
           </div>
         ) : null}
       </div>
