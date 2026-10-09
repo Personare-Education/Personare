@@ -17,35 +17,13 @@ import {
   PROGRAM_COLORS,
   PROGRAM_ICONS,
 } from "@/constants/program-appearance";
-import {
-  DEFAULT_STUDY_GOAL,
-  STUDY_GOALS,
-  type StudyGoal,
-} from "@/utils/study-goal";
 import { cn } from "@/utils/tailwind";
 
 export interface ProgramFormSubmitValues {
   color: string;
   icon: string;
   name: string;
-  studyGoal: StudyGoal;
-  /** The test's day, `yyyy-MM-dd`; null for "Nunca mais esquecer". */
-  targetDate: string | null;
 }
-
-const STUDY_GOAL_TEXT: Record<
-  StudyGoal,
-  { description: string; title: string }
-> = {
-  retain: {
-    description: "studyGoalRetainDescription",
-    title: "studyGoalRetainTitle",
-  },
-  test_prep: {
-    description: "studyGoalTestDescription",
-    title: "studyGoalTestTitle",
-  },
-};
 
 interface ProgramFormDialogProps {
   onOpenChange: (open: boolean) => void;
@@ -62,52 +40,24 @@ export default function ProgramFormDialog({
 }: ProgramFormDialogProps) {
   const { t } = useTranslation();
   const nameInputId = useId();
-  const targetDateInputId = useId();
-  const studyGoalName = useId();
   const [name, setName] = useState(program?.name ?? "");
   const [icon, setIcon] = useState(program?.icon ?? DEFAULT_PROGRAM_ICON_NAME);
   const [color, setColor] = useState(program?.color ?? DEFAULT_PROGRAM_COLOR);
-  const [studyGoal, setStudyGoal] = useState<StudyGoal>(
-    program?.studyGoal ?? DEFAULT_STUDY_GOAL
-  );
-  const [targetDate, setTargetDate] = useState(program?.targetDate ?? "");
 
   useEffect(() => {
     if (open) {
       setName(program?.name ?? "");
       setIcon(program?.icon ?? DEFAULT_PROGRAM_ICON_NAME);
       setColor(program?.color ?? DEFAULT_PROGRAM_COLOR);
-      setStudyGoal(program?.studyGoal ?? DEFAULT_STUDY_GOAL);
-      setTargetDate(program?.targetDate ?? "");
     }
   }, [open, program]);
 
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      onSubmit({
-        color,
-        icon,
-        name,
-        studyGoal,
-        targetDate: studyGoal === "test_prep" ? targetDate : null,
-      });
+      onSubmit({ color, icon, name });
     },
-    [color, icon, name, onSubmit, studyGoal, targetDate]
-  );
-
-  const handleStudyGoalChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setStudyGoal(event.target.value as StudyGoal);
-    },
-    []
-  );
-
-  const handleTargetDateChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setTargetDate(event.target.value);
-    },
-    []
+    [color, icon, name, onSubmit]
   );
 
   const handleNameChange = useCallback(
@@ -194,55 +144,6 @@ export default function ProgramFormDialog({
                 value={name}
               />
             </div>
-            {/* The goal decides how reviews are scheduled
-                (docs/architecture/scheduling.md D1). */}
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 font-medium text-sm">
-                {t("studyGoalLabel")}
-              </legend>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {STUDY_GOALS.map((goal) => (
-                  <label
-                    className={cn(
-                      "flex cursor-pointer flex-col gap-1 rounded-lg border p-3 text-start transition-colors hover:bg-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
-                      studyGoal === goal &&
-                        "border-brand/40 bg-brand/10 hover:bg-brand/10"
-                    )}
-                    key={goal}
-                  >
-                    <input
-                      checked={studyGoal === goal}
-                      className="sr-only"
-                      name={studyGoalName}
-                      onChange={handleStudyGoalChange}
-                      type="radio"
-                      value={goal}
-                    />
-                    <span className="font-medium text-sm">
-                      {t(STUDY_GOAL_TEXT[goal].title)}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {t(STUDY_GOAL_TEXT[goal].description)}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {studyGoal === "test_prep" ? (
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor={targetDateInputId}>
-                    {t("targetDateLabel")}
-                  </Label>
-                  <Input
-                    className="w-fit"
-                    id={targetDateInputId}
-                    onChange={handleTargetDateChange}
-                    required
-                    type="date"
-                    value={targetDate}
-                  />
-                </div>
-              ) : null}
-            </fieldset>
             <div className="flex flex-col gap-1">
               <Label>{t("programColorLabel")}</Label>
               <div className="flex flex-wrap gap-2">

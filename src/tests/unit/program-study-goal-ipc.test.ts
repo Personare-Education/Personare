@@ -119,4 +119,31 @@ describe("a program's study goal", () => {
       targetDate: null,
     });
   });
+
+  it("is set from the program's page, without touching the rest", async () => {
+    const program = await client.create({ color: "#fff", name: "Cálculo I" });
+
+    const asTest = await client.setStudyGoal({
+      id: program.id,
+      studyGoal: "test_prep",
+      targetDate: "2026-12-01",
+    });
+    expect(asTest).toMatchObject({
+      color: "#fff",
+      name: "Cálculo I",
+      studyGoal: "test_prep",
+      targetDate: "2026-12-01",
+    });
+
+    const back = await client.setStudyGoal({
+      id: program.id,
+      studyGoal: "retain",
+      targetDate: "2026-12-01",
+    });
+    expect(back).toMatchObject({ studyGoal: "retain", targetDate: null });
+
+    await expect(
+      client.setStudyGoal({ id: program.id, studyGoal: "test_prep" })
+    ).rejects.toThrow();
+  });
 });

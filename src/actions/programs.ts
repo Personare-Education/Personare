@@ -34,27 +34,16 @@ export interface ProgramAppearance {
   icon: string | null;
 }
 
-/** docs/architecture/scheduling.md D1. */
-export interface ProgramStudyGoal {
-  studyGoal?: StudyGoal;
-  targetDate?: string | null;
-}
-
-export function createProgram(
-  name: string,
-  appearance: ProgramAppearance,
-  goal: ProgramStudyGoal = {}
-) {
-  return ipc.client.programs.create({ ...appearance, ...goal, name });
+export function createProgram(name: string, appearance: ProgramAppearance) {
+  return ipc.client.programs.create({ ...appearance, name });
 }
 
 export function updateProgram(
   id: string,
   name: string,
-  appearance: ProgramAppearance,
-  goal: ProgramStudyGoal = {}
+  appearance: ProgramAppearance
 ) {
-  return ipc.client.programs.update({ ...appearance, ...goal, id, name });
+  return ipc.client.programs.update({ ...appearance, id, name });
 }
 
 /** Undoes the soft delete (docs/specs/safety-net.md). */
@@ -84,4 +73,13 @@ export function undoProgramImport(created: {
   programId: string | null;
 }) {
   return ipc.client.programs.undoImport({ created });
+}
+
+/** The program's goal (docs/architecture/scheduling.md D1). */
+export function setProgramStudyGoal(
+  id: string,
+  studyGoal: StudyGoal,
+  targetDate: string | null
+) {
+  return ipc.client.programs.setStudyGoal({ id, studyGoal, targetDate });
 }

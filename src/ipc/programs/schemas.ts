@@ -59,3 +59,12 @@ export const undoProgramImportInputSchema = z.object({
     programId: z.string().nullable(),
   }),
 });
+
+/** The goal, set on the program's page (docs/architecture/scheduling.md D1). */
+export const setStudyGoalInputSchema = z
+  .object({
+    id: z.string(),
+    ...studyGoalFields,
+    studyGoal: z.enum(STUDY_GOALS),
+  })
+  .superRefine(requireDayForTest);

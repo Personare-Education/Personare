@@ -1,4 +1,11 @@
-import { create, list, restore, softDelete, update } from "./handlers";
+import {
+  create,
+  list,
+  restore,
+  setStudyGoal,
+  softDelete,
+  update,
+} from "./handlers";
 import {
   importFromMarkdown,
   previewImport,
@@ -11,6 +18,7 @@ export const programs = {
   list,
   previewImport,
   restore,
+  setStudyGoal,
   softDelete,
   undoImport,
   update,
