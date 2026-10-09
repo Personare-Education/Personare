@@ -170,7 +170,6 @@ export default {
     "« {{name}} » et ses modules seront supprimés. Vous pourrez annuler juste après.",
   deleteProgramConfirmTitle: "Supprimer ce programme ?",
   deleteQuizQuestionAction: "Supprimer la question",
-  documentation: "Documentation",
   dragQuizOptionAction: "Glisser pour réordonner",
   driveBackupErrorMessage:
     "Échec de la sauvegarde sur Google Drive. Veuillez réessayer.",
@@ -624,8 +623,6 @@ export default {
   textSizeLarger: "Très grand",
   textSizeSmall: "Petit",
   themeLabel: "Thème",
-  titleHomePage: "Page d’accueil",
-  titleSecondPage: "Deuxième page",
   todayCardCount_many: "{{count}} cartes",
   todayCardCount_one: "{{count}} carte",
   todayCardCount_other: "{{count}} cartes",

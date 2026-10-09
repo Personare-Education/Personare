@@ -157,7 +157,6 @@ export default {
     "将删除“{{name}}”及其模块。删除后可以立即撤销。",
   deleteProgramConfirmTitle: "删除这个计划？",
   deleteQuizQuestionAction: "删除题目",
-  documentation: "文档",
   dragQuizOptionAction: "拖动以排序",
   driveBackupErrorMessage: "无法备份到 Google Drive，请重试。",
   driveBackupNotConnectedHint:
@@ -542,8 +541,6 @@ export default {
   textSizeLarger: "特大",
   textSizeSmall: "小",
   themeLabel: "主题",
-  titleHomePage: "首页",
-  titleSecondPage: "第二页",
   todayCardCount_other: "{{count}} 张卡片",
   todayDayDoneTitle: "今天完成了",
   todayDoneByProgramLabel: "今天已复习",

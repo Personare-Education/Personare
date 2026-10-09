@@ -172,7 +172,6 @@ export default {
     "سيُحذف «{{name}}» ووحداته. يمكنك التراجع مباشرة بعد ذلك.",
   deleteProgramConfirmTitle: "حذف هذا البرنامج؟",
   deleteQuizQuestionAction: "حذف السؤال",
-  documentation: "التوثيق",
   dragQuizOptionAction: "اسحب لإعادة الترتيب",
   driveBackupErrorMessage:
     "تعذّر النسخ الاحتياطي إلى Google Drive. يُرجى المحاولة مرة أخرى.",
@@ -658,8 +657,6 @@ export default {
   textSizeLarger: "كبير جدًا",
   textSizeSmall: "صغير",
   themeLabel: "المظهر",
-  titleHomePage: "الصفحة الرئيسية",
-  titleSecondPage: "الصفحة الثانية",
   todayCardCount_few: "{{count}} بطاقات",
   todayCardCount_many: "{{count}} بطاقةً",
   todayCardCount_one: "بطاقة واحدة",
