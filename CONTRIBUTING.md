@@ -44,3 +44,11 @@ Em uma máquina Windows sem as "Desktop development with C++" workloads do Visua
 ## Escopo de arquivos
 
 Ao planejar múltiplas issues em paralelo, declare explicitamente quais arquivos cada uma vai tocar antes de começar. Isso permite identificar issues sem sobreposição (podem rodar em paralelo, em branches/worktrees isoladas) e issues com dependência real (ex.: uma issue que define schema de banco depende da issue que configura o ORM). `package.json`/`package-lock.json` costumam ser tocados por qualquer issue que adiciona dependência — trate como zona de baixo risco (linhas diferentes raramente conflitam), mas sempre valide com `npm ci` após reconciliar.
+
+## Traduções
+
+Cada idioma tem seu arquivo em `src/localization/locales/` (`en.ts` é o de referência e o fallback). Uma
+chave nova entra em **todos os nove**, com as formas de plural que a gramática de cada um pede (`_one`,
+`_other`, e também `_many` em português, espanhol e francês; `_zero`, `_two`, `_few` e `_many` em árabe) e
+os mesmos `{{placeholders}}` do inglês. O `locale-parity.test.ts` confere isso, e também que toda chave
+pedida pelo código com `t("…")` existe.
