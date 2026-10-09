@@ -514,6 +514,11 @@ export default {
   replayWelcomeDescription: "Personare가 어떻게 동작하는지 다시 봐요.",
   replayWelcomeTitle: "소개",
   restoreFromDriveAction: "Google Drive에서 복원",
+  retentionSummaryRemembered_other:
+    "최근 30일간 복습 {{count}}회 중 기억한 비율",
+  retentionSummaryTarget:
+    "목표는 {{target}}%입니다. 복습은 그 근처가 되도록 예약됩니다.",
+  retentionSummaryTitle: "나의 기억",
   revealAnswerAction: "답 보기",
   reviewCardsLeftLabel_other: "카드 {{count}}장 남음",
   reviewDueInDays_other: "{{count}}일 후",

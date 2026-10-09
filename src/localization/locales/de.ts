@@ -562,6 +562,13 @@ export default {
     "Sieh dir noch einmal an, wie Personare funktioniert.",
   replayWelcomeTitle: "Einführung",
   restoreFromDriveAction: "Aus Google Drive wiederherstellen",
+  retentionSummaryRemembered_one:
+    "behalten bei {{count}} Wiederholung in den letzten 30 Tagen",
+  retentionSummaryRemembered_other:
+    "behalten bei {{count}} Wiederholungen in den letzten 30 Tagen",
+  retentionSummaryTarget:
+    "Dein Ziel sind {{target}} %. Die Wiederholungen werden so geplant, dass sie nahe daran liegen.",
+  retentionSummaryTitle: "Dein Gedächtnis",
   revealAnswerAction: "Antwort aufdecken",
   reviewCardsLeftLabel_one: "Noch {{count}} Karte",
   reviewCardsLeftLabel_other: "Noch {{count}} Karten",

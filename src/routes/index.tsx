@@ -4,6 +4,7 @@ import { Flame } from "lucide-react";
 import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import KeyHint from "@/components/key-hint";
+import RetentionSummary from "@/components/retention-summary";
 import TodayItemCard from "@/components/today-item-card";
 import TodaySessionDialog from "@/components/today-session-dialog";
 import { Button } from "@/components/ui/button";
@@ -345,6 +346,7 @@ function DayClosed({
         <ReviewedToday programs={reviewedByProgram} />
       ) : null}
       <UpcomingWeek upcoming={upcoming} />
+      <RetentionSummary />
       {upcoming.nextDate ? null : (
         <Button asChild className="self-start" variant="outline">
           <Link to="/programs">{t("todayGoToProgramsAction")}</Link>
