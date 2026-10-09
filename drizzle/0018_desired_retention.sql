@@ -1,0 +1,1 @@
+ALTER TABLE `app_settings` ADD `desired_retention` real DEFAULT 0.9 NOT NULL;

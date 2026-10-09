@@ -15,6 +15,7 @@ import AccountSection from "@/components/account-section";
 import BackupExportDialog from "@/components/backup-export-dialog";
 import BackupImportDialog from "@/components/backup-import-dialog";
 import BetaActivationSection from "@/components/beta-activation-section";
+import DesiredRetentionToggle from "@/components/desired-retention-toggle";
 import DriveBackupDialog from "@/components/drive-backup-dialog";
 import DriveRestoreDialog from "@/components/drive-restore-dialog";
 import ErrorLogSection from "@/components/error-log-section";
@@ -224,6 +225,7 @@ export default function SettingsDialog({
                       {t("autoStartDescription")}
                     </p>
                   </div>
+                  <DesiredRetentionToggle />
                   <PrereleaseUpdatesToggle />
                   <SoundsToggle />
                   <div className="flex flex-col items-start gap-2">

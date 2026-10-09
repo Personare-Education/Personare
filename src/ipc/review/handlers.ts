@@ -12,6 +12,7 @@ import {
   reviewItems as reviewItemsTable,
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
+import { getOrCreateAppSettings } from "@/ipc/settings/handlers";
 import { loadLocks } from "@/ipc/shared/locks";
 import { recordReviewPoints } from "@/ipc/shared/points";
 import { loadActivityCounts, loadSchedule } from "@/ipc/shared/schedule";
@@ -46,6 +47,11 @@ function requireDatabaseClient() {
   return db;
 }
 
+/** What the student picked in Settings (docs/specs/desired-retention.md). */
+function desiredRetentionOf(db: DatabaseClient) {
+  return getOrCreateAppSettings(db).desiredRetention;
+}
+
 const RATING_TO_GRADE: Record<"again" | "hard" | "good" | "easy", Grade> = {
   again: Rating.Again,
   easy: Rating.Easy,
@@ -68,7 +74,10 @@ function applyRatingToReviewItem(
 ) {
   const reviewRow: ReviewItemRow = { ...row, state: row.state as StateType };
   const grade = RATING_TO_GRADE[rating];
-  const { card } = applyRating(reviewRow, grade, now, options);
+  const { card } = applyRating(reviewRow, grade, now, {
+    ...options,
+    desiredRetention: desiredRetentionOf(db),
+  });
   const fields = fromFsrsCard(card);
 
   const history = JSON.parse(row.ratingHistory) as {
@@ -220,7 +229,11 @@ export const previewRatings = os
       if (!row) {
         throw new Error("Review item not found");
       }
-      return previewFsrsRatings({ ...row, state: row.state as StateType }, now);
+      return previewFsrsRatings(
+        { ...row, state: row.state as StateType },
+        now,
+        { desiredRetention: desiredRetentionOf(db) }
+      );
     }
 
     const row = db
@@ -231,7 +244,7 @@ export const previewRatings = os
     return previewFsrsRatings(
       row ? { ...row, state: row.state as StateType } : null,
       now,
-      { shortTermEnabled: false }
+      { desiredRetention: desiredRetentionOf(db), shortTermEnabled: false }
     );
   });
 

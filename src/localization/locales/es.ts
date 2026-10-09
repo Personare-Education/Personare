@@ -170,6 +170,12 @@ export default {
     "Esto eliminará “{{name}}” y sus módulos. Puedes deshacerlo justo después.",
   deleteProgramConfirmTitle: "¿Eliminar este programa?",
   deleteQuizQuestionAction: "Eliminar pregunta",
+  desiredRetentionDescription:
+    "Cuánto de lo que vence quieres recordar. Más alto trae los repasos antes, así que son más. 90% sirve para la mayor parte del estudio; 95%, para las semanas antes de un examen. Se aplica desde tu próxima valoración.",
+  desiredRetentionExamHint: "antes de un examen",
+  desiredRetentionFewerHint: "menos repasos",
+  desiredRetentionLabel: "Meta de retención",
+  desiredRetentionRecommendedHint: "recomendado",
   diagnosticsSectionDescription:
     "Cuando algo sale mal, Personare lo anota en un archivo en este ordenador. No se envía nada: expórtalo para mandarlo a quien te esté ayudando.",
   diagnosticsSectionTitle: "Diagnóstico",

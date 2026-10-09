@@ -170,6 +170,12 @@ export default {
     "« {{name}} » et ses modules seront supprimés. Vous pourrez annuler juste après.",
   deleteProgramConfirmTitle: "Supprimer ce programme ?",
   deleteQuizQuestionAction: "Supprimer la question",
+  desiredRetentionDescription:
+    "La part de ce qui arrive à échéance que vous voulez retenir. Plus haut ramène les révisions plus tôt, donc il y en a plus. 90 % convient à la plupart des études ; 95 %, aux semaines avant un examen. S’applique dès votre prochaine évaluation.",
+  desiredRetentionExamHint: "avant un examen",
+  desiredRetentionFewerHint: "moins de révisions",
+  desiredRetentionLabel: "Objectif de rétention",
+  desiredRetentionRecommendedHint: "recommandé",
   diagnosticsSectionDescription:
     "Quand quelque chose ne va pas, Personare le note dans un fichier sur cet ordinateur. Rien n’est envoyé : exportez-le pour l’envoyer à la personne qui vous aide.",
   diagnosticsSectionTitle: "Diagnostic",

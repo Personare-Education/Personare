@@ -171,6 +171,12 @@ export default {
     "„{{name}}“ und seine Module werden gelöscht. Du kannst es direkt danach rückgängig machen.",
   deleteProgramConfirmTitle: "Dieses Programm löschen?",
   deleteQuizQuestionAction: "Frage löschen",
+  desiredRetentionDescription:
+    "Wie viel von dem, was fällig wird, du behalten willst. Höher holt Wiederholungen früher zurück, also gibt es mehr davon. 90 % passen zum meisten Lernen, 95 % zu den Wochen vor einer Prüfung. Gilt ab deiner nächsten Bewertung.",
+  desiredRetentionExamHint: "vor einer Prüfung",
+  desiredRetentionFewerHint: "weniger Wiederholungen",
+  desiredRetentionLabel: "Behaltensziel",
+  desiredRetentionRecommendedHint: "empfohlen",
   diagnosticsSectionDescription:
     "Wenn etwas schiefgeht, notiert Personare es in einer Datei auf diesem Computer. Nichts wird gesendet: Exportiere sie, um sie an die Person zu schicken, die dir hilft.",
   diagnosticsSectionTitle: "Diagnose",
