@@ -12,6 +12,7 @@ import {
 import { DEFAULT_STUDY_GOAL, type StudyGoal } from "@/utils/study-goal";
 import {
   createProgramInputSchema,
+  setStudyGoalInputSchema,
   softDeleteProgramInputSchema,
   updateProgramInputSchema,
 } from "./schemas";
@@ -84,6 +85,26 @@ export const update = os
         ...(input.studyGoal
           ? studyGoalColumns(input.studyGoal, input.targetDate)
           : {}),
+      })
+      .where(eq(programsTable.id, input.id))
+      .returning()
+      .get();
+  });
+
+/**
+ * Chosen on the program's page, above its modules: "Nunca mais esquecer" or
+ * "Estudar para uma Prova" with the test's day (docs/architecture/scheduling.md D1).
+ */
+export const setStudyGoal = os
+  .input(setStudyGoalInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+
+    return db
+      .update(programsTable)
+      .set({
+        updatedAt: new Date(),
+        ...studyGoalColumns(input.studyGoal, input.targetDate),
       })
       .where(eq(programsTable.id, input.id))
       .returning()
