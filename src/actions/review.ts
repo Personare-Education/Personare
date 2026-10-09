@@ -11,9 +11,13 @@ export function listDue(activityId: string) {
   return ipc.client.review.listDue({ activityId });
 }
 
-export function submitRating(reviewItemId: string, rating: RatingValue) {
+export function submitRating(
+  reviewItemId: string,
+  rating: RatingValue,
+  durationMs?: number
+) {
   return ipc.client.review
-    .submitRating({ rating, reviewItemId })
+    .submitRating({ durationMs, rating, reviewItemId })
     .then((result) => {
       notifyReviewCompleted();
       return result;

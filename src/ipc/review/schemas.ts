@@ -8,13 +8,21 @@ export const listDueInputSchema = z.object({
   activityId: z.string(),
 });
 
+/**
+ * How long the review took, when the screen measured it
+ * (docs/architecture/scheduling.md D3).
+ */
+const durationMs = z.number().int().min(0).optional();
+
 export const submitRatingInputSchema = z.object({
+  durationMs,
   rating: z.enum(["again", "hard", "good", "easy"]),
   reviewItemId: z.string(),
 });
 
 export const markActivityDifficultyInputSchema = z.object({
   activityId: z.string(),
+  durationMs,
   rating: z.enum(["again", "hard", "good", "easy"]),
 });
 

@@ -10,11 +10,13 @@ import {
   pendingActivityRatings as pendingActivityRatingsTable,
   programs as programsTable,
   reviewItems as reviewItemsTable,
+  reviewLogs as reviewLogsTable,
 } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
 import { getOrCreateAppSettings } from "@/ipc/settings/handlers";
 import { loadLocks } from "@/ipc/shared/locks";
 import { recordReviewPoints } from "@/ipc/shared/points";
+import { programOfReviewItem } from "@/ipc/shared/review-item-program";
 import { loadActivityCounts, loadSchedule } from "@/ipc/shared/schedule";
 import {
   activityOfFlashcard,
@@ -26,6 +28,7 @@ import {
   fromFsrsCard,
   previewRatings as previewFsrsRatings,
   type ReviewItemRow,
+  retrievabilityAt,
 } from "@/utils/fsrs";
 import { computeRetention } from "@/utils/retention-stats";
 import {
@@ -47,6 +50,8 @@ function requireDatabaseClient() {
 
   return db;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** What the student picked in Settings (docs/specs/desired-retention.md). */
 function desiredRetentionOf(db: DatabaseClient) {
@@ -71,14 +76,16 @@ function applyRatingToReviewItem(
   row: typeof reviewItemsTable.$inferSelect,
   rating: "again" | "hard" | "good" | "easy",
   now: Date,
-  options?: { shortTermEnabled?: boolean }
+  options?: { durationMs?: number; shortTermEnabled?: boolean }
 ) {
   const reviewRow: ReviewItemRow = { ...row, state: row.state as StateType };
   const grade = RATING_TO_GRADE[rating];
-  const { card } = applyRating(reviewRow, grade, now, {
-    ...options,
-    desiredRetention: desiredRetentionOf(db),
-  });
+  const desiredRetention = desiredRetentionOf(db);
+  const schedulerOptions = {
+    desiredRetention,
+    shortTermEnabled: options?.shortTermEnabled,
+  };
+  const { card } = applyRating(reviewRow, grade, now, schedulerOptions);
   const fields = fromFsrsCard(card);
 
   const history = JSON.parse(row.ratingHistory) as {
@@ -87,25 +94,58 @@ function applyRatingToReviewItem(
   }[];
   history.push({ rating, reviewedAt: now.getTime() });
 
-  return db
-    .update(reviewItemsTable)
-    .set({
-      difficulty: fields.difficulty,
-      dueDate: fields.dueDate,
-      lapses: fields.lapses,
-      lastRating: rating,
-      lastReviewedAt: fields.lastReviewedAt,
-      learningSteps: fields.learningSteps,
-      ratingHistory: JSON.stringify(history),
-      reps: fields.reps,
-      scheduledDays: fields.scheduledDays,
-      stability: fields.stability,
-      state: fields.state,
-      updatedAt: now,
-    })
-    .where(eq(reviewItemsTable.id, row.id))
-    .returning()
-    .get();
+  return db.transaction((tx) => {
+    const updated = tx
+      .update(reviewItemsTable)
+      .set({
+        difficulty: fields.difficulty,
+        dueDate: fields.dueDate,
+        lapses: fields.lapses,
+        lastRating: rating,
+        lastReviewedAt: fields.lastReviewedAt,
+        learningSteps: fields.learningSteps,
+        ratingHistory: JSON.stringify(history),
+        reps: fields.reps,
+        scheduledDays: fields.scheduledDays,
+        stability: fields.stability,
+        state: fields.state,
+        updatedAt: now,
+      })
+      .where(eq(reviewItemsTable.id, row.id))
+      .returning()
+      .get();
+
+    // docs/architecture/scheduling.md D3: what calibration and the
+    // simulator read.
+    tx.insert(reviewLogsTable)
+      .values({
+        desiredRetention,
+        difficultyAfter: fields.difficulty,
+        difficultyBefore: row.difficulty,
+        dueAfter: fields.dueDate,
+        durationMs: options?.durationMs ?? null,
+        elapsedDays: row.lastReviewedAt
+          ? (now.getTime() - row.lastReviewedAt.getTime()) / DAY_MS
+          : null,
+        itemKind: row.flashcardId ? "recall" : "coverage",
+        rating,
+        retrievabilityBefore: retrievabilityAt(
+          reviewRow,
+          now,
+          schedulerOptions
+        ),
+        reviewedAt: now,
+        reviewItemId: row.id,
+        stabilityAfter: fields.stability,
+        stabilityBefore: row.stability,
+        stateAfter: fields.state,
+        stateBefore: row.state,
+        studyGoal: programOfReviewItem(db, row)?.studyGoal ?? null,
+      })
+      .run();
+
+    return updated;
+  });
 }
 
 export const ensureReviewItems = os
@@ -265,7 +305,9 @@ export const submitRating = os
     }
 
     const now = new Date();
-    const rated = applyRatingToReviewItem(db, row, input.rating, now);
+    const rated = applyRatingToReviewItem(db, row, input.rating, now, {
+      durationMs: input.durationMs,
+    });
     // Its points, on time or not by when it was due (gamification.md §3).
     recordReviewPoints(db, {
       dueDate: row.reps === 0 ? null : row.dueDate,
@@ -329,6 +371,7 @@ export const markActivityDifficulty = os
     }
 
     const rated = applyRatingToReviewItem(db, row, input.rating, now, {
+      durationMs: input.durationMs,
       shortTermEnabled: false,
     });
     markActivityCompleted(db, input.activityId, now);

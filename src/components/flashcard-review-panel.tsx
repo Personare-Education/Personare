@@ -48,6 +48,16 @@ interface FlashcardReviewPanelProps {
  * card or Space, and rated with the buttons or the keys 1-4. Used by the
  * deck's own review dialog and by the "Today" session.
  */
+/** Longer than this, the student most likely left the screen: not measured. */
+const MAX_MEASURED_REVIEW_MS = 15 * 60 * 1000;
+
+export function reviewDuration(shownAt: number, ratedAt: number) {
+  const duration = ratedAt - shownAt;
+  return duration >= 0 && duration <= MAX_MEASURED_REVIEW_MS
+    ? duration
+    : undefined;
+}
+
 export default function FlashcardReviewPanel({
   activityId,
   cardClassName,
@@ -91,6 +101,13 @@ export default function FlashcardReviewPanel({
   }, [activityId]);
 
   const currentItem = queue[0] ?? null;
+  // When the card showed up, for how long its review took
+  // (docs/architecture/scheduling.md D3).
+  const shownAtRef = useRef(Date.now());
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restarts the clock for each card shown
+  useEffect(() => {
+    shownAtRef.current = Date.now();
+  }, [currentItem?.id]);
   // What each rating would schedule for this card (docs/specs/rating-clarity.md AC-1).
   const [intervals, setIntervals] = useState<
     Partial<Record<RatingValue, Date>> | undefined
@@ -147,7 +164,13 @@ export default function FlashcardReviewPanel({
 
       isSavingRef.current = true;
       setIsSaving(true);
-      Promise.resolve(submitRating(currentItem.id, rating))
+      Promise.resolve(
+        submitRating(
+          currentItem.id,
+          rating,
+          reviewDuration(shownAtRef.current, Date.now())
+        )
+      )
         .then((updated) => {
           setSaveFailed(false);
           ratedIdsRef.current.add(currentItem.id);

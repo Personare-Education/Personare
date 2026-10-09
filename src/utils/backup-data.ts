@@ -12,6 +12,7 @@ import {
   quizOptions,
   quizQuestions,
   reviewItems,
+  reviewLogs,
   unlockRequirements,
 } from "@/database/schema";
 import { backfillSequenceData } from "@/database/sequence-backfill";
@@ -33,6 +34,7 @@ export function collectBackupData(
     quizOptions: db.select().from(quizOptions).all(),
     quizQuestions: db.select().from(quizQuestions).all(),
     reviewItems: db.select().from(reviewItems).all(),
+    reviewLogs: db.select().from(reviewLogs).all(),
     unlockRequirements: db.select().from(unlockRequirements).all(),
   };
 }
@@ -71,6 +73,8 @@ export function restoreBackupData(
   db.transaction((tx) => {
     tx.delete(unlockRequirements).run();
     tx.delete(pointEvents).run();
+    // Before the items they point at.
+    tx.delete(reviewLogs).run();
     tx.delete(reviewItems).run();
     tx.delete(quizOptions).run();
     tx.delete(quizQuestions).run();
@@ -105,6 +109,10 @@ export function restoreBackupData(
     }
     if (data.reviewItems.length > 0) {
       tx.insert(reviewItems).values(data.reviewItems).run();
+    }
+    // Missing in backups made before review logs.
+    if (data.reviewLogs && data.reviewLogs.length > 0) {
+      tx.insert(reviewLogs).values(data.reviewLogs).run();
     }
     if (data.appSettings.length > 0) {
       tx.insert(appSettings).values(data.appSettings).run();

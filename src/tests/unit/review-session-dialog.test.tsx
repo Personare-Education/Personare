@@ -212,7 +212,11 @@ describe("ReviewSessionDialog (Issue #16)", () => {
       screen.getByRole("button", { name: i18n.t("ratingGoodAction") })
     );
 
-    expect(submitRating).toHaveBeenCalledWith(DUE_ITEMS[0].id, "good");
+    expect(submitRating).toHaveBeenCalledWith(
+      DUE_ITEMS[0].id,
+      "good",
+      expect.any(Number)
+    );
     expect(await screen.findByText(DUE_ITEMS[1].front)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: i18n.t("revealAnswerAction") })
@@ -295,7 +299,11 @@ describe("ReviewSessionDialog (Issue #16)", () => {
 
     await user.keyboard("3");
 
-    expect(submitRating).toHaveBeenCalledWith(DUE_ITEMS[0].id, "good");
+    expect(submitRating).toHaveBeenCalledWith(
+      DUE_ITEMS[0].id,
+      "good",
+      expect.any(Number)
+    );
     expect(await screen.findByText(DUE_ITEMS[1].front)).toBeInTheDocument();
   });
 

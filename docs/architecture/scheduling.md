@@ -342,7 +342,7 @@ do experimento. Dados para pesquisa só saem do computador por exportação **vo
 |---|---|---|
 | Modo A (FSRS com retenção desejada) | Implementado | `src/utils/fsrs.ts`, `docs/specs/desired-retention.md` |
 | D1, D2: modo no programa | Implementado | `src/utils/study-goal.ts`, `docs/specs/program-study-goal.md` |
-| D3: `review_logs` | A implementar | |
+| D3: `review_logs` | Implementado | `docs/specs/review-logs.md` |
 | D4: calibração | Trabalho futuro | |
 | D5, D6, D7: Modo B v1 | A implementar | |
 | D8 (v1.1, v2), D9, D10 | Trabalho futuro | #228 |
