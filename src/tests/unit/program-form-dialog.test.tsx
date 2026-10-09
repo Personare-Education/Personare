@@ -106,6 +106,8 @@ describe("ProgramFormDialog icon/color picker (Issue #99 revision)", () => {
       color: "#6366f1",
       icon: "Brain",
       name: "Novo Programa",
+      studyGoal: "retain",
+      targetDate: null,
     });
   });
 });

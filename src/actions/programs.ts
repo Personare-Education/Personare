@@ -1,4 +1,5 @@
 import { ipc } from "@/ipc/manager";
+import type { StudyGoal } from "@/utils/study-goal";
 
 export interface ProgramActivityCount {
   count: number;
@@ -33,16 +34,27 @@ export interface ProgramAppearance {
   icon: string | null;
 }
 
-export function createProgram(name: string, appearance: ProgramAppearance) {
-  return ipc.client.programs.create({ ...appearance, name });
+/** docs/architecture/scheduling.md D1. */
+export interface ProgramStudyGoal {
+  studyGoal?: StudyGoal;
+  targetDate?: string | null;
+}
+
+export function createProgram(
+  name: string,
+  appearance: ProgramAppearance,
+  goal: ProgramStudyGoal = {}
+) {
+  return ipc.client.programs.create({ ...appearance, ...goal, name });
 }
 
 export function updateProgram(
   id: string,
   name: string,
-  appearance: ProgramAppearance
+  appearance: ProgramAppearance,
+  goal: ProgramStudyGoal = {}
 ) {
-  return ipc.client.programs.update({ ...appearance, id, name });
+  return ipc.client.programs.update({ ...appearance, ...goal, id, name });
 }
 
 /** Undoes the soft delete (docs/specs/safety-net.md). */

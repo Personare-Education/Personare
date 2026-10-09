@@ -617,10 +617,17 @@ export default {
   streakNoneYetLabel: "Sem sequência ainda",
   streakResetsAtMidnightMessage: "Reseta à meia-noite",
   streakStartedMessage: "Sua sequência começou",
+  studyGoalLabel: "Objetivo",
+  studyGoalRetainDescription:
+    "Revisões no ritmo da sua memória, sem data para acabar.",
+  studyGoalRetainTitle: "Nunca mais esquecer",
+  studyGoalTestDescription: "Tudo volta antes do dia da prova.",
+  studyGoalTestTitle: "Estudar para uma Prova",
   submitExamAction: "Entregar prova",
   syncCalendarAction: "Sincronizar agora",
   takeExamAction: "Fazer prova",
   takeQuizAction: "Responder quiz",
+  targetDateLabel: "Dia da prova",
   testPrereleasesDescription:
     "Receba as versões de teste (alphas) assim que saírem. Desligado, só as versões normais. Vale na próxima vez que o app abrir.",
   testPrereleasesToggleLabel: "Testar pré-lançamentos",

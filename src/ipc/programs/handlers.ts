@@ -9,11 +9,20 @@ import {
   cascadeRestoreModule,
   cascadeSoftDeleteModule,
 } from "@/ipc/shared/cascade-soft-delete";
+import { DEFAULT_STUDY_GOAL, type StudyGoal } from "@/utils/study-goal";
 import {
   createProgramInputSchema,
   softDeleteProgramInputSchema,
   updateProgramInputSchema,
 } from "./schemas";
+
+/** The goal's columns; the day only goes with a test (D1). */
+function studyGoalColumns(studyGoal: StudyGoal, targetDate?: string | null) {
+  return {
+    studyGoal,
+    targetDate: studyGoal === "test_prep" ? (targetDate ?? null) : null,
+  };
+}
 
 function requireDatabaseClient() {
   const db = getDatabaseClient();
@@ -50,6 +59,10 @@ export const create = os
         icon: input.icon ?? null,
         name: input.name,
         updatedAt: now,
+        ...studyGoalColumns(
+          input.studyGoal ?? DEFAULT_STUDY_GOAL,
+          input.targetDate
+        ),
       })
       .returning()
       .get();
@@ -67,6 +80,10 @@ export const update = os
         icon: input.icon ?? null,
         name: input.name,
         updatedAt: new Date(),
+        // An edit that doesn't mention the goal keeps it.
+        ...(input.studyGoal
+          ? studyGoalColumns(input.studyGoal, input.targetDate)
+          : {}),
       })
       .where(eq(programsTable.id, input.id))
       .returning()

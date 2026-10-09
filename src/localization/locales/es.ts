@@ -631,10 +631,17 @@ export default {
   streakNoneYetLabel: "Aún no hay racha",
   streakResetsAtMidnightMessage: "Se reinicia a medianoche",
   streakStartedMessage: "Tu racha ha empezado",
+  studyGoalLabel: "Objetivo",
+  studyGoalRetainDescription:
+    "Repasos al ritmo de tu memoria, sin fecha de fin.",
+  studyGoalRetainTitle: "No olvidar nunca más",
+  studyGoalTestDescription: "Todo vuelve antes del día del examen.",
+  studyGoalTestTitle: "Estudiar para un examen",
   submitExamAction: "Entregar examen",
   syncCalendarAction: "Sincronizar ahora",
   takeExamAction: "Hacer examen",
   takeQuizAction: "Hacer quiz",
+  targetDateLabel: "Día del examen",
   testPrereleasesDescription:
     "Recibe las versiones de prueba (alfas) en cuanto salen. Desactivado, solo las versiones normales. Se aplica la próxima vez que se abra la app.",
   testPrereleasesToggleLabel: "Versiones de prueba",

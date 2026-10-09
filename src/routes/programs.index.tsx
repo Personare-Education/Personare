@@ -130,10 +130,11 @@ export function ProgramsPage() {
   }, []);
 
   const handleFormSubmit = useCallback(
-    ({ color, icon, name }: ProgramFormSubmitValues) => {
+    ({ color, icon, name, studyGoal, targetDate }: ProgramFormSubmitValues) => {
+      const goal = { studyGoal, targetDate };
       const submit = formProgram
-        ? updateProgram(formProgram.id, name, { color, icon })
-        : createProgram(name, { color, icon });
+        ? updateProgram(formProgram.id, name, { color, icon }, goal)
+        : createProgram(name, { color, icon }, goal);
 
       submit.then(() => {
         setIsFormOpen(false);
