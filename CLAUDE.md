@@ -20,24 +20,20 @@ Quando um trabalho virar vários PRs (por exemplo, as frentes de uma mesma crít
 
 ## Agendamento de revisões
 
-Antes de mexer no agendamento (`src/utils/fsrs.ts`, `src/ipc/review/`, retenção, calendário), leia
-[`docs/architecture/scheduling.md`](docs/architecture/scheduling.md). Resumo:
+Antes de mexer no agendamento (`src/utils/fsrs.ts`, `src/ipc/review/`, retenção, calendário, objetivo do
+programa), leia [`docs/architecture/scheduling.md`](docs/architecture/scheduling.md). As decisões aceitas
+estão na seção 9 (D1 a D11) e o que já está implementado na seção 11. Resumo:
 
-- **Dois modos, dois objetivos, não equivalentes.** **Modo A:** retenção a longo prazo, sem data. **Modo B:**
-  desempenho numa avaliação com data definida. Os dois podem compartilhar modelo de memória e histórico, mas
-  cada um tem a sua política de agendamento.
-- **Confirmado (no código):** o que existe hoje é uma forma do Modo A. O `ts-fsrs` agenda cada `ReviewItem`
-  com pesos padrão e a retenção desejada pelo aluno (0,80 a 0,95). O Modo B **não existe**. O FSRS é a
-  referência do Modo A, e se ele é a escolha definitiva ainda está em aberto.
-- **Separe três coisas:** o **modelo de memória** (estima a recordação), a **política de agendamento**
-  (decide o que revisar e quando, conforme o objetivo) e o **sistema de planejamento** (disponibilidade,
-  calendário, replanejamento). Hoje o modelo e a política vêm acoplados dentro do `ts-fsrs`.
-- **Modo B, só a formulação conceitual:** $\max_\pi \sum_i w_i R_i(T \mid \pi)$ e a heurística gulosa
-  $\text{Score}(i,t)$ são pontos de partida, **não** o algoritmo. Não implemente uma fórmula definitiva sem
-  uma decisão registrada.
-- **O modo é escolhido por programa, na criação (decidido):** "Nunca mais esquecer" (Modo A) ou "Estudar
-  para uma Prova" (Modo B). A data da prova pertence ao programa.
+- **Dois modos, dois objetivos, não equivalentes, escolhidos por programa na criação (D1).**
+  **"Nunca mais esquecer"** (`study_goal = "retain"`, Modo A): retenção a longo prazo, com o FSRS e a
+  retenção desejada. **"Estudar para uma Prova"** (`study_goal = "test_prep"` + `target_date`, Modo B):
+  desempenho numa prova com data.
 - **"Prova" já é outra coisa no app:** `exams` (`docs/specs/exams.md`) é a prova feita dentro do app, sem
-  FSRS. No código e no banco, não use `exam` para o Modo B; na interface, o rótulo é "Estudar para uma Prova".
-- Marque hipóteses como hipóteses. Nenhuma superioridade de algoritmo foi demonstrada pelo projeto. As
-  recomendações (propostas) estão na seção 9 e as decisões pendentes na seção 10; issues #228 e #229.
+  FSRS. No código e no banco, o Modo B nunca usa `exam`.
+- **Modelo de memória ≠ política de agendamento ≠ planejamento.** O modelo é o `ts-fsrs`. A política de cada
+  modo é uma função pura em `src/utils/` (D6).
+- **Modo B v1 (D7):** nenhum vencimento depois da véspera da prova; depois da data, o programa volta a agir
+  como Modo A (D2). A ordenação por $\text{Score}(i,t)$ (v2) só entra com calibração (D4) e simulador (D9).
+- **Toda avaliação grava um `review_logs` (D3)**, com a recordação prevista e a duração quando medida.
+- Marque hipóteses como hipóteses. Nenhuma superioridade de algoritmo foi demonstrada pelo projeto.
+  Mudar uma decisão pede um registro novo na seção 9.
