@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   type AnySQLiteColumn,
+  index,
   integer,
   real,
   sqliteTable,
@@ -23,57 +24,68 @@ export const programs = sqliteTable("programs", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
-export const modules = sqliteTable("modules", {
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  name: text("name").notNull(),
-  /** Its place in the program's list (docs/specs/sequences-and-locks.md). */
-  position: integer("position").notNull().default(0),
-  programId: text("program_id")
-    .notNull()
-    .references(() => programs.id),
-  /** none | previous | any | all; the lists live in unlock_requirements. */
-  unlockMode: text("unlock_mode").notNull().default("none"),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+export const modules = sqliteTable(
+  "modules",
+  {
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    name: text("name").notNull(),
+    /** Its place in the program's list (docs/specs/sequences-and-locks.md). */
+    position: integer("position").notNull().default(0),
+    programId: text("program_id")
+      .notNull()
+      .references(() => programs.id),
+    /** none | previous | any | all; the lists live in unlock_requirements. */
+    unlockMode: text("unlock_mode").notNull().default("none"),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("modules_program_id_idx").on(table.programId)]
+);
 
 /**
  * `type` is an open, application-validated discriminator (link, quiz, pdf,
  * flashcard_deck, ...), not a closed SQLite enum/CHECK constraint -- new
  * Activity types must not require a destructive migration (Plan.md 1.1).
  */
-export const activities = sqliteTable("activities", {
-  /**
-   * The first time it was done: its first rating, or -- for a sub-activity
-   * -- doing it inside its group. What unlock rules check
-   * (docs/specs/sequences-and-locks.md).
-   */
-  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  filePath: text("file_path"),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  moduleId: text("module_id")
-    .notNull()
-    .references(() => modules.id),
-  /** The group (type "group") a sub-activity belongs to, if any. */
-  parentActivityId: text("parent_activity_id").references(
-    (): AnySQLiteColumn => activities.id
-  ),
-  /** Its place in its module's list, or in its group's. */
-  position: integer("position").notNull().default(0),
-  title: text("title").notNull(),
-  type: text("type").notNull(),
-  /** none | previous | any | all; the lists live in unlock_requirements. */
-  unlockMode: text("unlock_mode").notNull().default("none"),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-  url: text("url"),
-});
+export const activities = sqliteTable(
+  "activities",
+  {
+    /**
+     * The first time it was done: its first rating, or -- for a sub-activity
+     * -- doing it inside its group. What unlock rules check
+     * (docs/specs/sequences-and-locks.md).
+     */
+    completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    filePath: text("file_path"),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    moduleId: text("module_id")
+      .notNull()
+      .references(() => modules.id),
+    /** The group (type "group") a sub-activity belongs to, if any. */
+    parentActivityId: text("parent_activity_id").references(
+      (): AnySQLiteColumn => activities.id
+    ),
+    /** Its place in its module's list, or in its group's. */
+    position: integer("position").notNull().default(0),
+    title: text("title").notNull(),
+    type: text("type").notNull(),
+    /** none | previous | any | all; the lists live in unlock_requirements. */
+    unlockMode: text("unlock_mode").notNull().default("none"),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+    url: text("url"),
+  },
+  (table) => [
+    index("activities_module_id_idx").on(table.moduleId),
+    index("activities_parent_activity_id_idx").on(table.parentActivityId),
+  ]
+);
 
 /**
  * The list behind an "any" or "all" unlock rule: what `subjectId` (an
@@ -81,130 +93,167 @@ export const activities = sqliteTable("activities", {
  * point at something deleted are ignored when the rule is checked
  * (docs/specs/sequences-and-locks.md).
  */
-export const unlockRequirements = sqliteTable("unlock_requirements", {
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  requiredId: text("required_id").notNull(),
-  subjectId: text("subject_id").notNull(),
-  subjectKind: text("subject_kind").notNull(),
-});
+export const unlockRequirements = sqliteTable(
+  "unlock_requirements",
+  {
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    requiredId: text("required_id").notNull(),
+    subjectId: text("subject_id").notNull(),
+    subjectKind: text("subject_kind").notNull(),
+  },
+  (table) => [
+    index("unlock_requirements_subject_id_idx").on(table.subjectId),
+    index("unlock_requirements_required_id_idx").on(table.requiredId),
+  ]
+);
 
 /**
  * quiz_options intentionally mirrors quiz_questions' soft-delete strategy
  * (a nullable deleted_at column) rather than hard delete-and-recreate, so
  * softDeleteOption behaves exactly like every other soft-delete in the app.
  */
-export const quizQuestions = sqliteTable("quiz_questions", {
-  /** The quiz it belongs to, or null for an exam's standalone question. */
-  activityId: text("activity_id").references(() => activities.id),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  /**
-   * The exam it belongs to, for a standalone question; exactly one of
-   * activityId/examId is set (docs/specs/exams.md).
-   */
-  examId: text("exam_id").references(() => exams.id),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  /** File name of an optional attached image, under userData/attachments/. */
-  imagePath: text("image_path"),
-  text: text("text").notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+export const quizQuestions = sqliteTable(
+  "quiz_questions",
+  {
+    /** The quiz it belongs to, or null for an exam's standalone question. */
+    activityId: text("activity_id").references(() => activities.id),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    /**
+     * The exam it belongs to, for a standalone question; exactly one of
+     * activityId/examId is set (docs/specs/exams.md).
+     */
+    examId: text("exam_id").references(() => exams.id),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    /** File name of an optional attached image, under userData/attachments/. */
+    imagePath: text("image_path"),
+    text: text("text").notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("quiz_questions_activity_id_idx").on(table.activityId),
+    index("quiz_questions_exam_id_idx").on(table.examId),
+  ]
+);
 
-export const quizOptions = sqliteTable("quiz_options", {
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  /** File name of an optional attached image, under userData/attachments/. */
-  imagePath: text("image_path"),
-  isCorrect: integer("is_correct", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  questionId: text("question_id")
-    .notNull()
-    .references(() => quizQuestions.id),
-  text: text("text").notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+export const quizOptions = sqliteTable(
+  "quiz_options",
+  {
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    /** File name of an optional attached image, under userData/attachments/. */
+    imagePath: text("image_path"),
+    isCorrect: integer("is_correct", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => quizQuestions.id),
+    text: text("text").notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("quiz_options_question_id_idx").on(table.questionId)]
+);
 
-export const flashcards = sqliteTable("flashcards", {
-  activityId: text("activity_id")
-    .notNull()
-    .references(() => activities.id),
-  back: text("back").notNull(),
-  /** File name of an optional attached image, under userData/attachments/. */
-  backImagePath: text("back_image_path"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  front: text("front").notNull(),
-  /** File name of an optional attached image, under userData/attachments/. */
-  frontImagePath: text("front_image_path"),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+export const flashcards = sqliteTable(
+  "flashcards",
+  {
+    activityId: text("activity_id")
+      .notNull()
+      .references(() => activities.id),
+    back: text("back").notNull(),
+    /** File name of an optional attached image, under userData/attachments/. */
+    backImagePath: text("back_image_path"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    front: text("front").notNull(),
+    /** File name of an optional attached image, under userData/attachments/. */
+    frontImagePath: text("front_image_path"),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("flashcards_activity_id_idx").on(table.activityId)]
+);
 
 /**
  * An exam (docs/specs/exams.md): drawn at random from its modules' quizzes,
  * plus its standalone questions, taken on demand -- no FSRS.
  */
-export const exams = sqliteTable("exams", {
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  /** The share of right answers that passes, in percent. */
-  passingScore: integer("passing_score").notNull().default(70),
-  programId: text("program_id")
-    .notNull()
-    .references(() => programs.id),
-  /** How many questions an attempt draws from the modules. */
-  questionCount: integer("question_count").notNull(),
-  /** Null when the exam has no time limit. */
-  timeLimitMinutes: integer("time_limit_minutes"),
-  title: text("title").notNull(),
-  /**
-   * none | sources | all | any | exam; the lists live in unlock_requirements
-   * (docs/specs/exam-locks.md).
-   */
-  unlockMode: text("unlock_mode").notNull().default("none"),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+export const exams = sqliteTable(
+  "exams",
+  {
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    /** The share of right answers that passes, in percent. */
+    passingScore: integer("passing_score").notNull().default(70),
+    programId: text("program_id")
+      .notNull()
+      .references(() => programs.id),
+    /** How many questions an attempt draws from the modules. */
+    questionCount: integer("question_count").notNull(),
+    /** Null when the exam has no time limit. */
+    timeLimitMinutes: integer("time_limit_minutes"),
+    title: text("title").notNull(),
+    /**
+     * none | sources | all | any | exam; the lists live in unlock_requirements
+     * (docs/specs/exam-locks.md).
+     */
+    unlockMode: text("unlock_mode").notNull().default("none"),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [index("exams_program_id_idx").on(table.programId)]
+);
 
 /** The modules an exam draws its questions from. */
-export const examModules = sqliteTable("exam_modules", {
-  examId: text("exam_id")
-    .notNull()
-    .references(() => exams.id),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  moduleId: text("module_id")
-    .notNull()
-    .references(() => modules.id),
-});
+export const examModules = sqliteTable(
+  "exam_modules",
+  {
+    examId: text("exam_id")
+      .notNull()
+      .references(() => exams.id),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    moduleId: text("module_id")
+      .notNull()
+      .references(() => modules.id),
+  },
+  (table) => [
+    index("exam_modules_exam_id_idx").on(table.examId),
+    index("exam_modules_module_id_idx").on(table.moduleId),
+  ]
+);
 
 /** A finished attempt; one abandoned midway is never saved. */
-export const examAttempts = sqliteTable("exam_attempts", {
-  correct: integer("correct").notNull(),
-  durationMs: integer("duration_ms").notNull(),
-  examId: text("exam_id")
-    .notNull()
-    .references(() => exams.id),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
-  total: integer("total").notNull(),
-});
+export const examAttempts = sqliteTable(
+  "exam_attempts",
+  {
+    correct: integer("correct").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    examId: text("exam_id")
+      .notNull()
+      .references(() => exams.id),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+    total: integer("total").notNull(),
+  },
+  (table) => [index("exam_attempts_exam_id_idx").on(table.examId)]
+);
 
 /**
  * The points ledger (docs/specs/gamification.md §3): every gain and loss,
@@ -212,22 +261,29 @@ export const examAttempts = sqliteTable("exam_attempts", {
  * is worked out again from the reviews, so new rules never change what
  * was already earned.
  */
-export const pointEvents = sqliteTable("point_events", {
-  /** Negative for a loss. */
-  amount: integer("amount").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  /** The local day it counts for, "2026-10-07". */
-  dayKey: text("day_key").notNull(),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  /** review | quiz | exam | overdue | streakBreak | season */
-  kind: text("kind").notNull(),
-  /** "2026-Q4". */
-  season: text("season").notNull(),
-  /** What it is about, so a gain or loss is never counted twice. */
-  sourceId: text("source_id"),
-});
+export const pointEvents = sqliteTable(
+  "point_events",
+  {
+    /** Negative for a loss. */
+    amount: integer("amount").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    /** The local day it counts for, "2026-10-07". */
+    dayKey: text("day_key").notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    /** review | quiz | exam | overdue | streakBreak | season */
+    kind: text("kind").notNull(),
+    /** "2026-Q4". */
+    season: text("season").notNull(),
+    /** What it is about, so a gain or loss is never counted twice. */
+    sourceId: text("source_id"),
+  },
+  (table) => [
+    index("point_events_season_idx").on(table.season),
+    index("point_events_source_id_idx").on(table.sourceId),
+  ]
+);
 
 /**
  * ReviewItem is the first-class entity scheduled by FSRS, decoupled from the
@@ -240,26 +296,34 @@ export const pointEvents = sqliteTable("point_events", {
  * flashcardId for an individual Flashcard inside a flashcard_deck Activity,
  * activityId for a quiz/pdf/link Activity reviewed as a whole (Issue #77).
  */
-export const reviewItems = sqliteTable("review_items", {
-  activityId: text("activity_id").references(() => activities.id),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  difficulty: real("difficulty").notNull(),
-  dueDate: integer("due_date", { mode: "timestamp_ms" }).notNull(),
-  flashcardId: text("flashcard_id").references(() => flashcards.id),
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  lapses: integer("lapses").notNull().default(0),
-  lastRating: text("last_rating").notNull(),
-  lastReviewedAt: integer("last_reviewed_at", { mode: "timestamp_ms" }),
-  learningSteps: integer("learning_steps").notNull().default(0),
-  ratingHistory: text("rating_history").notNull(),
-  reps: integer("reps").notNull().default(0),
-  scheduledDays: integer("scheduled_days").notNull().default(0),
-  stability: real("stability").notNull(),
-  state: text("state").notNull().default("New"),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+export const reviewItems = sqliteTable(
+  "review_items",
+  {
+    activityId: text("activity_id").references(() => activities.id),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    difficulty: real("difficulty").notNull(),
+    dueDate: integer("due_date", { mode: "timestamp_ms" }).notNull(),
+    flashcardId: text("flashcard_id").references(() => flashcards.id),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    lapses: integer("lapses").notNull().default(0),
+    lastRating: text("last_rating").notNull(),
+    lastReviewedAt: integer("last_reviewed_at", { mode: "timestamp_ms" }),
+    learningSteps: integer("learning_steps").notNull().default(0),
+    ratingHistory: text("rating_history").notNull(),
+    reps: integer("reps").notNull().default(0),
+    scheduledDays: integer("scheduled_days").notNull().default(0),
+    stability: real("stability").notNull(),
+    state: text("state").notNull().default("New"),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("review_items_due_date_idx").on(table.dueDate),
+    index("review_items_flashcard_id_idx").on(table.flashcardId),
+    index("review_items_activity_id_idx").on(table.activityId),
+  ]
+);
 
 /**
  * Singleton settings row -- id is always 1, never a UUID like the rest of
