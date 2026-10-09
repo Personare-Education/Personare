@@ -24,7 +24,8 @@ Antes de mexer no agendamento (`src/utils/fsrs.ts`, `src/ipc/review/`, retençã
 programa), leia [`docs/architecture/scheduling.md`](docs/architecture/scheduling.md). As decisões aceitas
 estão na seção 9 (D1 a D11) e o que já está implementado na seção 11. Resumo:
 
-- **Dois modos, dois objetivos, não equivalentes, escolhidos por programa na criação (D1).**
+- **Dois modos, dois objetivos, não equivalentes, escolhidos por programa, na página do programa acima
+  dos módulos (D1).** Todo programa nasce no Modo A.
   **"Nunca mais esquecer"** (`study_goal = "retain"`, Modo A): retenção a longo prazo, com o FSRS e a
   retenção desejada. **"Estudar para uma Prova"** (`study_goal = "test_prep"` + `target_date`, Modo B):
   desempenho numa prova com data.
