@@ -588,9 +588,12 @@ export default {
   takeExamAction: "試験を受ける",
   takeQuizAction: "クイズに挑戦",
   targetDateLabel: "試験日",
+  testCountdown_other: "試験まであと{{count}}日",
   testPrereleasesDescription:
     "テスト版(アルファ)を公開と同時に受け取ります。オフにすると通常版のみ。次にアプリを開いたときから適用されます。",
   testPrereleasesToggleLabel: "テスト版を受け取る",
+  testToday: "試験は今日",
+  testWasOn: "試験は{{date}}でした",
   textSizeDefault: "標準",
   textSizeLabel: "文字サイズ",
   textSizeLarge: "大",

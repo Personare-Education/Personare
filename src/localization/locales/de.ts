@@ -632,9 +632,13 @@ export default {
   takeExamAction: "Prüfung ablegen",
   takeQuizAction: "Quiz starten",
   targetDateLabel: "Prüfungstag",
+  testCountdown_one: "Prüfung in {{count}} Tag",
+  testCountdown_other: "Prüfung in {{count}} Tagen",
   testPrereleasesDescription:
     "Erhalte Testversionen (Alphas), sobald sie erscheinen. Aus: nur reguläre Versionen. Gilt ab dem nächsten Öffnen der App.",
   testPrereleasesToggleLabel: "Testversionen",
+  testToday: "Prüfung heute",
+  testWasOn: "Die Prüfung war am {{date}}",
   textSizeDefault: "Standard",
   textSizeLabel: "Textgröße",
   textSizeLarge: "Groß",
