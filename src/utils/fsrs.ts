@@ -21,10 +21,36 @@ import {
  * enable_short_term:false makes every rating graduate straight to a real,
  * whole-day interval, matching "I just finished this once" semantics.
  */
-const shortTermScheduler = fsrs();
-const longTermScheduler = fsrs(
-  generatorParameters({ enable_short_term: false })
-);
+/**
+ * The share of reviews the student wants to get right when one comes due
+ * (docs/specs/desired-retention.md): higher means sooner and more reviews.
+ * 90% is ts-fsrs's own default.
+ */
+export const DEFAULT_DESIRED_RETENTION = 0.9;
+
+export interface SchedulerOptions {
+  desiredRetention?: number;
+  shortTermEnabled?: boolean;
+}
+
+const schedulers = new Map<string, ReturnType<typeof fsrs>>();
+
+function schedulerFor(options?: SchedulerOptions) {
+  const shortTerm = options?.shortTermEnabled !== false;
+  const retention = options?.desiredRetention ?? DEFAULT_DESIRED_RETENTION;
+  const key = `${shortTerm}:${retention}`;
+  let scheduler = schedulers.get(key);
+  if (!scheduler) {
+    scheduler = fsrs(
+      generatorParameters({
+        enable_short_term: shortTerm,
+        request_retention: retention,
+      })
+    );
+    schedulers.set(key, scheduler);
+  }
+  return scheduler;
+}
 
 /**
  * Agnostic of which content it schedules (Flashcard or, since Issue #77, a
@@ -97,14 +123,9 @@ export function applyRating(
   row: ReviewItemRow,
   rating: Grade,
   now: Date,
-  options?: { shortTermEnabled?: boolean }
+  options?: SchedulerOptions
 ): { card: Card; log: ReviewLog } {
-  const scheduler =
-    options?.shortTermEnabled === false
-      ? longTermScheduler
-      : shortTermScheduler;
-
-  return scheduler.next(toFsrsCard(row), now, rating);
+  return schedulerFor(options).next(toFsrsCard(row), now, rating);
 }
 
 export type PreviewRating = "again" | "hard" | "good" | "easy";
@@ -125,12 +146,9 @@ const PREVIEW_GRADES: Record<PreviewRating, Grade> = {
 export function previewRatings(
   row: ReviewItemRow | null,
   now: Date,
-  options?: { shortTermEnabled?: boolean }
+  options?: SchedulerOptions
 ): Record<PreviewRating, Date> {
-  const scheduler =
-    options?.shortTermEnabled === false
-      ? longTermScheduler
-      : shortTermScheduler;
+  const scheduler = schedulerFor(options);
   const card = row ? toFsrsCard(row) : createEmptyCard(now);
   const preview = {} as Record<PreviewRating, Date>;
   for (const [rating, grade] of Object.entries(PREVIEW_GRADES)) {

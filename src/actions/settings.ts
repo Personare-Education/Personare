@@ -17,3 +17,8 @@ export function setTestPrereleases(enabled: boolean) {
 export function setSoundsEnabled(enabled: boolean) {
   return ipc.client.settings.setSoundsEnabled({ enabled });
 }
+
+/** The retention FSRS schedules for (docs/specs/desired-retention.md). */
+export function setDesiredRetention(desiredRetention: number) {
+  return ipc.client.settings.setDesiredRetention({ desiredRetention });
+}

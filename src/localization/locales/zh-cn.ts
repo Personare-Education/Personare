@@ -157,6 +157,12 @@ export default {
     "将删除“{{name}}”及其模块。删除后可以立即撤销。",
   deleteProgramConfirmTitle: "删除这个计划？",
   deleteQuizQuestionAction: "删除题目",
+  desiredRetentionDescription:
+    "到期的内容中你希望记住多少。越高，复习回来得越早，次数也越多。大部分学习适合 90%；考试前几周适合 95%。从你的下一次评分开始生效。",
+  desiredRetentionExamHint: "考试前",
+  desiredRetentionFewerHint: "复习更少",
+  desiredRetentionLabel: "记忆目标",
+  desiredRetentionRecommendedHint: "推荐",
   diagnosticsSectionDescription:
     "出现问题时，Personare 会把它记录在这台电脑上的一个文件里。不会发送到任何地方：导出后可发给正在帮助你的人。",
   diagnosticsSectionTitle: "诊断",

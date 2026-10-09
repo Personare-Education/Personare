@@ -4,8 +4,10 @@ import { app } from "electron";
 import type { DatabaseClient } from "@/database/client";
 import { appSettings as appSettingsTable } from "@/database/schema";
 import { getDatabaseClient } from "@/ipc/database/state";
+import { DEFAULT_DESIRED_RETENTION } from "@/utils/fsrs";
 import {
   setAutoStartInputSchema,
+  setDesiredRetentionInputSchema,
   setSoundsEnabledInputSchema,
   setTestPrereleasesInputSchema,
 } from "./schemas";
@@ -43,6 +45,7 @@ export function getOrCreateAppSettings(db: DatabaseClient) {
 
   return {
     autoStartEnabled: row?.autoStartEnabled ?? false,
+    desiredRetention: row?.desiredRetention ?? DEFAULT_DESIRED_RETENTION,
     soundsEnabled: row?.soundsEnabled ?? true,
     testPrereleases: row?.testPrereleases ?? true,
   };
@@ -88,6 +91,21 @@ export const setSoundsEnabled = os
     getOrCreateAppSettings(db);
     db.update(appSettingsTable)
       .set({ soundsEnabled: input.enabled })
+      .where(eq(appSettingsTable.id, SETTINGS_ROW_ID))
+      .run();
+  });
+
+/**
+ * The retention FSRS schedules for, from the next rating on
+ * (docs/specs/desired-retention.md AC-1).
+ */
+export const setDesiredRetention = os
+  .input(setDesiredRetentionInputSchema)
+  .handler(({ input }) => {
+    const db = requireDatabaseClient();
+    getOrCreateAppSettings(db);
+    db.update(appSettingsTable)
+      .set({ desiredRetention: input.desiredRetention })
       .where(eq(appSettingsTable.id, SETTINGS_ROW_ID))
       .run();
   });

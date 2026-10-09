@@ -169,6 +169,12 @@ export default {
     "「{{name}}」とそのモジュールを削除します。直後なら元に戻せます。",
   deleteProgramConfirmTitle: "このプログラムを削除しますか?",
   deleteQuizQuestionAction: "問題を削除",
+  desiredRetentionDescription:
+    "期限が来たものをどれだけ覚えていたいか。高くすると復習が早く戻り、回数が増えます。普段の勉強には 90%、試験前の数週間には 95% が目安です。次の評価から適用されます。",
+  desiredRetentionExamHint: "試験前",
+  desiredRetentionFewerHint: "復習が少なめ",
+  desiredRetentionLabel: "記憶率の目標",
+  desiredRetentionRecommendedHint: "おすすめ",
   diagnosticsSectionDescription:
     "問題が起きると、Personare はこのコンピューター上のファイルに記録します。どこにも送信されません。サポートしてくれる人に送るときはエクスポートしてください。",
   diagnosticsSectionTitle: "診断",

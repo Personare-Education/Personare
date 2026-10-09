@@ -172,6 +172,12 @@ export default {
     "سيُحذف «{{name}}» ووحداته. يمكنك التراجع مباشرة بعد ذلك.",
   deleteProgramConfirmTitle: "حذف هذا البرنامج؟",
   deleteQuizQuestionAction: "حذف السؤال",
+  desiredRetentionDescription:
+    "كم تريد أن تتذكّر مما يحين موعده. كلما ارتفع عادت المراجعات أبكر، فتكثر. 90% تناسب معظم الدراسة، و95% الأسابيع التي تسبق الامتحان. يُطبَّق بدءًا من تقييمك التالي.",
+  desiredRetentionExamHint: "قبل الامتحان",
+  desiredRetentionFewerHint: "مراجعات أقل",
+  desiredRetentionLabel: "هدف التذكّر",
+  desiredRetentionRecommendedHint: "موصى به",
   diagnosticsSectionDescription:
     "عندما يحدث خطأ، يدوّنه Personare في ملف على هذا الحاسوب. لا يُرسَل أي شيء: صدّره لإرساله إلى من يساعدك.",
   diagnosticsSectionTitle: "التشخيص",

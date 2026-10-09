@@ -11,3 +11,8 @@ export const setTestPrereleasesInputSchema = z.object({
 export const setSoundsEnabledInputSchema = z.object({
   enabled: z.boolean(),
 });
+
+/** 80% to 95% (docs/specs/desired-retention.md AC-1). */
+export const setDesiredRetentionInputSchema = z.object({
+  desiredRetention: z.number().min(0.8).max(0.95),
+});

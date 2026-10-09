@@ -127,6 +127,13 @@
       "when": 1791545423952,
       "tag": "0017_add_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1791546636697,
+      "tag": "0018_desired_retention",
+      "breakpoints": true
     }
   ]
 }

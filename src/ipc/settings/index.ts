@@ -1,6 +1,7 @@
 import {
   get,
   setAutoStart,
+  setDesiredRetention,
   setSoundsEnabled,
   setTestPrereleases,
 } from "./handlers";
@@ -8,6 +9,7 @@ import {
 export const settings = {
   get,
   setAutoStart,
+  setDesiredRetention,
   setSoundsEnabled,
   setTestPrereleases,
 };

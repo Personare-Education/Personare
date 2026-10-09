@@ -334,6 +334,11 @@ export const appSettings = sqliteTable("app_settings", {
   autoStartEnabled: integer("auto_start_enabled", { mode: "boolean" })
     .notNull()
     .default(false),
+  /**
+   * The share of reviews to get right when they come due, which FSRS
+   * schedules for (docs/specs/desired-retention.md).
+   */
+  desiredRetention: real("desired_retention").notNull().default(0.9),
   id: integer("id").primaryKey(),
   /** Settings → Sounds (docs/specs/gamification.md §2 AC-3). */
   soundsEnabled: integer("sounds_enabled", { mode: "boolean" })

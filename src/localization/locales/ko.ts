@@ -164,6 +164,12 @@ export default {
     "“{{name}}”과(와) 그 안의 모듈을 삭제해요. 바로 다음에 되돌릴 수 있어요.",
   deleteProgramConfirmTitle: "이 프로그램을 삭제할까요?",
   deleteQuizQuestionAction: "문제 삭제",
+  desiredRetentionDescription:
+    "기한이 된 것 중 얼마나 기억하고 싶은지입니다. 높을수록 복습이 더 빨리, 더 자주 돌아옵니다. 대부분의 공부에는 90%, 시험 전 몇 주에는 95%가 맞습니다. 다음 평가부터 적용됩니다.",
+  desiredRetentionExamHint: "시험 전",
+  desiredRetentionFewerHint: "복습 적게",
+  desiredRetentionLabel: "기억 목표",
+  desiredRetentionRecommendedHint: "권장",
   diagnosticsSectionDescription:
     "문제가 생기면 Personare가 이 컴퓨터의 파일에 기록합니다. 아무것도 전송되지 않습니다. 도와주는 사람에게 보내려면 내보내세요.",
   diagnosticsSectionTitle: "진단",

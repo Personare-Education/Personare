@@ -165,6 +165,12 @@ export default {
     'This will delete "{{name}}" and its modules. You can undo it right after.',
   deleteProgramConfirmTitle: "Delete this program?",
   deleteQuizQuestionAction: "Delete question",
+  desiredRetentionDescription:
+    "How much of what comes due you want to remember. Higher brings reviews back sooner, so there are more of them. 90% suits most study; 95% the weeks before an exam. It applies from your next rating.",
+  desiredRetentionExamHint: "before an exam",
+  desiredRetentionFewerHint: "fewer reviews",
+  desiredRetentionLabel: "Retention target",
+  desiredRetentionRecommendedHint: "recommended",
   diagnosticsSectionDescription:
     "When something goes wrong, Personare writes it down in a file on this computer. Nothing is sent anywhere: export it to send to whoever is helping you.",
   diagnosticsSectionTitle: "Diagnostics",

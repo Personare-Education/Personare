@@ -166,6 +166,12 @@ export default {
     'Isso vai excluir "{{name}}" e os módulos dele. Dá para desfazer logo em seguida.',
   deleteProgramConfirmTitle: "Excluir este programa?",
   deleteQuizQuestionAction: "Excluir pergunta",
+  desiredRetentionDescription:
+    "Quanto do que vence você quer lembrar. Mais alto traz as revisões mais cedo, então são mais revisões. 90% serve para a maior parte do estudo; 95%, para as semanas antes de uma prova. Vale a partir da sua próxima avaliação.",
+  desiredRetentionExamHint: "antes de uma prova",
+  desiredRetentionFewerHint: "menos revisões",
+  desiredRetentionLabel: "Meta de retenção",
+  desiredRetentionRecommendedHint: "recomendado",
   diagnosticsSectionDescription:
     "Quando algo dá errado, o Personare anota num arquivo neste computador. Nada é enviado: exporte para mandar a quem estiver te ajudando.",
   diagnosticsSectionTitle: "Diagnóstico",
