@@ -13,6 +13,7 @@ See [`PRODUCT.md`](PRODUCT.md) for who it is for, the product principles and the
 ## Features
 
 - **Programs → Modules → Activities:** a program is an area of study (a course, a degree, an exam). Activities are links, PDFs, quizzes, flashcard decks and sequences, with optional unlock rules and module exams.
+- **Two goals per program:** "Never forget" (long-term retention) or "Study for a test" (nothing comes due after the test's eve, with a countdown). See [`docs/architecture/scheduling.md`](docs/architecture/scheduling.md).
 - **Today's reviews:** each activity comes back on its own FSRS schedule after the student rates it (again / hard / good / easy). A deck is scheduled card by card.
 - **Calendar** of upcoming reviews, with optional sync to a dedicated Google Calendar.
 - **Starts with the system**, minimized to the tray, and notifies the day's reviews.

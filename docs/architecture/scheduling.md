@@ -79,7 +79,8 @@ fora do app.
 - **Ainda não existem no modelo de dados:** data da avaliação, peso de um conteúdo na avaliação, custo de
   tempo por revisão e disponibilidade diária do aluno.
 
-**Em resumo:** o que existe hoje é uma forma do **Modo A**. O Modo B não existe. A dica "95%, antes de uma
+**Em resumo (antes da implementação de D1 a D7):** o que existia era uma forma do **Modo A**, e o Modo B não
+existia. Para o estado de agora, ver a seção 11. A dica "95%, antes de uma
 prova", no seletor de retenção, é só um paliativo: subir a retenção não leva a data em conta.
 
 ## 3. Separação de responsabilidades
@@ -347,5 +348,5 @@ do experimento. Dados para pesquisa só saem do computador por exportação **vo
 | D1, D2: modo no programa | Implementado | `src/utils/study-goal.ts`, `docs/specs/program-study-goal.md` |
 | D3: `review_logs` | Implementado | `docs/specs/review-logs.md` |
 | D4: calibração | Trabalho futuro | |
-| D5, D6, D7: Modo B v1 | A implementar | |
+| D5, D6, D7: Modo B v1 | Implementado | `src/utils/scheduling-policy.ts`, `docs/specs/test-prep-scheduling.md` |
 | D8 (v1.1, v2), D9, D10 | Trabalho futuro | #228 |

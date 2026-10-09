@@ -609,9 +609,13 @@ export default {
   takeExamAction: "Take exam",
   takeQuizAction: "Take quiz",
   targetDateLabel: "Test day",
+  testCountdown_one: "Test in {{count}} day",
+  testCountdown_other: "Test in {{count}} days",
   testPrereleasesDescription:
     "Get test versions (alphas) as soon as they are out. Off, only regular versions. Applies the next time the app opens.",
   testPrereleasesToggleLabel: "Test pre-releases",
+  testToday: "Test today",
+  testWasOn: "Test was on {{date}}",
   textSizeDefault: "Default",
   textSizeLabel: "Text size",
   textSizeLarge: "Large",

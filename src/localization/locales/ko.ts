@@ -573,9 +573,12 @@ export default {
   takeExamAction: "시험 보기",
   takeQuizAction: "퀴즈 풀기",
   targetDateLabel: "시험일",
+  testCountdown_other: "시험까지 {{count}}일",
   testPrereleasesDescription:
     "테스트 버전(알파)을 나오자마자 받아요. 끄면 정식 버전만 받아요. 다음에 앱을 열 때부터 적용돼요.",
   testPrereleasesToggleLabel: "테스트 버전",
+  testToday: "오늘 시험",
+  testWasOn: "시험은 {{date}}이었습니다",
   textSizeDefault: "보통",
   textSizeLabel: "글자 크기",
   textSizeLarge: "크게",

@@ -26,11 +26,13 @@ import {
   applyRating,
   createInitialReviewItemFields,
   fromFsrsCard,
+  type PreviewRating,
   previewRatings as previewFsrsRatings,
   type ReviewItemRow,
   retrievabilityAt,
 } from "@/utils/fsrs";
 import { computeRetention } from "@/utils/retention-stats";
+import { scheduleForGoal } from "@/utils/scheduling-policy";
 import {
   activityIdInputSchema,
   ensureReviewItemsInputSchema,
@@ -56,6 +58,20 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** What the student picked in Settings (docs/specs/desired-retention.md). */
 function desiredRetentionOf(db: DatabaseClient) {
   return getOrCreateAppSettings(db).desiredRetention;
+}
+
+/** The preview, with the program's goal applied as rating would (D7). */
+function withGoal(
+  preview: Record<PreviewRating, Date>,
+  program: ReturnType<typeof programOfReviewItem>,
+  now: Date
+): Record<PreviewRating, Date> {
+  return {
+    again: scheduleForGoal(preview.again, program, now),
+    easy: scheduleForGoal(preview.easy, program, now),
+    good: scheduleForGoal(preview.good, program, now),
+    hard: scheduleForGoal(preview.hard, program, now),
+  };
 }
 
 const RATING_TO_GRADE: Record<"again" | "hard" | "good" | "easy", Grade> = {
@@ -86,7 +102,22 @@ function applyRatingToReviewItem(
     shortTermEnabled: options?.shortTermEnabled,
   };
   const { card } = applyRating(reviewRow, grade, now, schedulerOptions);
-  const fields = fromFsrsCard(card);
+  const program = programOfReviewItem(db, row);
+  const proposed = fromFsrsCard(card);
+  // The program's goal decides the due date (docs/architecture/scheduling.md
+  // D6, D7): for a test, nothing after its eve.
+  const dueDate = scheduleForGoal(proposed.dueDate, program, now);
+  const fields =
+    dueDate === proposed.dueDate
+      ? proposed
+      : {
+          ...proposed,
+          dueDate,
+          scheduledDays: Math.max(
+            0,
+            Math.round((dueDate.getTime() - now.getTime()) / DAY_MS)
+          ),
+        };
 
   const history = JSON.parse(row.ratingHistory) as {
     rating: string;
@@ -140,7 +171,7 @@ function applyRatingToReviewItem(
         stabilityBefore: row.stability,
         stateAfter: fields.state,
         stateBefore: row.state,
-        studyGoal: programOfReviewItem(db, row)?.studyGoal ?? null,
+        studyGoal: program?.studyGoal ?? null,
       })
       .run();
 
@@ -270,10 +301,12 @@ export const previewRatings = os
       if (!row) {
         throw new Error("Review item not found");
       }
-      return previewFsrsRatings(
-        { ...row, state: row.state as StateType },
-        now,
-        { desiredRetention: desiredRetentionOf(db) }
+      return withGoal(
+        previewFsrsRatings({ ...row, state: row.state as StateType }, now, {
+          desiredRetention: desiredRetentionOf(db),
+        }),
+        programOfReviewItem(db, row),
+        now
       );
     }
 
@@ -282,10 +315,17 @@ export const previewRatings = os
       .from(reviewItemsTable)
       .where(eq(reviewItemsTable.activityId, input.activityId))
       .get();
-    return previewFsrsRatings(
-      row ? { ...row, state: row.state as StateType } : null,
-      now,
-      { desiredRetention: desiredRetentionOf(db), shortTermEnabled: false }
+    return withGoal(
+      previewFsrsRatings(
+        row ? { ...row, state: row.state as StateType } : null,
+        now,
+        { desiredRetention: desiredRetentionOf(db), shortTermEnabled: false }
+      ),
+      programOfReviewItem(db, {
+        activityId: input.activityId,
+        flashcardId: null,
+      }),
+      now
     );
   });
 

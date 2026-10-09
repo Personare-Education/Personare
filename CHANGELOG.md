@@ -8,6 +8,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Added
 
+- **Nunca mais esquecer ou Estudar para uma Prova:** na página de cada programa, acima dos módulos, você
+  escolhe o objetivo. "Nunca mais esquecer", o padrão, revisa no ritmo da sua memória, sem data para acabar,
+  como antes. "Estudar para uma Prova" pede o dia da prova, e nenhuma revisão do programa fica para depois
+  da véspera; os botões de avaliação já mostram a data limitada. O programa conta os dias até a prova, na
+  página e no cartão. Passada a data, ele volta a revisar no ritmo da memória. A escolha salva na hora e
+  pode ser trocada quando quiser.
+- **Registro de cada revisão:** toda avaliação passa a guardar o que o algoritmo previa e quanto tempo a
+  revisão levou (nos flashcards). É a base para medir se as previsões acertam e melhorar o agendamento.
+  Fica só no seu computador e vai junto no backup.
 - **Meta de retenção:** em Configurações → Geral, escolha quanto do que vence você quer lembrar: 80% (menos
   revisões), 85%, 90% (recomendado, o de antes) ou 95% (antes de uma prova). Mais alto traz as revisões
   mais cedo. Vale a partir da próxima avaliação e vai junto no backup.
@@ -19,6 +28,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ### Changed
 
+- **Arquitetura do agendamento documentada** em `docs/architecture/scheduling.md`: os dois modos, as
+  decisões tomadas e o que ainda depende de pesquisa.
 - **Mais rápido com muitos cards:** o banco ganhou índices nas colunas que as listas, as revisões do dia, o
   calendário e os pontos consultam. Faz diferença depois de importar um baralho grande do Anki.
 - **README** reescrito para descrever o Personare (o que faz, como é feito e como contribuir), e o

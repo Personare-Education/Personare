@@ -555,9 +555,12 @@ export default {
   takeExamAction: "参加考试",
   takeQuizAction: "开始测验",
   targetDateLabel: "考试日",
+  testCountdown_other: "距考试还有 {{count}} 天",
   testPrereleasesDescription:
     "测试版（alpha）一发布就能获取。关闭则只获取正式版。下次打开应用时生效。",
   testPrereleasesToggleLabel: "测试版",
+  testToday: "今天考试",
+  testWasOn: "考试已于 {{date}} 结束",
   textSizeDefault: "标准",
   textSizeLabel: "文字大小",
   textSizeLarge: "大",

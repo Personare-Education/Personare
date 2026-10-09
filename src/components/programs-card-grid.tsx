@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { CalendarClock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { type KeyboardEvent, type MouseEvent, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
@@ -19,7 +19,9 @@ import {
   resolveProgramIcon,
 } from "@/constants/program-appearance";
 import { programTintStyle } from "@/utils/program-tint";
-import type { StudyGoal } from "@/utils/study-goal";
+import { daysUntilTest } from "@/utils/scheduling-policy";
+import { parseDayKey, type StudyGoal } from "@/utils/study-goal";
+import { cn } from "@/utils/tailwind";
 
 export interface Program {
   color: string | null;
@@ -31,6 +33,46 @@ export interface Program {
   studyGoal?: StudyGoal;
   targetDate?: string | null;
   updatedAt: Date;
+}
+
+/**
+ * Studying for a test: how many days are left, or when it was
+ * (docs/architecture/scheduling.md D2, D7).
+ */
+function TestCountdown({ program }: { program: Program }) {
+  const { i18n, t } = useTranslation();
+  if (program.studyGoal !== "test_prep" || !program.targetDate) {
+    return null;
+  }
+  const now = new Date();
+  const days = daysUntilTest(program.targetDate, now);
+  if (Number.isNaN(days)) {
+    return null;
+  }
+  let text: string;
+  if (days > 0) {
+    text = t("testCountdown", { count: days });
+  } else if (days === 0) {
+    text = t("testToday");
+  } else {
+    const date = new Intl.DateTimeFormat(i18n.language, {
+      day: "numeric",
+      month: "short",
+    }).format(parseDayKey(program.targetDate) ?? now);
+    text = t("testWasOn", { date });
+  }
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-1 text-[0.6875rem] tabular-nums",
+        days >= 0 ? "font-medium text-brand-text" : "text-muted-foreground"
+      )}
+      data-testid="test-countdown"
+    >
+      <CalendarClock aria-hidden="true" className="size-3" />
+      {text}
+    </span>
+  );
 }
 
 interface ProgramsCardGridProps {
@@ -139,6 +181,7 @@ function ProgramCard({
                     {t("programDueCount", { count: dueCount })}
                   </span>
                 ) : null}
+                <TestCountdown program={program} />
               </span>
             </div>
             <DropdownMenu>
